@@ -1,7 +1,7 @@
 <xs:schema
         xmlns:xs='http://www.w3.org/2001/XMLSchema'
-        xmlns='http://xml.parser.core.fakerpp.testany.org'
-        targetNamespace = 'uri:dqyuan.top:schemas:table'
+        xmlns='https://github.com/dqinyuan/fakerpp'
+        targetNamespace = 'https://github.com/dqinyuan/fakerpp'
         elementFormDefault='qualified'>
 
     <xs:complexType name="tableType">
