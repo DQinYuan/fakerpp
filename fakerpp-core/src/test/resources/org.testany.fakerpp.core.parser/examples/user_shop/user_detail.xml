@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<table xmlns="https://github.com/dqinyuan/fakerpp"
+       xsi:schemaLocation="https://github.com/dqinyuan/fakerpp
+       https://raw.githubusercontent.com/dqinyuan/master/fakerpp.xsd"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       name="user_detail" ds="mysql">
+    <joins>
+        <rightjoin target="user"/>
+    </joins>
+    <col-families>
+        <str prefix="street_" len="3">
+            <cols>
+                <col>address</col>
+            </cols>
+        </str>
+        <str len="30">
+            <cols>
+                <col>description</col>
+            </cols>
+        </str>
+    </col-families>
+    <excludes>
+        <exclude>id</exclude>
+    </excludes>
+</table>

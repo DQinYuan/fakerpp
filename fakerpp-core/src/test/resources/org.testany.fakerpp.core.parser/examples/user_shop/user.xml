@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<table xmlns="https://github.com/dqinyuan/fakerpp"
+       xsi:schemaLocation="https://github.com/dqinyuan/fakerpp
+       https://raw.githubusercontent.com/dqinyuan/master/fakerpp.xsd"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       name="user" num="15" virtual="true" ds="">
+    <col-families>
+        <name>
+            <full-name>
+                <cols>
+                    <col>name</col>
+                </cols>
+            </full-name>
+        </name>
+        <enum>
+            <cols>
+                <col>sex</col>
+            </cols>
+            <options>
+                <option>male</option>
+                <option>female</option>
+            </options>
+        </enum>
+        <int min="6" max="80">
+            <cols>
+                <col>age</col>
+            </cols>
+        </int>
+    </col-families>
+</table>

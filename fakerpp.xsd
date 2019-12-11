@@ -1,0 +1,245 @@
+<xs:schema
+        xmlns:xs='http://www.w3.org/2001/XMLSchema'
+        xmlns='http://xml.parser.core.fakerpp.testany.org'
+        targetNamespace = 'uri:dqyuan.top:schemas:table'
+        elementFormDefault='qualified'>
+
+    <xs:complexType name="tableType">
+        <xs:sequence>
+            <xs:element ref="joins" minOccurs="0"/>
+            <xs:element ref="col-families"/>
+            <xs:element ref="excludes" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:token" use="required"/>
+        <xs:attribute name="virtual" type="xs:boolean" default="false"/>
+        <xs:attribute name="ds" type="xs:string" use="required"/>
+        <xs:attribute name="num" type="xs:token" default="-1"/>
+    </xs:complexType>
+
+    <xs:complexType name="leftjoinType">
+        <xs:sequence>
+            <xs:element ref="map"  minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="target" type="xs:token" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="rightjoinType">
+        <xs:sequence>
+            <xs:element ref="map"  minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="target" type="xs:token" use="required"/>
+        <xs:attribute name="random" type="xs:boolean" default="false"/>
+    </xs:complexType>
+
+    <xs:complexType name="mapType">
+        <xs:simpleContent>
+            <xs:extension base="xs:token">
+                <xs:attribute name="from" type="xs:token" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="joinsType">
+        <!-- in any order any times -->
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="leftjoin"/>
+            <xs:element ref="rightjoin"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="excludesType">
+        <xs:sequence>
+            <xs:element name="exclude" type="xs:token" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="table" type="tableType"/>
+    <xs:element name="joins" type="joinsType"/>
+    <xs:element name="col-families" type="colFamiliesType"/>
+    <xs:element name="excludes" type="excludesType"/>
+    <xs:element name="map" type="mapType"/>
+    <xs:element name="leftjoin" type="leftjoinType"/>
+    <xs:element name="rightjoin" type="rightjoinType"/>
+
+
+    <!-- col and cols -->
+    <!-- col tag can not be empty or null -->
+    <xs:simpleType name="colType">
+        <xs:restriction base="xs:string">
+            <!-- \S reparents all non empty char -->
+            <xs:pattern value="\S+"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="colsType">
+        <xs:sequence>
+            <xs:element name="col" type="colType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <!-- base generator type -->
+    <xs:complexType name="baseGenType">
+        <xs:sequence>
+            <xs:element name="cols" type="colsType"/>
+        </xs:sequence>
+    </xs:complexType>
+
+
+    <!-- built in generators -->
+
+    <!-- str generator -->
+    <xs:complexType name="strType">
+        <xs:complexContent>
+            <xs:extension base="baseGenType">
+                <xs:attribute name="prefix" type="xs:token" default=""/>
+                <xs:attribute name="suffix" type="xs:token" default=""/>
+                <xs:attribute name="len" type="xs:integer" default="10"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <!-- date generator -->
+    <xs:complexType name="dateType">
+        <xs:complexContent>
+            <xs:extension base="baseGenType">
+                <xs:attribute name="format" type="xs:token" default="yyyy-mm-dd"/>
+                <xs:attribute name="start" type="xs:token" default="now-60"/>
+                <xs:attribute name="end" type="xs:integer" default="now"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <!-- date range generator -->
+    <xs:complexType name="dateRangeType">
+        <xs:complexContent>
+            <xs:extension base="baseGenType">
+                <xs:attribute name="format" type="xs:token" default="yyyy-mm-dd"/>
+                <xs:attribute name="start" type="xs:token" default="now-60"/>
+                <xs:attribute name="end" type="xs:integer" default="now"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <!-- enum generator -->
+    <xs:complexType name="enumType">
+        <xs:complexContent>
+            <xs:extension base="baseGenType">
+                <xs:sequence>
+                    <xs:element name="options">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="option" type="xs:string" maxOccurs="unbounded"/>
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <!-- int generator -->
+    <xs:complexType name="intType">
+        <xs:complexContent>
+            <xs:extension base="baseGenType">
+                <xs:attribute name="min" type="xs:int" default="0"/>
+                <xs:attribute name="max" type="xs:int" default="100"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+
+    <!-- faker generators -->
+
+
+    <xs:complexType name="nameType">
+        <xs:choice>
+            <xs:element type="baseGenType" name="name"/>
+            <xs:element type="baseGenType" name="name-with-middle"/>
+            <xs:element type="baseGenType" name="full-name"/>
+            <xs:element type="baseGenType" name="first-name"/>
+            <xs:element type="baseGenType" name="last-name"/>
+            <xs:element type="baseGenType" name="prefix"/>
+            <xs:element type="baseGenType" name="suffix"/>
+            <xs:element type="baseGenType" name="title"/>
+            <xs:element type="baseGenType" name="username"/>
+            <xs:element type="baseGenType" name="blood-group"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="numberType">
+        <xs:choice>
+            <xs:element type="baseGenType" name="random-digit"/>
+            <xs:element type="baseGenType" name="random-digit-not-zero"/>
+            <xs:element name="number-between">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="baseGenType">
+                            <!-- 这如果自动生成的话考虑**多态**需要进行类型推导 -->
+                            <xs:attribute name="min" type="xs:long" use="required"/>
+                            <xs:attribute name="max" type="xs:long" use="required"/>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="random-number">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="baseGenType">
+                            <xs:attribute name="number-of-digits" type="xs:int" use="required"/>
+                            <xs:attribute name="strict" type="xs:boolean" use="required"/>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="random-double">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="baseGenType">
+                            <xs:attribute name="max-number-of-decimals" type="xs:int" use="required"/>
+                            <!--多态-->
+                            <xs:attribute name="min" type="xs:long" use="required"/>
+                            <xs:attribute name="max" type="xs:long" use="required"/>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="decimal-between">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="baseGenType">
+                            <xs:attribute name="min" type="xs:long" use="required"/>
+                            <xs:attribute name="max" type="xs:long" use="required"/>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="digits">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="baseGenType">
+                            <!-- 这里不需要required是因为多态 -->
+                            <xs:attribute name="count" type="xs:long"/>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:choice>
+    </xs:complexType>
+
+
+   <!-- register all generators -->
+    <xs:complexType name="colFamiliesType">
+        <!-- in any order any times -->
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <!-- str generator -->
+            <xs:element name="str" type="strType"/>
+            <!-- date generator -->
+            <xs:element name="date" type="dateType"/>
+            <!-- date range generator -->
+            <xs:element name="date-range" type="dateRangeType"/>
+            <!-- enum generator -->
+            <xs:element name="enum" type="enumType"/>
+            <!-- int generator -->
+            <xs:element name="int" type="intType"/>
+
+            <!-- java faker generator -->
+
+            <xs:element name="name" type="nameType"/>
+            <xs:element name="number" type="numberType"/>
+        </xs:choice>
+    </xs:complexType>
+</xs:schema>
