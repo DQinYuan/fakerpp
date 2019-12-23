@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<table xmlns="https://github.com/dqinyuan/fakerpp"
+       name="dt">
+    <col-families>
+        <built-in>
+            <date-range>
+                <cols>
+                    <col>dt</col>
+                </cols>
+            </date-range>
+        </built-in>
+    </col-families>
+</table>

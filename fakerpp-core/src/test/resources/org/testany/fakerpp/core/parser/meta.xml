@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<meta xmlns='https://github.com/dqinyuan/fakerpp/meta'>
+    <datasources>
+        <datasource name="mysql0" type="mysql" storer="s">
+            <url>mysql0Url</url>
+            <user>mysql0User</user>
+            <passwd>123456</passwd>
+        </datasource>
+        <datasource name="redis" type="redis">
+            <url>redisUrl</url>
+            <user>redisUser</user>
+            <passwd>redis123</passwd>
+        </datasource>
+    </datasources>
+</meta>

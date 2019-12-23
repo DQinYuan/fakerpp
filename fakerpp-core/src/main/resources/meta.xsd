@@ -1,0 +1,31 @@
+<xs:schema
+        xmlns:xs='http://www.w3.org/2001/XMLSchema'
+        xmlns='https://github.com/dqinyuan/fakerpp/meta'
+        targetNamespace = 'https://github.com/dqinyuan/fakerpp/meta'
+        elementFormDefault='qualified'>
+
+    <xs:element name="meta">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="datasources" type="datasourcesType"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="datasourcesType">
+        <xs:sequence>
+            <xs:element name="datasource" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="url" type="xs:token"/>
+                        <xs:element name="user" type="xs:token"/>
+                        <xs:element name="passwd" type="xs:token"/>
+                    </xs:sequence>
+                    <xs:attribute name="name" type="xs:token" use="required"/>
+                    <xs:attribute name="type" type="xs:token" use="required"/>
+                    <xs:attribute name="storer" type="xs:string" default="default"/>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

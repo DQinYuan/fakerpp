@@ -1,0 +1,200 @@
+package org.testany.fakerpp.core.engine;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
+import org.testany.fakerpp.core.ERMLException;
+import org.testany.fakerpp.core.engine.domain.ColExec;
+import org.testany.fakerpp.core.engine.domain.ColFamilyExec;
+import org.testany.fakerpp.core.engine.domain.TableExec;
+import org.testany.fakerpp.core.engine.generator.FakerGen;
+import org.testany.fakerpp.core.engine.generator.Generator;
+import org.testany.fakerpp.core.engine.generator.Generators;
+import org.testany.fakerpp.core.engine.generator.joins.LeftJoinGen;
+import org.testany.fakerpp.core.engine.generator.joins.RightJoinGen;
+import org.testany.fakerpp.core.parser.ast.DataSourceInfo;
+import org.testany.fakerpp.core.parser.ast.ERML;
+import org.testany.fakerpp.core.parser.ast.Table;
+import org.testany.fakerpp.core.store.ERMLStore;
+
+import java.util.*;
+
+@Component
+@RequiredArgsConstructor
+@Slf4j
+public class ERMLEngine {
+
+    private final ERMLStore ermlStore;
+
+    private final Generators generators;
+
+    public void exec(ERML erml) throws ERMLException {
+        Scheduler sched = getScheduler(erml);
+        ermlStore.exec(sched);
+    }
+
+    public Scheduler getScheduler(ERML erml) throws ERMLException {
+        // convert to table exec
+        // 1. convert every single table to table exec
+        // 2. connect them graph
+        return new Scheduler(getTableExecMap(erml));
+    }
+
+    public Map<String, TableExec> getTableExecMap(ERML erml) throws ERMLException {
+        Map<String, TableExec> tableExecMap = new HashMap<>();
+        for (Map.Entry<String, Table> entry : erml.getTables().entrySet()) {
+            tableExecMap.put(entry.getKey(),
+                    getTableExec(entry.getValue(), erml.getMeta().getDataSourceInfos()));
+        }
+
+        // process joins
+        for (Map.Entry<String, Table> entry : erml.getTables().entrySet()) {
+            TableExec originTable = tableExecMap.get(entry.getKey());
+            Table.Joins tableJoins = entry.getValue().getJoins();
+            processJoins(originTable, tableExecMap, tableJoins.getLeftJoins(), true);
+            processJoins(originTable, tableExecMap, tableJoins.getRightJoins(), false);
+        }
+
+        return tableExecMap;
+    }
+
+    private void processJoins(TableExec originTable, Map<String, TableExec> tableExecMap,
+                              List<Table.Join> joins, boolean left) throws ERMLException {
+
+        if (left) {
+            for (Table.Join join : joins) {
+                TableExec dependTable = tableExecMap.get(join.getDepend());
+                JoinDependExecs joinDependExecs = getJoinDependExecs(originTable,
+                        dependTable, join.getMap());
+                originTable.addNormalColFamilies(new ColFamilyExec(
+                        joinDependExecs.joinColExecs,
+                        new LeftJoinGen(joinDependExecs.dependColExecs)
+                ));
+            }
+        } else {
+            List<ColExec> joinExecs = new ArrayList<>();
+            List<ColExec> dependExecs = new ArrayList<>();
+
+            for (Table.Join join : joins) {
+                TableExec dependTable = tableExecMap.get(join.getDepend());
+                JoinDependExecs joinDependExecs = getJoinDependExecs(originTable,
+                        dependTable, join.getMap());
+                joinExecs.addAll(joinDependExecs.joinColExecs);
+                dependExecs.addAll(joinDependExecs.dependColExecs);
+            }
+
+            originTable.addCriticalColFamilies(new ColFamilyExec(
+                    joinExecs,
+                    new RightJoinGen(dependExecs)
+            ));
+        }
+    }
+
+    @RequiredArgsConstructor
+    private static class JoinDependExecs {
+        private final List<ColExec> joinColExecs;
+        private final List<ColExec> dependColExecs;
+    }
+
+    /**
+     * @param originTable
+     * @param dependTable
+     * @param depend2table
+     * @return depend cols
+     * @throws ERMLException
+     */
+    private JoinDependExecs getJoinDependExecs(TableExec originTable,
+                                               TableExec dependTable, Map<String, String> depend2table)
+            throws ERMLException {
+        List<ColExec> joinColExecs = new ArrayList<>();
+        List<ColExec> dependColExecs = new ArrayList<>();
+        for (Map.Entry<String, String> entry : depend2table.entrySet()) {
+            String dependColName = entry.getKey();
+            String originColName = entry.getValue();
+            if (!dependTable.containsCol(dependColName)) {
+                throw new ERMLException(
+                        String.format("error in join, field '%s' not in table '%s'",
+                                dependColName, dependTable.getName())
+                );
+            }
+            if (originTable.containsCol(originColName)) {
+                throw new ERMLException(
+                        String.format("duplicate col '%s' in table '%s'",
+                                originColName, originTable.getName())
+                );
+            }
+            dependColExecs.add(dependTable.column(dependColName));
+            ColExec joinColExec = new ColExec(originColName);
+            originTable.addColumn(joinColExec);
+            joinColExecs.add(joinColExec);
+        }
+
+        return new JoinDependExecs(joinColExecs, dependColExecs);
+    }
+
+    private TableExec getTableExec(Table table,
+                                   Map<String, DataSourceInfo> infoMap) throws ERMLException {
+        // dataSourceInfo
+        DataSourceInfo dInfo;
+        if (StringUtils.isEmpty(table.getDs())) {
+            dInfo = null;
+        } else if (!infoMap.containsKey(table.getDs())) {
+            dInfo = null;
+            log.warn("datasource of name {} can not be found in meta", table.getDs());
+        } else {
+            dInfo = infoMap.get(table.getDs());
+        }
+
+        // col families (get generator)
+        List<ColFamilyExec> criticalCfExecs = new ArrayList<>();
+        List<ColFamilyExec> normalCfExecs = new ArrayList<>();
+        LinkedHashMap<String, ColExec> orderMap = new LinkedHashMap<>();
+        for (Table.ColFamily cf : table.getColFamilies()) {
+            List<ColExec> colExecs = new ArrayList<>();
+            for (String colName : cf.getCols()) {
+                if (orderMap.containsKey(colName)) {
+                    throw new ERMLException(
+                            String.format("duplicate col '%s' in table '%s'"
+                                    , colName, table.getName()));
+                }
+                ColExec colExec = new ColExec(colName);
+                orderMap.put(colName, colExec);
+                colExecs.add(colExec);
+            }
+
+            String field = cf.getField();
+            Generator generator = null;
+            if ("built-in".equals(field)) {
+                generator = generators.builtInGenerator(cf.getGenerator(),
+                        cf.getAttributes(),
+                        cf.getOtherLists());
+            } else {
+                generator = new FakerGen(field, cf.getGenerator());
+            }
+
+            ColFamilyExec colFamilyExec = new ColFamilyExec(colExecs, generator);
+            if (generator.dataNum() > 0) {
+                criticalCfExecs.add(colFamilyExec);
+            } else {
+                normalCfExecs.add(colFamilyExec);
+            }
+        }
+
+        // exclude column
+        Map<String, ColExec> excludes = new HashMap<>();
+        for (String excludeColName : table.getExcludes()) {
+            if (orderMap.containsKey(excludeColName)) {
+                throw new ERMLException(
+                        String.format("<exclude> '%s' column already define", excludeColName)
+                );
+            }
+            excludes.put(excludeColName, new ColExec(excludeColName));
+        }
+
+        return new TableExec(table.getName(), table.getNum(),
+                dInfo, criticalCfExecs, normalCfExecs, orderMap, excludes);
+    }
+
+
+}

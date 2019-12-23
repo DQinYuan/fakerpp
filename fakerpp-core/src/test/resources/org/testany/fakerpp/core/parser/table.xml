@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<table xmlns="https://github.com/dqinyuan/fakerpp"
+       name="user_shop" ds="mysql0">
+    <joins>
+        <rightjoin depend="dt">
+            <map from="dt"/>
+        </rightjoin>
+        <rightjoin depend="shop">
+            <map from="id">shop_id</map>
+        </rightjoin>
+        <leftjoin depend="user">
+            <map from="id">user_id</map>
+        </leftjoin>
+    </joins>
+    <col-families>
+        <number>
+            <random-double max-number-of-decimals="2" min="90" max="10000">
+                <cols>
+                    <col>amount</col>
+                    <col>mmmm</col>
+                </cols>
+            </random-double>
+        </number>
+        <built-in>
+            <enum>
+                <cols>
+                    <col>oppp</col>
+                </cols>
+                <options>
+                    <option>sdd</option>
+                    <option>dds</option>
+                </options>
+            </enum>
+        </built-in>
+    </col-families>
+    <excludes>
+        <exclude>id</exclude>
+    </excludes>
+</table>

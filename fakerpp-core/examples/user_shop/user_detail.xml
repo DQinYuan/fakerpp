@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<table xmlns="https://github.com/dqinyuan/fakerpp"
+       name="user_detail" ds="mysql0">
+    <joins>
+        <rightjoin depend="user">
+            <map from="name"/>
+            <map from="sex"/>
+            <map from="age"/>
+        </rightjoin>
+    </joins>
+    <col-families>
+        <built-in>
+            <str prefix="street_" len="3">
+                <cols>
+                    <col>address</col>
+                </cols>
+            </str>
+        </built-in>
+        <built-in>
+            <str len="30">
+                <cols>
+                    <col>description</col>
+                </cols>
+            </str>
+        </built-in>
+    </col-families>
+    <excludes>
+        <exclude>id</exclude>
+    </excludes>
+</table>
