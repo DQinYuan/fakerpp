@@ -3,11 +3,11 @@ package org.testany.fakerpp.core.engine.generator.builtin.base;
 import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.util.BiExpression;
 import org.testany.fakerpp.core.util.BiExpressionParser;
+import org.testany.fakerpp.core.util.SeedableThreadLocalRandom;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class DateBase {
 
@@ -86,7 +86,7 @@ public class DateBase {
     }
 
     public String random() {
-        long randomInterval = ThreadLocalRandom.current().nextLong(interval);
+        long randomInterval = SeedableThreadLocalRandom.nextLong(interval);
         return LocalDate.ofEpochDay(
                 startDate.toEpochDay() + randomInterval).format(dateFormatter);
     }

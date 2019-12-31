@@ -12,7 +12,7 @@ import java.util.Map;
 @EqualsAndHashCode
 public class Meta {
 
-    private Map<String, DataSourceInfo> dataSourceInfos;
+    private final Map<String, DataSourceInfo> dataSourceInfos;
 
     public Meta() {
         dataSourceInfos = new HashMap<>();

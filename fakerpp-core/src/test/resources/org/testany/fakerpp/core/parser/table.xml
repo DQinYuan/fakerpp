@@ -5,7 +5,7 @@
         <rightjoin depend="dt">
             <map from="dt"/>
         </rightjoin>
-        <rightjoin depend="shop">
+        <rightjoin depend="shop" random="true">
             <map from="id">shop_id</map>
         </rightjoin>
         <leftjoin depend="user">

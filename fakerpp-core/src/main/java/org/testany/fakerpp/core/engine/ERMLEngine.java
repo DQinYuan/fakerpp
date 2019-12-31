@@ -11,6 +11,7 @@ import org.testany.fakerpp.core.engine.domain.TableExec;
 import org.testany.fakerpp.core.engine.generator.FakerGen;
 import org.testany.fakerpp.core.engine.generator.Generator;
 import org.testany.fakerpp.core.engine.generator.Generators;
+import org.testany.fakerpp.core.engine.generator.joins.JoinDepend;
 import org.testany.fakerpp.core.engine.generator.joins.LeftJoinGen;
 import org.testany.fakerpp.core.engine.generator.joins.RightJoinGen;
 import org.testany.fakerpp.core.parser.ast.DataSourceInfo;
@@ -52,85 +53,13 @@ public class ERMLEngine {
         for (Map.Entry<String, Table> entry : erml.getTables().entrySet()) {
             TableExec originTable = tableExecMap.get(entry.getKey());
             Table.Joins tableJoins = entry.getValue().getJoins();
-            processJoins(originTable, tableExecMap, tableJoins.getLeftJoins(), true);
-            processJoins(originTable, tableExecMap, tableJoins.getRightJoins(), false);
+            originTable.leftJoin(TableExec.JoinInfo.getJoinInfos(tableExecMap,
+                    tableJoins.getLeftJoins()));
+            originTable.rightJoin(TableExec.JoinInfo.getJoinInfos(tableExecMap,
+                    tableJoins.getRightJoins()));
         }
 
         return tableExecMap;
-    }
-
-    private void processJoins(TableExec originTable, Map<String, TableExec> tableExecMap,
-                              List<Table.Join> joins, boolean left) throws ERMLException {
-
-        if (left) {
-            for (Table.Join join : joins) {
-                TableExec dependTable = tableExecMap.get(join.getDepend());
-                JoinDependExecs joinDependExecs = getJoinDependExecs(originTable,
-                        dependTable, join.getMap());
-                originTable.addNormalColFamilies(new ColFamilyExec(
-                        joinDependExecs.joinColExecs,
-                        new LeftJoinGen(joinDependExecs.dependColExecs)
-                ));
-            }
-        } else {
-            List<ColExec> joinExecs = new ArrayList<>();
-            List<ColExec> dependExecs = new ArrayList<>();
-
-            for (Table.Join join : joins) {
-                TableExec dependTable = tableExecMap.get(join.getDepend());
-                JoinDependExecs joinDependExecs = getJoinDependExecs(originTable,
-                        dependTable, join.getMap());
-                joinExecs.addAll(joinDependExecs.joinColExecs);
-                dependExecs.addAll(joinDependExecs.dependColExecs);
-            }
-
-            originTable.addCriticalColFamilies(new ColFamilyExec(
-                    joinExecs,
-                    new RightJoinGen(dependExecs)
-            ));
-        }
-    }
-
-    @RequiredArgsConstructor
-    private static class JoinDependExecs {
-        private final List<ColExec> joinColExecs;
-        private final List<ColExec> dependColExecs;
-    }
-
-    /**
-     * @param originTable
-     * @param dependTable
-     * @param depend2table
-     * @return depend cols
-     * @throws ERMLException
-     */
-    private JoinDependExecs getJoinDependExecs(TableExec originTable,
-                                               TableExec dependTable, Map<String, String> depend2table)
-            throws ERMLException {
-        List<ColExec> joinColExecs = new ArrayList<>();
-        List<ColExec> dependColExecs = new ArrayList<>();
-        for (Map.Entry<String, String> entry : depend2table.entrySet()) {
-            String dependColName = entry.getKey();
-            String originColName = entry.getValue();
-            if (!dependTable.containsCol(dependColName)) {
-                throw new ERMLException(
-                        String.format("error in join, field '%s' not in table '%s'",
-                                dependColName, dependTable.getName())
-                );
-            }
-            if (originTable.containsCol(originColName)) {
-                throw new ERMLException(
-                        String.format("duplicate col '%s' in table '%s'",
-                                originColName, originTable.getName())
-                );
-            }
-            dependColExecs.add(dependTable.column(dependColName));
-            ColExec joinColExec = new ColExec(originColName);
-            originTable.addColumn(joinColExec);
-            joinColExecs.add(joinColExec);
-        }
-
-        return new JoinDependExecs(joinColExecs, dependColExecs);
     }
 
     private TableExec getTableExec(Table table,

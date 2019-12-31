@@ -13,7 +13,7 @@ class StrGenTest extends Specification {
 
         expect:
         5.times {
-            def data = strGen.nextData()
+            def data = strGen.nextData()[0]
             assert data != null
             assert data.size() == 9
             assert data.startsWith(prefix)

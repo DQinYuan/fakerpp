@@ -2,10 +2,11 @@ package org.testany.fakerpp.core.engine.generator.builtin;
 
 import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.engine.generator.Generator;
+import org.testany.fakerpp.core.util.SeedableThreadLocalRandom;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class EnumGen implements Generator {
 
@@ -19,8 +20,10 @@ public class EnumGen implements Generator {
     }
 
     @Override
-    public String nextData() {
-        return options.get(ThreadLocalRandom.current().nextInt(options.size()));
+    public List<String> nextData() {
+        return Arrays.asList(
+                options.get(SeedableThreadLocalRandom.nextInt(options.size()))
+        );
     }
 
     @Override

@@ -2,6 +2,8 @@ package org.testany.fakerpp.core.engine.generator;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
+
 @RequiredArgsConstructor
 public class FakerGen implements Generator {
 
@@ -14,7 +16,7 @@ public class FakerGen implements Generator {
     }
 
     @Override
-    public String nextData() {
+    public List<String> nextData() {
         return null;
     }
 

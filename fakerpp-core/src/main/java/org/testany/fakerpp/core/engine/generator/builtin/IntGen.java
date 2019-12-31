@@ -2,8 +2,10 @@ package org.testany.fakerpp.core.engine.generator.builtin;
 
 import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.engine.generator.Generator;
+import org.testany.fakerpp.core.util.SeedableThreadLocalRandom;
 
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Arrays;
+import java.util.List;
 
 public class IntGen implements Generator {
 
@@ -18,8 +20,8 @@ public class IntGen implements Generator {
     }
 
     @Override
-    public String nextData() {
-        return String.valueOf(ThreadLocalRandom.current().nextInt(min, max));
+    public List<String> nextData() {
+        return Arrays.asList(String.valueOf(SeedableThreadLocalRandom.nextInt(min, max)));
     }
 
     @Override

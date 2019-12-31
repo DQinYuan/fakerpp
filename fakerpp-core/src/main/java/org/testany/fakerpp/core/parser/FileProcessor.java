@@ -34,25 +34,29 @@ import static org.joox.JOOX.$;
 @Getter
 public class FileProcessor {
 
-    private ERML erml;
+    private ERML.Builder ermlBuilder;
 
     public FileProcessor() {
-        erml = new ERML();
+        ermlBuilder = ERML.builder();
+    }
+
+    public ERML getERML() {
+        return ermlBuilder.build();
     }
 
     public void process(Path path) throws ERMLException {
         // meta directory
         if (Files.isDirectory(path) && path.endsWith("meta")) {
-            if (erml.getMeta() == null) {
+            if (ermlBuilder.meta() == null) {
                 Document doc = getDocument(path.resolve("meta.xml"), MetaSchema.getInstance());
-                erml.setMeta(parseMetaXml(doc));
+                ermlBuilder.meta(parseMetaXml(doc));
             }
             return;
         }
 
         // normal xml
         if (!Files.isDirectory(path) && path.getFileName().toString().endsWith(".xml")) {
-            erml.appendTable(parseTableXml(getDocument(path, FakerppSchema.getInstance())));
+            ermlBuilder.appendTable(parseTableXml(getDocument(path, FakerppSchema.getInstance())));
             return;
         }
     }
@@ -118,13 +122,14 @@ public class FileProcessor {
                                             map.put(from, to);
                                         }
                                     });
-                            Table.Join join = new Table.Join(map, $(ctx).attr("depend"));
                             switch ($(ctx).tag()) {
                                 case "leftjoin":
-                                    lefts.add(join);
+                                    lefts.add(new Table.Join(map, $(ctx).attr("depend"), false));
                                     break;
                                 case "rightjoin":
-                                    rights.add(join);
+                                    rights.add(new Table.Join(map, $(ctx).attr("depend"),
+                                            Boolean.parseBoolean($(ctx).attr("random"))
+                                    ));
                                     break;
                             }
                         }

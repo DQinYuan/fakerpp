@@ -28,6 +28,8 @@ public class Table {
         // from -> content
         private final Map<String, String> map;
         private final String depend;
+        // only valid in right join
+        private final boolean random;
     }
 
     @Getter

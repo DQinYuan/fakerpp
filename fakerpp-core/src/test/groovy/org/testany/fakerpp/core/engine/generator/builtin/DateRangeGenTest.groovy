@@ -18,7 +18,7 @@ class DateRangeGenTest extends Specification {
         def exps = ["2019-09-01", "2019-09-02", "2019-09-03", "2019-09-04"]
         dateRangeGen.dataNum() == exps.size()
         exps.each {
-            exp -> assert exp == dateRangeGen.nextData()
+            exp -> assert exp == dateRangeGen.nextData()[0]
         }
     }
 

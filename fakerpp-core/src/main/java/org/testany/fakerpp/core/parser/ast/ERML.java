@@ -1,31 +1,50 @@
 package org.testany.fakerpp.core.parser.ast;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Getter
+@RequiredArgsConstructor
 public class ERML {
 
-    private Meta meta;
-    private Map<String, Table> tables;
+    private final Meta meta;
+    private final Map<String, Table> tables;
 
-    public ERML() {
-        tables = new HashMap<>();
+    public static class Builder {
+        private Meta meta;
+        private Map<String, Table> tables;
+
+        public Builder() {
+            tables = new HashMap<>();
+        }
+
+        public void meta(Meta meta) {
+            this.meta = meta;
+        }
+
+        public Meta meta() {
+            return this.meta;
+        }
+
+        /**
+         *
+         * @param table
+         * @return if table duplicate
+         */
+        public boolean appendTable(Table table) {
+            Table oldValue = this.tables.put(table.getName(), table);
+            return oldValue == null;
+        }
+
+        public ERML build() {
+            return new ERML(this.meta, this.tables);
+        }
     }
 
-    /**
-     *
-     * @param table
-     * @return if table duplicate
-     */
-    public boolean appendTable(Table table) {
-        Table oldValue = tables.put(table.getName(), table);
-        return oldValue == null;
-    }
-
-    public void setMeta(Meta meta) {
-        this.meta = meta;
+    public static Builder builder() {
+        return new Builder();
     }
 }

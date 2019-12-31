@@ -13,7 +13,7 @@ class EnumGenTest extends Specification {
 
         then:
         5.times {
-            assert options.contains(enumGen.nextData())
+            assert options.contains(enumGen.nextData()[0])
         }
 
     }

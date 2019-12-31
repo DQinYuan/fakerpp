@@ -10,7 +10,7 @@ class DateGenTest extends Specification {
 
     void assertInRange(DateGen dateGen, DateTimeFormatter formatter, long rangeLeft, long rangeRight) {
         5.times {
-            def data = dateGen.nextData()
+            def data = dateGen.nextData()[0]
             def dataEpoch = LocalDate.parse(data, formatter).toEpochDay()
             assert dataEpoch >= rangeLeft
             assert dataEpoch < rangeRight

@@ -14,7 +14,7 @@ class IntGenTest extends Specification {
 
         then:
         5.times {
-            def data = intGen.nextData().toInteger()
+            def data = intGen.nextData()[0].toInteger()
             assert data >= min
             assert data < max
         }

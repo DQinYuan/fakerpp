@@ -19,19 +19,16 @@ class FileProcessorTest extends Specification {
 
     def "parse meta.xml to Meta Object"() {
         expect:
+        def meta = new Meta()
+        meta.appendDataSourceInfo(new DataSourceInfo("mysql0", "mysql",
+                "s", "mysql0Url",
+                "mysql0User", "123456"))
+        meta.appendDataSourceInfo(new DataSourceInfo(
+                "redis", "redis",
+                "default", "redisUrl",
+                "redisUser", "redis123"))
         FileProcessor.parseMetaXml(getDocFromClassPath("meta.xml", MetaSchema.getInstance())) ==
-                new Meta(dataSourceInfos:
-                        [
-                                mysql0:
-                                        new DataSourceInfo("mysql0", "mysql",
-                                                "s", "mysql0Url",
-                                                "mysql0User", "123456"),
-                                redis :
-                                        new DataSourceInfo(
-                                                "redis", "redis",
-                                                "default", "redisUrl",
-                                                "redisUser", "redis123")
-                        ])
+                meta
     }
 
     def "parse table.xml to Table object"() {
@@ -43,8 +40,9 @@ class FileProcessorTest extends Specification {
                         "mysql0",
                         0,
                         new Table.Joins(
-                                [new Table.Join(["id":"user_id"], "user")],
-                                [new Table.Join(["dt":"dt"], "dt"), new Table.Join(["id":"shop_id"], "shop")]
+                                [new Table.Join(["id":"user_id"], "user", false)],
+                                [new Table.Join(["dt":"dt"], "dt", false),
+                                 new Table.Join(["id":"shop_id"], "shop", true)]
                         ),
 
                         [new Table.ColFamily(
