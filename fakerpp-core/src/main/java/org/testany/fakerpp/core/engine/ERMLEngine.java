@@ -8,12 +8,9 @@ import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.engine.domain.ColExec;
 import org.testany.fakerpp.core.engine.domain.ColFamilyExec;
 import org.testany.fakerpp.core.engine.domain.TableExec;
-import org.testany.fakerpp.core.engine.generator.FakerGen;
+import org.testany.fakerpp.core.engine.generator.faker.Fakers;
 import org.testany.fakerpp.core.engine.generator.Generator;
 import org.testany.fakerpp.core.engine.generator.Generators;
-import org.testany.fakerpp.core.engine.generator.joins.JoinDepend;
-import org.testany.fakerpp.core.engine.generator.joins.LeftJoinGen;
-import org.testany.fakerpp.core.engine.generator.joins.RightJoinGen;
 import org.testany.fakerpp.core.parser.ast.DataSourceInfo;
 import org.testany.fakerpp.core.parser.ast.ERML;
 import org.testany.fakerpp.core.parser.ast.Table;
@@ -30,6 +27,8 @@ public class ERMLEngine {
 
     private final Generators generators;
 
+    private final Fakers fakers;
+
     public void exec(ERML erml) throws ERMLException {
         Scheduler sched = getScheduler(erml);
         ermlStore.exec(sched);
@@ -39,6 +38,8 @@ public class ERMLEngine {
         // convert to table exec
         // 1. convert every single table to table exec
         // 2. connect them graph
+        // 3. construct graph
+
         return new Scheduler(getTableExecMap(erml));
     }
 
@@ -46,7 +47,8 @@ public class ERMLEngine {
         Map<String, TableExec> tableExecMap = new HashMap<>();
         for (Map.Entry<String, Table> entry : erml.getTables().entrySet()) {
             tableExecMap.put(entry.getKey(),
-                    getTableExec(entry.getValue(), erml.getMeta().getDataSourceInfos()));
+                    getTableExec(entry.getValue(), erml.getMeta().getDataSourceInfos(),
+                            erml.getMeta().getLang()));
         }
 
         // process joins
@@ -63,7 +65,8 @@ public class ERMLEngine {
     }
 
     private TableExec getTableExec(Table table,
-                                   Map<String, DataSourceInfo> infoMap) throws ERMLException {
+                                   Map<String, DataSourceInfo> infoMap,
+                                   String defaultLang) throws ERMLException {
         // dataSourceInfo
         DataSourceInfo dInfo;
         if (StringUtils.isEmpty(table.getDs())) {
@@ -99,7 +102,11 @@ public class ERMLEngine {
                         cf.getAttributes(),
                         cf.getOtherLists());
             } else {
-                generator = new FakerGen(field, cf.getGenerator());
+                generator = fakers.fakerGenerator("".equals(cf.getLang()) ? defaultLang: cf.getLang(),
+                        field,
+                        cf.getGenerator(),
+                        cf.getAttributes(),
+                        cf.getOtherLists());
             }
 
             ColFamilyExec colFamilyExec = new ColFamilyExec(colExecs, generator);

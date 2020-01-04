@@ -19,4 +19,8 @@ public class ColExec {
     public int size() {
         return data.size();
     }
+
+    public void add(String newData) {
+        data.add(newData);
+    }
 }

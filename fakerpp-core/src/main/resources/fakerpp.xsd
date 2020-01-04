@@ -156,79 +156,91 @@
 
     <!-- faker generators -->
 
+    <xs:complexType name="baseFakerFieldType">
+        <xs:attribute name="lang" default="default"/>
+    </xs:complexType>
+
     <xs:complexType name="nameType">
-        <xs:choice>
-            <xs:element type="baseGenType" name="name"/>
-            <xs:element type="baseGenType" name="name-with-middle"/>
-            <xs:element type="baseGenType" name="full-name"/>
-            <xs:element type="baseGenType" name="first-name"/>
-            <xs:element type="baseGenType" name="last-name"/>
-            <xs:element type="baseGenType" name="prefix"/>
-            <xs:element type="baseGenType" name="suffix"/>
-            <xs:element type="baseGenType" name="title"/>
-            <xs:element type="baseGenType" name="username"/>
-            <xs:element type="baseGenType" name="blood-group"/>
-        </xs:choice>
+        <xs:complexContent>
+            <xs:extension base="baseFakerFieldType">
+                <xs:choice>
+                    <xs:element type="baseGenType" name="name"/>
+                    <xs:element type="baseGenType" name="name-with-middle"/>
+                    <xs:element type="baseGenType" name="full-name"/>
+                    <xs:element type="baseGenType" name="first-name"/>
+                    <xs:element type="baseGenType" name="last-name"/>
+                    <xs:element type="baseGenType" name="prefix"/>
+                    <xs:element type="baseGenType" name="suffix"/>
+                    <xs:element type="baseGenType" name="title"/>
+                    <xs:element type="baseGenType" name="username"/>
+                    <xs:element type="baseGenType" name="blood-group"/>
+                </xs:choice>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
     <xs:complexType name="numberType">
-        <xs:choice>
-            <xs:element type="baseGenType" name="random-digit"/>
-            <xs:element type="baseGenType" name="random-digit-not-zero"/>
-            <xs:element name="number-between">
-                <xs:complexType>
-                    <xs:complexContent>
-                        <xs:extension base="baseGenType">
-                            <!-- 这如果自动生成的话考虑**多态**需要进行类型推导 -->
-                            <xs:attribute name="min" type="xs:long" use="required"/>
-                            <xs:attribute name="max" type="xs:long" use="required"/>
-                        </xs:extension>
-                    </xs:complexContent>
-                </xs:complexType>
-            </xs:element>
-            <xs:element name="random-number">
-                <xs:complexType>
-                    <xs:complexContent>
-                        <xs:extension base="baseGenType">
-                            <xs:attribute name="number-of-digits" type="xs:int" use="required"/>
-                            <xs:attribute name="strict" type="xs:boolean" use="required"/>
-                        </xs:extension>
-                    </xs:complexContent>
-                </xs:complexType>
-            </xs:element>
-            <xs:element name="random-double">
-                <xs:complexType>
-                    <xs:complexContent>
-                        <xs:extension base="baseGenType">
-                            <xs:attribute name="max-number-of-decimals" type="xs:int" use="required"/>
-                            <!--多态-->
-                            <xs:attribute name="min" type="xs:long" use="required"/>
-                            <xs:attribute name="max" type="xs:long" use="required"/>
-                        </xs:extension>
-                    </xs:complexContent>
-                </xs:complexType>
-            </xs:element>
-            <xs:element name="decimal-between">
-                <xs:complexType>
-                    <xs:complexContent>
-                        <xs:extension base="baseGenType">
-                            <xs:attribute name="min" type="xs:long" use="required"/>
-                            <xs:attribute name="max" type="xs:long" use="required"/>
-                        </xs:extension>
-                    </xs:complexContent>
-                </xs:complexType>
-            </xs:element>
-            <xs:element name="digits">
-                <xs:complexType>
-                    <xs:complexContent>
-                        <xs:extension base="baseGenType">
-                            <!-- 这里不需要required是因为多态 -->
-                            <xs:attribute name="count" type="xs:long"/>
-                        </xs:extension>
-                    </xs:complexContent>
-                </xs:complexType>
-            </xs:element>
-        </xs:choice>
+        <xs:complexContent>
+            <xs:extension base="baseFakerFieldType">
+                <xs:choice>
+                    <xs:element type="baseGenType" name="random-digit"/>
+                    <xs:element type="baseGenType" name="random-digit-not-zero"/>
+                    <xs:element name="number-between">
+                        <xs:complexType>
+                            <xs:complexContent>
+                                <xs:extension base="baseGenType">
+                                    <!-- 这如果自动生成的话考虑**多态**需要进行类型推导 -->
+                                    <xs:attribute name="min" type="xs:long" use="required"/>
+                                    <xs:attribute name="max" type="xs:long" use="required"/>
+                                </xs:extension>
+                            </xs:complexContent>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="random-number">
+                        <xs:complexType>
+                            <xs:complexContent>
+                                <xs:extension base="baseGenType">
+                                    <xs:attribute name="number-of-digits" type="xs:int" use="required"/>
+                                    <xs:attribute name="strict" type="xs:boolean" use="required"/>
+                                </xs:extension>
+                            </xs:complexContent>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="random-double">
+                        <xs:complexType>
+                            <xs:complexContent>
+                                <xs:extension base="baseGenType">
+                                    <xs:attribute name="max-number-of-decimals" type="xs:int" use="required"/>
+                                    <!--多态-->
+                                    <xs:attribute name="min" type="xs:long" use="required"/>
+                                    <xs:attribute name="max" type="xs:long" use="required"/>
+                                </xs:extension>
+                            </xs:complexContent>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="decimal-between">
+                        <xs:complexType>
+                            <xs:complexContent>
+                                <xs:extension base="baseGenType">
+                                    <xs:attribute name="min" type="xs:long" use="required"/>
+                                    <xs:attribute name="max" type="xs:long" use="required"/>
+                                </xs:extension>
+                            </xs:complexContent>
+                        </xs:complexType>
+                    </xs:element>
+                    <xs:element name="digits">
+                        <xs:complexType>
+                            <xs:complexContent>
+                                <xs:extension base="baseGenType">
+                                    <!-- 这里不需要required是因为多态 -->
+                                    <xs:attribute name="count" type="xs:long"/>
+                                </xs:extension>
+                            </xs:complexContent>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:choice>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
 

@@ -39,6 +39,7 @@ public class Table {
     public static class ColFamily {
         private final List<String> cols;
         private final String field;
+        private final String lang;
         private final String generator;
         private final Map<String, String> attributes;
         private final Map<String, List<String>> otherLists;

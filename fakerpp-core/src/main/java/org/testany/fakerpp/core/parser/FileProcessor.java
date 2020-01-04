@@ -1,5 +1,6 @@
 package org.testany.fakerpp.core.parser;
 
+import com.google.common.base.Strings;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -86,12 +87,12 @@ public class FileProcessor {
 
 
     public static Meta parseMetaXml(Document document) {
-        Meta meta = new Meta();
+        Meta.Builder builder = Meta.builder();
         $(document)
                 .child("datasources")
                 .children()
                 .each(ctx ->
-                        meta.appendDataSourceInfo(
+                        builder.appendDataSourceInfo(
                                 new DataSourceInfo(
                                         $(ctx).attr("name"),
                                         $(ctx).attr("type"),
@@ -101,7 +102,8 @@ public class FileProcessor {
                                         $(ctx).child("passwd").text())
                         )
                 );
-        return meta;
+        builder.lang($(document).attr("lang"));
+        return builder.build();
     }
 
     public static Table.Joins parseJoins(Match joinsCtx) {
@@ -194,10 +196,10 @@ public class FileProcessor {
                 .children()
                 .texts(),
                 $(colFamilyCtx).tag(),
+                Strings.nullToEmpty($(colFamilyCtx).attr("lang")),
                 generatorTag.tag(),
                 attrs,
                 otherLists);
-
     }
 
 }

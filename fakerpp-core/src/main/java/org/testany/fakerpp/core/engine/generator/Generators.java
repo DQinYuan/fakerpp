@@ -1,11 +1,11 @@
 package org.testany.fakerpp.core.engine.generator;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.WordUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.testany.fakerpp.core.ERMLException;
+import org.testany.fakerpp.core.util.MhAndClass;
+import org.testany.fakerpp.core.util.MyStringUtil;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -20,24 +20,18 @@ public class Generators {
     private static final String GEN_CLASS_TEMPLATE =
             "org.testany.fakerpp.core.engine.generator.builtin.%sGen";
 
-    @RequiredArgsConstructor
-    private static class GenClass {
-        private final Class clazz;
-        private final MethodHandle mh;
-    }
-
     @Cacheable
-    public GenClass getConsByBuiltInTag(String name) throws ERMLException {
-        String camelCaseName = WordUtils.capitalizeFully(name, '-')
-                .replaceAll("-", "");
+    public MhAndClass getConsByBuiltInTag(String name) throws ERMLException {
+        String camelCaseName = MyStringUtil.delimit2Camel(name, true);
         String qualifiedName = String.format(GEN_CLASS_TEMPLATE, camelCaseName);
         try {
             Class genClass = Class.forName(qualifiedName);
             MethodHandle constructor = MethodHandles.lookup().findConstructor(genClass,
                     MethodType.methodType(void.class));
-            return new GenClass(genClass,
+            return new MhAndClass(
                     // https://stackoverflow.com/questions/27278314/why-cant-i-invokeexact-here-even-though-the-methodtype-is-ok
-                    constructor.asType(constructor.type().changeReturnType(Generator.class)));
+                    constructor.asType(constructor.type().changeReturnType(Generator.class)),
+                    genClass);
         } catch (ClassNotFoundException e) {
             throw new ERMLException(String.format("built-in generator '%s' can not be found",
                     name));
@@ -48,19 +42,14 @@ public class Generators {
         }
     }
 
-    @RequiredArgsConstructor
-    private static class GenField {
-        private final Class fieldClass;
-        private final MethodHandle setter;
-    }
-
     @Cacheable
-    public GenField getFieldSetter(Class clazz, String field) throws ERMLException {
+    public MhAndClass getFieldSetter(Class clazz, String field) throws ERMLException {
         try {
             Class fType = clazz.getDeclaredField(field).getType();
             MethodHandle setter = MethodHandles.lookup().findSetter(clazz, field, fType);
-            return new GenField(fType,
-                    setter.asType(setter.type().changeParameterType(0, Generator.class)));
+            return new MhAndClass(
+                    setter.asType(setter.type().changeParameterType(0, Generator.class)),
+                    fType);
         } catch (NoSuchFieldException | IllegalAccessException e) {
             throw new ERMLException(String.format("attr %s not exist", field));
         }
@@ -71,35 +60,35 @@ public class Generators {
                                       Map<String, String> attrs,
                                       Map<String, List<String>> listAttrs) throws ERMLException {
         // construct
-        GenClass generatorCM =
+        MhAndClass generatorCM =
                 getConsByBuiltInTag(name);
         Generator generator = null;
         try {
-            generator = (Generator) generatorCM.mh.invokeExact();
+            generator = (Generator) generatorCM.getMh().invokeExact();
         } catch (Throwable ignore) {
             ignore.printStackTrace();
         }
 
         // attrs
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            GenField gField = getFieldSetter(generatorCM.clazz, entry.getKey());
+            MhAndClass gField = getFieldSetter(generatorCM.getClazz(), entry.getKey());
             String attrValue = entry.getValue();
-            String fieldType = gField.fieldClass.getName();
+            String fieldType = gField.getClazz().getName();
             if ("int".equals(fieldType)) {
                 try {
-                    gField.setter.invokeExact(generator, Integer.parseInt(attrValue));
+                    gField.getMh().invokeExact(generator, Integer.parseInt(attrValue));
                 } catch (Throwable ignore) {
                     ignore.printStackTrace();
                 }
             } else if ("long".equals(fieldType)) {
                 try {
-                    gField.setter.invokeExact(generator, Long.parseLong(attrValue));
+                    gField.getMh().invokeExact(generator, Long.parseLong(attrValue));
                 } catch (Throwable ignore) {
                     ignore.printStackTrace();
                 }
             } else if ("java.lang.String".equals(fieldType)) {
                 try {
-                    gField.setter.invokeExact(generator, attrValue);
+                    gField.getMh().invokeExact(generator, attrValue);
                 } catch (Throwable ignore) {
                     ignore.printStackTrace();
                 }
@@ -111,8 +100,8 @@ public class Generators {
 
         for (Map.Entry<String, List<String>> entry : listAttrs.entrySet()) {
             try {
-                getFieldSetter(generatorCM.clazz, entry.getKey())
-                        .setter.invokeExact(generator, entry.getValue());
+                getFieldSetter(generatorCM.getClazz(), entry.getKey())
+                        .getMh().invokeExact(generator, entry.getValue());
             } catch (Throwable ignore) {
                 ignore.printStackTrace();
             }

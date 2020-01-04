@@ -1,5 +1,6 @@
 package org.testany.fakerpp.core.engine.domain;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -13,10 +14,9 @@ import org.testany.fakerpp.core.parser.ast.DataSourceInfo;
 import org.testany.fakerpp.core.parser.ast.Table;
 import org.testany.fakerpp.core.util.ExceptionConsumer;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,7 +25,6 @@ import static org.testany.fakerpp.core.util.ExceptionConsumer.sneaky;
 @Slf4j
 @RequiredArgsConstructor
 @Getter
-@EqualsAndHashCode
 public class TableExec {
 
     private final String name;
@@ -42,12 +41,50 @@ public class TableExec {
     // exclude columns
     private final Map<String, ColExec> excludes;
 
+    private List<TableExec> depends = new ArrayList<>();
+
+    /**
+     * iterator all col family of this table
+     * first criticalColFamilies, then colFamilies
+     *
+     * @param consumer
+     */
+    private void forEachColFamily(
+            ExceptionConsumer<ColFamilyExec, ERMLException> consumer) throws ERMLException {
+        for (ColFamilyExec cf : criticalColFamilies) {
+            consumer.accept(cf);
+        }
+        for (ColFamilyExec cf : colFamilies) {
+            consumer.accept(cf);
+        }
+    }
 
     public List<String> columns() {
-        return null;
+        ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+        try {
+            forEachColFamily(
+                    cf -> builder.addAll(cf
+                            .getCols().stream()
+                            .map(ColExec::getName)
+                            .collect(Collectors.toList()))
+            );
+        } catch (ERMLException ignore) {
+        }
+        return builder.build();
     }
 
     public void forEach(ExceptionConsumer<List<String>, ERMLException> consumer) throws ERMLException {
+        long finalDataNum = criticalColFamilies.stream()
+                .map(ColFamilyExec::dataNum)
+                .min(Long::compareTo)
+                .orElseThrow(() -> new ERMLException("data num decide fail"));
+        for (int i = 0; i < finalDataNum; i++) {
+            ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+            forEachColFamily(
+                    cf -> builder.addAll(cf.nextData())
+            );
+            consumer.accept(builder.build());
+        }
     }
 
     public boolean containsCol(String colName) {
@@ -138,6 +175,8 @@ public class TableExec {
             columns.put(joinColExec.getName(), joinColExec);
             joinColExecs.add(joinColExec);
         }
+
+        depends.add(dependTable);
 
         return new JoinDepend(joinColExecs, dependColExecs);
     }

@@ -19,16 +19,17 @@ class FileProcessorTest extends Specification {
 
     def "parse meta.xml to Meta Object"() {
         expect:
-        def meta = new Meta()
-        meta.appendDataSourceInfo(new DataSourceInfo("mysql0", "mysql",
+        def metaBuilder = Meta.builder()
+        metaBuilder.lang("en")
+        metaBuilder.appendDataSourceInfo(new DataSourceInfo("mysql0", "mysql",
                 "s", "mysql0Url",
                 "mysql0User", "123456"))
-        meta.appendDataSourceInfo(new DataSourceInfo(
+        metaBuilder.appendDataSourceInfo(new DataSourceInfo(
                 "redis", "redis",
                 "default", "redisUrl",
                 "redisUser", "redis123"))
         FileProcessor.parseMetaXml(getDocFromClassPath("meta.xml", MetaSchema.getInstance())) ==
-                meta
+                metaBuilder.build()
     }
 
     def "parse table.xml to Table object"() {
@@ -40,21 +41,31 @@ class FileProcessorTest extends Specification {
                         "mysql0",
                         0,
                         new Table.Joins(
-                                [new Table.Join(["id":"user_id"], "user", false)],
-                                [new Table.Join(["dt":"dt"], "dt", false),
-                                 new Table.Join(["id":"shop_id"], "shop", true)]
+                                [new Table.Join(["id": "user_id"], "user", false)],
+                                [new Table.Join(["dt": "dt"], "dt", false),
+                                 new Table.Join(["id": "shop_id"], "shop", true)]
                         ),
 
                         [new Table.ColFamily(
                                 ["amount", "mmmm"],
                                 "number",
+                                "zh-CN",
                                 "random-double",
                                 ["max-number-of-decimals": "2", min: "90", max: "10000"],
                                 [:]
                         ),
                          new Table.ColFamily(
+                                 ["name"],
+                                 "name",
+                                 "default",
+                                 "full-name",
+                                 [:],
+                                 [:]
+                         ),
+                         new Table.ColFamily(
                                  ["oppp"],
                                  "built-in",
+                                 "",
                                  "enum",
                                  [:],
                                  [options: ["sdd", "dds"]]

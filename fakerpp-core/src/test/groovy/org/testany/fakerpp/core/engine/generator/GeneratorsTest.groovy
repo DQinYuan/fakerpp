@@ -28,7 +28,7 @@ class GeneratorsTest extends Specification {
     def "get built-in class field setter"() {
         given:
         def gField = generators.getFieldSetter(clazz, fieldName)
-        gField.setter.invokeWithArguments(instance, setVal)
+        gField.mh.invokeWithArguments(instance, setVal)
 
         expect:
         instance.@"${fieldName}" == setVal

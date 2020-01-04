@@ -2,7 +2,7 @@
 <table xmlns="https://github.com/dqinyuan/fakerpp"
        name="user" num="15">
     <col-families>
-        <name>
+        <name lang="zh-CN">
             <full-name>
                 <cols>
                     <col>name</col>

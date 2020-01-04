@@ -30,6 +30,7 @@ public class ERMLParser {
         } catch (IOException e) {
             throw new ERMLException("can not access path" + path, e);
         }
+
         return processor.getERML();
     }
 

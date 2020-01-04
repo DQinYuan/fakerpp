@@ -9,6 +9,7 @@
             <xs:sequence>
                 <xs:element name="datasources" type="datasourcesType"/>
             </xs:sequence>
+            <xs:attribute name="lang" type="xs:string" default="en"/>
         </xs:complexType>
     </xs:element>
 

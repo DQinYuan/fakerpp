@@ -13,7 +13,7 @@
         </leftjoin>
     </joins>
     <col-families>
-        <number>
+        <number lang="zh-CN">
             <random-double max-number-of-decimals="2" min="90" max="10000">
                 <cols>
                     <col>amount</col>
@@ -21,6 +21,13 @@
                 </cols>
             </random-double>
         </number>
+        <name>
+            <full-name>
+                <cols>
+                    <col>name</col>
+                </cols>
+            </full-name>
+        </name>
         <built-in>
             <enum>
                 <cols>

@@ -18,7 +18,7 @@ class ERMLEngineTest extends Specification {
     ERMLEngine engine
 
     def setupSpec() {
-        engine = new ERMLEngine(null, new Generators())
+        engine = new ERMLEngine(null, new Generators(), null)
     }
 
     def "parse erml to tableExec"() {
@@ -26,8 +26,9 @@ class ERMLEngineTest extends Specification {
         def m0Ds = new DataSourceInfo("mysql0", "mysql",
                 "s", "mysql0Url",
                 "mysql0User", "123456")
-        def meta = new Meta()
-        meta.appendDataSourceInfo(m0Ds)
+        def metaBuilder = Meta.builder()
+        metaBuilder.appendDataSourceInfo(m0Ds)
+        metaBuilder.lang("en")
         def tables = [
                 "user_shop": new Table(
                         "user_shop",
@@ -41,6 +42,7 @@ class ERMLEngineTest extends Specification {
                         [new Table.ColFamily(
                                 ["oppp"],
                                 "built-in",
+                                "",
                                 "enum",
                                 [:],
                                 [options: ["sdd", "dds"]]
@@ -63,6 +65,7 @@ class ERMLEngineTest extends Specification {
                         [new Table.ColFamily(
                                 ["dt"],
                                 "built-in",
+                                "",
                                 "date-range",
                                 [:],
                                 [:]
@@ -79,7 +82,7 @@ class ERMLEngineTest extends Specification {
                 )
         ]
         def ermlBuilder = ERML.builder()
-        ermlBuilder.meta(meta)
+        ermlBuilder.meta(metaBuilder.build())
         tables.each {k, v -> ermlBuilder.appendTable(v)}
         def erml = ermlBuilder.build()
 

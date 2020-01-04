@@ -16,7 +16,7 @@ public interface Generator {
      *
      * @return generated data. null means it can not generate data any more
      */
-    List<String> nextData();
+    List<String> nextData() throws ERMLException;
 
     /**
      * number of data it can generate
