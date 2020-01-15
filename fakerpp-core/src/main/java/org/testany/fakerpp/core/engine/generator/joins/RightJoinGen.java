@@ -7,12 +7,15 @@ import lombok.RequiredArgsConstructor;
 import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.engine.domain.ColExec;
 import org.testany.fakerpp.core.engine.generator.Generator;
+import org.testany.fakerpp.core.util.CheckUtil;
 import org.testany.fakerpp.core.util.SeedableThreadLocalRandom;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.testany.fakerpp.core.util.ExceptionConsumer.sneakyConsumer;
 
 @RequiredArgsConstructor
 public class RightJoinGen implements Generator {
@@ -85,10 +88,21 @@ public class RightJoinGen implements Generator {
     public void init() throws ERMLException {
     }
 
+    private void initCheck(List<Dimension> dimensions) throws ERMLException {
+        dimensions.stream().map(Dimension::getColExecs)
+                .forEach(sneakyConsumer(CheckUtil::checkColsSizeIdentity));
+    }
+
     /**
      * initData before nextData and dataNum
      */
     private void initData() {
+        try {
+            initCheck(fixedDimension);
+            initCheck(randomDimension);
+        } catch (ERMLException e) {
+            throw new RuntimeException(e);
+        }
         //dimension row list
         this.randomDimenRows = getRowLists(randomDimension);
         List<RowList> fixedColsByRow =
@@ -194,7 +208,7 @@ public class RightJoinGen implements Generator {
         }
 
         return SeedableThreadLocalRandom
-                .nextInt(start + 1, bound);
+                .nextInt(start + 1, bound + 1);
     }
 
     private List<RowList> getRowLists(List<Dimension> dimensions) {
@@ -219,7 +233,6 @@ public class RightJoinGen implements Generator {
         public RowList toRowList() {
             return new RowList(cols);
         }
-
     }
 
     @RequiredArgsConstructor

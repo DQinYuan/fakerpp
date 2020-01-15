@@ -14,20 +14,19 @@ class FakersTest extends Specification {
     }
 
     def "get faker gen"(String field, String generator,
-                        Map<String, String> attrs, Map<String, List<String>> listAttrs) {
+                        Map<String, String> attrs) {
         expect:
         def fakerGen = fakers.fakerGenerator("en", field,
                 generator,
-                attrs,
-                listAttrs
+                attrs
         )
         fakerGen.nextData()
 
         where:
-        field    | generator       | attrs                                          | listAttrs
-        "number" | "random-double" | ["maxNumberOfDecimals": 3, "min": 1, "max": 9] | [:]
-        "beer"   | "name"          | [:]                                            | [:]
-        "name"   | "full-name"     | [:]                                            | [:]
+        field    | generator       | attrs
+        "number" | "random-double" | ["max-number-of-decimals": "3", "min": "1", "max": "9"]
+        "beer"   | "name"          | [:]
+        "name"   | "full-name"     | [:]
 
     }
 

@@ -1,5 +1,6 @@
 package org.testany.fakerpp.core.engine.generator.joins
 
+import org.testany.fakerpp.core.ERMLException
 import org.testany.fakerpp.core.util.SeedableThreadLocalRandom
 import spock.lang.Specification
 
@@ -59,7 +60,7 @@ class RightJoinGenTest extends Specification {
         }
     }
 
-    def "right join with on random col family"() {
+    def "right join with one random col family"() {
         given:
         def rowData = [
                 ["a1", "b1"],
@@ -75,17 +76,17 @@ class RightJoinGenTest extends Specification {
         SeedableThreadLocalRandom.setSeed(0)
         // number in `data` field represent row number in rowData (to slice it)
         def seedExpect = [
-                [count: 2, data: [0, 1], datanum: 2],
-                [count: 1, data: [1], datanum: 1],
-                [count: 1, data: [2], datanum: 1]
+                [count: 2, data: [0, 1]],
+                [count: 2, data: [1, 2]],
+                [count: 1, data: [2]]
         ]
 
         then:
-        3.times { i ->
+        seedExpect.size().times { i ->
             def rightJoinGen = build(builder)
             def expect = seedExpect[i]
             expectSeq(rightJoinGen, rowData[expect.data], expect.count)
-            assert rightJoinGen.dataNum() == expect.datanum
+            assert rightJoinGen.dataNum() == expect.count
         }
     }
 
@@ -174,5 +175,21 @@ class RightJoinGenTest extends Specification {
         expectSeq(rightJoinGen, exp, 6)
     }
 
+    def "invalid dimension"() {
+        given:
+        def rowData =
+                [["a1", "b1"],
+                 ["a2"]]
+        def builder = RightJoinGen.builder()
+
+        when:
+        addDimension(builder, "invalid", [["a1", "a2"], ["b1"]], false)
+        def gen = build(builder)
+        gen.nextData()
+
+        then:
+        RuntimeException e = thrown()
+        e.getCause() instanceof ERMLException
+    }
 
 }

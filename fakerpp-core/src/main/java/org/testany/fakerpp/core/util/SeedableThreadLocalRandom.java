@@ -1,5 +1,9 @@
 package org.testany.fakerpp.core.util;
 
+import com.github.javafaker.Faker;
+import org.apache.commons.lang3.RandomStringUtils;
+
+import java.util.Locale;
 import java.util.Random;
 
 public class SeedableThreadLocalRandom {
@@ -45,6 +49,25 @@ public class SeedableThreadLocalRandom {
      */
     public static int nextInt(int origin, int bound) {
         return origin + threadLocal.get().nextInt(bound - origin);
+    }
+
+    /**
+     * <p>Creates a random string whose length is the number of characters
+     * specified.</p>
+     *
+     * <p>Characters will be chosen from the set of Latin alphabetic
+     * characters (a-z, A-Z) and the digits 0-9.</p>
+     *
+     * @param count  the length of random string to create
+     * @return the random string
+     */
+    public static String randomAlphanumeric(final int count) {
+        return RandomStringUtils.random(count, 0, 0, true,
+                true, null, threadLocal.get());
+    }
+
+    public static Faker newFaker(String lang) {
+        return new Faker(new Locale(lang), threadLocal.get());
     }
 
 

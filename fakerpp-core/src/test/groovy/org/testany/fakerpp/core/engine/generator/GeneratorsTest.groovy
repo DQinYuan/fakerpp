@@ -34,15 +34,15 @@ class GeneratorsTest extends Specification {
         instance.@"${fieldName}" == setVal
 
         where:
-        clazz        | instance     | fieldName | setVal
-        IntGen.class | new IntGen() | "min"     | 10001
-        DateGen.class| new DateGen()| "end"     | "noenow"
-        EnumGen.class| new EnumGen()| "options" | ["aaa", "bbb"]
+        clazz         | instance      | fieldName | setVal
+        IntGen.class  | new IntGen()  | "min"     | 10001
+        DateGen.class | new DateGen() | "end"     | "noenow"
+        EnumGen.class | new EnumGen() | "options" | ["aaa", "bbb"]
     }
 
-    def "get built in generator object"(String tag, Map attrs, Map listAttrs, Map exp) {
+    def "get built in generator object"(String tag, Map attrs, List options, Map exp) {
         given:
-        def generator = generators.builtInGenerator(tag, attrs, listAttrs)
+        def generator = generators.builtInGenerator(tag, attrs, options)
 
         expect:
         exp.each {
@@ -51,10 +51,10 @@ class GeneratorsTest extends Specification {
         }
 
         where:
-        tag          | attrs                      | listAttrs                | exp
-        "int"        | [min: "10", max: "11"]     | [:]                      | [min: 10, max: 11]
-        "date-range" | [start:"end-1", end:"now"] | [:]                      | [start:"end-1", end:"now"]
-        "enum"       | [:]                        | ["options":["a", "poi"]] | ["options":["a", "poi"]]
+        tag          | attrs                        | options          | exp
+        "int"        | [min: "10", max: "11"]       | []               | [min: 10, max: 11]
+        "date-range" | [start: "end-1", end: "now"] | []               | [start: "end-1", end: "now"]
+        "enum"       | [:]                          | [["a"], ["poi"]] | ["options": [["a"], ["poi"]]]
     }
 
 }

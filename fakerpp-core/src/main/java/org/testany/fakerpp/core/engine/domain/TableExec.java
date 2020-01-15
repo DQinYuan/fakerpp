@@ -2,11 +2,12 @@ package org.testany.fakerpp.core.engine.domain;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.testany.fakerpp.core.ERMLException;
+import org.testany.fakerpp.core.engine.DataFeeder;
+import org.testany.fakerpp.core.engine.TableIter;
 import org.testany.fakerpp.core.engine.generator.joins.JoinDepend;
 import org.testany.fakerpp.core.engine.generator.joins.LeftJoinGen;
 import org.testany.fakerpp.core.engine.generator.joins.RightJoinGen;
@@ -15,17 +16,15 @@ import org.testany.fakerpp.core.parser.ast.Table;
 import org.testany.fakerpp.core.util.ExceptionConsumer;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.testany.fakerpp.core.util.ExceptionConsumer.sneaky;
+import static org.testany.fakerpp.core.util.ExceptionConsumer.sneakyConsumer;
 
 @Slf4j
 @RequiredArgsConstructor
 @Getter
-public class TableExec {
+public class TableExec implements TableIter {
 
     private final String name;
     private final int num;
@@ -59,6 +58,11 @@ public class TableExec {
         }
     }
 
+    @Override
+    public String name() {
+        return name;
+    }
+
     public List<String> columns() {
         ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
         try {
@@ -73,18 +77,43 @@ public class TableExec {
         return builder.build();
     }
 
-    public void forEach(ExceptionConsumer<List<String>, ERMLException> consumer) throws ERMLException {
+    public Optional<DataSourceInfo> dataSourceInfo() {
+        return Optional.ofNullable(dataSourceInfo);
+    }
+
+    public void feedEachExclude(ExceptionConsumer<DataFeeder, ERMLException> feedConsumer)
+            throws ERMLException {
+        for (ColExec feeder : excludes.values()) {
+            feedConsumer.accept(feeder);
+        }
+    }
+
+    @Override
+    public long recordNum() {
+        long userDefineDataNum = num;
         long finalDataNum = criticalColFamilies.stream()
                 .map(ColFamilyExec::dataNum)
                 .min(Long::compareTo)
-                .orElseThrow(() -> new ERMLException("data num decide fail"));
-        for (int i = 0; i < finalDataNum; i++) {
+                .orElse(userDefineDataNum);
+        if (userDefineDataNum != 0) {
+            finalDataNum = Math.min(finalDataNum, userDefineDataNum);
+        }
+        return finalDataNum;
+    }
+
+    private boolean exhausted = false;
+
+    public void forEach(ExceptionConsumer<List<String>, ERMLException> consumer) throws ERMLException {
+        if (exhausted) throw new ERMLException(String.format("table %s exhausted", name));
+        long recordNum = recordNum();
+        for (int i = 0; i < recordNum; i++) {
             ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
             forEachColFamily(
                     cf -> builder.addAll(cf.nextData())
             );
             consumer.accept(builder.build());
         }
+        exhausted = true;
     }
 
     public boolean containsCol(String colName) {
@@ -113,7 +142,7 @@ public class TableExec {
     }
 
     public void leftJoin(List<JoinInfo> joinInfos) throws ERMLException {
-        joinInfos.stream().forEach(sneaky(this::leftJoin));
+        joinInfos.stream().forEach(sneakyConsumer(this::leftJoin));
     }
 
     public void leftJoin(JoinInfo joinInfo) throws ERMLException {
@@ -126,6 +155,9 @@ public class TableExec {
     }
 
     public void rightJoin(List<JoinInfo> joinInfos) throws ERMLException {
+        if (joinInfos == null || joinInfos.size() == 0) {
+            return;
+        }
         RightJoinGen.Builder builder = RightJoinGen.builder();
 
         for (JoinInfo joinInfo : joinInfos) {

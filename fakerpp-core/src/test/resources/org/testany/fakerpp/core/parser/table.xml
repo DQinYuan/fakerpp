@@ -34,8 +34,13 @@
                     <col>oppp</col>
                 </cols>
                 <options>
-                    <option>sdd</option>
-                    <option>dds</option>
+                    <option>
+                        <cell>sdd</cell>
+                        <cell>opo</cell>
+                    </option>
+                    <option>
+                        <cell>dds</cell>
+                    </option>
                 </options>
             </enum>
         </built-in>

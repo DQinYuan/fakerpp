@@ -15,8 +15,12 @@
                     <col>sex</col>
                 </cols>
                 <options>
-                    <option>male</option>
-                    <option>female</option>
+                    <option>
+                        <cell>male</cell>
+                    </option>
+                    <option>
+                        <cell>female</cell>
+                    </option>
                 </options>
             </enum>
         </built-in>

@@ -22,4 +22,16 @@ class DateRangeGenTest extends Specification {
         }
     }
 
+    def "date range gen default param test"() {
+        given:
+        def gen = new DateRangeGen()
+        gen.start = "end-3"
+
+        when:
+        gen.init()
+
+        then:
+        gen.dataNum() == 3
+    }
+
 }

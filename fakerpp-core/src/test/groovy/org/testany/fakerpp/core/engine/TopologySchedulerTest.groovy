@@ -4,7 +4,7 @@ import org.testany.fakerpp.core.ERMLException
 import org.testany.fakerpp.core.engine.domain.TableExec
 import spock.lang.Specification
 
-class SchedulerTest extends Specification {
+class TopologySchedulerTest extends Specification {
 
     TableExec a
     TableExec b
@@ -49,7 +49,7 @@ class SchedulerTest extends Specification {
         ]
 
         when:
-        def scheduler = new Scheduler(tMap)
+        def scheduler = new TopologyScheduler(tMap)
 
         then:
         def exp = [a, b, c, d, e].iterator()
@@ -75,7 +75,7 @@ class SchedulerTest extends Specification {
         ]
 
         when:
-        def scheduler = new Scheduler(tMap)
+        def scheduler = new TopologyScheduler(tMap)
         scheduler.forEach({t -> t.getName()})
 
         then:

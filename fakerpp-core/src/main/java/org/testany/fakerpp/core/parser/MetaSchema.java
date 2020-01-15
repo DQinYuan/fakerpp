@@ -21,7 +21,7 @@ public class MetaSchema {
 
             Schema schema = null;
             try {
-                schema = schemaFactory.newSchema(FileProcessor.class.getResource("/meta.xsd"));
+                schema = schemaFactory.newSchema(FileParser.class.getResource("/meta.xsd"));
             } catch (SAXException ignore) {
                 log.error("fakerapp.xsd can not have error", ignore);
                 throw new RuntimeException(ignore);

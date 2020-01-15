@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.testany.fakerpp.core.util.ExceptionConsumer.sneaky;
+import static org.testany.fakerpp.core.util.ExceptionConsumer.sneakyConsumer;
 
 @Slf4j
 @Component
@@ -23,10 +23,10 @@ public class ERMLParser {
     private final ERMLEngine ermlEngine;
 
     public ERML parseDir(Path path) throws ERMLException {
-        FileProcessor processor = new FileProcessor();
+        FileParser processor = new FileParser();
         try {
             Files.list(path)
-                    .forEach(sneaky(processor::process));
+                    .forEach(sneakyConsumer(processor::process));
         } catch (IOException e) {
             throw new ERMLException("can not access path" + path, e);
         }

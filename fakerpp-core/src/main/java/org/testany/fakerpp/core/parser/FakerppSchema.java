@@ -24,7 +24,7 @@ public class FakerppSchema {
 
             Schema schema = null;
             try {
-                schema = schemaFactory.newSchema(FileProcessor.class.getResource("/fakerpp.xsd"));
+                schema = schemaFactory.newSchema(FileParser.class.getResource("/fakerpp.xsd"));
             } catch (SAXException ignore) {
                 log.error("fakerapp.xsd can not have error", ignore);
                 throw new RuntimeException(ignore);

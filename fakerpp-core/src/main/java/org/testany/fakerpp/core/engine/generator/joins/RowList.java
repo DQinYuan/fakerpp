@@ -1,6 +1,7 @@
 package org.testany.fakerpp.core.engine.generator.joins;
 
 import lombok.RequiredArgsConstructor;
+import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.engine.domain.ColExec;
 
 import java.util.AbstractList;
@@ -13,6 +14,10 @@ public class RowList extends AbstractList<List<String>> {
 
     public int size() {
         return dependColExecs.get(0).size();
+    }
+
+    public void checkData() throws ERMLException {
+
     }
 
     public List<String> get(int index) {

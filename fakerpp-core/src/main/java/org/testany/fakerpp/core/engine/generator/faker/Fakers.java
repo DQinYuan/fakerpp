@@ -8,6 +8,7 @@ import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.engine.generator.Generator;
 import org.testany.fakerpp.core.util.MhAndClass;
 import org.testany.fakerpp.core.util.MyReflectUtil;
+import org.testany.fakerpp.core.util.MyStringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +31,7 @@ public class Fakers {
     }
 
     public Generator fakerGenerator(String lang, String field, String generator,
-                                    Map<String, String> attrs,
-                                    Map<String, List<String>> listAttrs) throws ERMLException {
+                                    Map<String, String> attrs) throws ERMLException {
         Faker langFaker = fakerFactory.getLangFaker(lang);
         MhAndClass mhAndClass = fakerInvoker.fieldInvoker(field);
         Object fieldFaker = null;
@@ -49,13 +49,19 @@ public class Fakers {
         Map<String, MyReflectUtil.ParamInfo> paramInfos = methodInfo.getParams();
         ParamVal[] params = new ParamVal[methodInfo.getParams().size()];
 
-        BiConsumer<String, Object> transFunc = (paramName, value) -> {
+        for (Map.Entry<String, String> entry : attrs.entrySet()) {
+            String paramName = MyStringUtil.delimit2Camel(entry.getKey(), false);
+            String value = entry.getValue();
             MyReflectUtil.ParamInfo paramInfo = paramInfos.get(paramName);
+            if (paramInfo == null) {
+                throw new ERMLException(
+                        String.format("param %s not exist in field %s, generator %s", paramName,
+                                field, generator)
+                );
+            }
             params[paramInfo.getOrder()] = new ParamVal(paramInfo.getParamClass(),
                     value);
-        };
-        attrs.forEach(transFunc);
-        listAttrs.forEach(transFunc);
+        }
 
         return new FakerGen(
                 methodInfo.getMh().bindTo(fieldFaker),

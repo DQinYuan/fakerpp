@@ -10,10 +10,10 @@ import spock.lang.Specification
 import javax.xml.validation.Schema
 import java.nio.file.Paths
 
-class FileProcessorTest extends Specification {
+class FileParserTest extends Specification {
 
     private Document getDocFromClassPath(String path, Schema schema) {
-        return FileProcessor
+        return FileParser
                 .getDocument(Paths.get(getClass().getResource(path).toURI()), schema)
     }
 
@@ -28,15 +28,15 @@ class FileProcessorTest extends Specification {
                 "redis", "redis",
                 "default", "redisUrl",
                 "redisUser", "redis123"))
-        FileProcessor.parseMetaXml(getDocFromClassPath("meta.xml", MetaSchema.getInstance())) ==
+        FileParser.parseMetaXml(getDocFromClassPath("meta.xml", MetaSchema.getInstance())) ==
                 metaBuilder.build()
     }
 
     def "parse table.xml to Table object"() {
         expect:
-        FileProcessor.parseTableXml(getDocFromClassPath("table.xml",
-                FakerppSchema.getInstance())) ==
-                new Table(
+        def real = FileParser.parseTableXml(getDocFromClassPath("table.xml",
+                FakerppSchema.getInstance()))
+        real == new Table(
                         "user_shop",
                         "mysql0",
                         0,
@@ -52,7 +52,7 @@ class FileProcessorTest extends Specification {
                                 "zh-CN",
                                 "random-double",
                                 ["max-number-of-decimals": "2", min: "90", max: "10000"],
-                                [:]
+                                []
                         ),
                          new Table.ColFamily(
                                  ["name"],
@@ -60,7 +60,7 @@ class FileProcessorTest extends Specification {
                                  "default",
                                  "full-name",
                                  [:],
-                                 [:]
+                                 []
                          ),
                          new Table.ColFamily(
                                  ["oppp"],
@@ -68,7 +68,7 @@ class FileProcessorTest extends Specification {
                                  "",
                                  "enum",
                                  [:],
-                                 [options: ["sdd", "dds"]]
+                                 [["sdd", "opo"], ["dds"]]
                          )],
                         ["id"]
                 )

@@ -33,11 +33,11 @@ import static org.joox.JOOX.$;
 
 @Slf4j
 @Getter
-public class FileProcessor {
+public class FileParser {
 
     private ERML.Builder ermlBuilder;
 
-    public FileProcessor() {
+    public FileParser() {
         ermlBuilder = ERML.builder();
     }
 
@@ -149,7 +149,7 @@ public class FileProcessor {
                 .each(ctx -> colFamilies.add(parseColFamily($(ctx))));
 
         return new Table($(document).attr("name"),
-                $(document).attr("ds"),
+                Strings.nullToEmpty($(document).attr("ds")),
                 Integer.parseInt($(document).attr("num")),
                 joins,
                 colFamilies,
@@ -177,6 +177,7 @@ public class FileProcessor {
         return attrs.stream();
     }
 
+    private static final String OPTIONS_TAG = "options";
     private static final String COLS_TAG = "cols";
 
     private static Table.ColFamily parseColFamily(Match colFamilyCtx) {
@@ -184,11 +185,12 @@ public class FileProcessor {
         Map<String, String> attrs = new HashMap<>();
         getAllAttrs(generatorTag)
                 .forEach(attr -> attrs.put(attr.getName(), attr.getValue()));
-        Map<String, List<String>> otherLists = new HashMap<>();
+        List<List<String>> options = new ArrayList<>();
         $(generatorTag).children()
-                .filter(othersCtx -> $(othersCtx).tag() != COLS_TAG)
-                .each(othersCtx -> otherLists.put($(othersCtx).tag(),
-                        $(othersCtx).children().texts())
+                .filter(ctx -> $(ctx).tag() == OPTIONS_TAG)
+                .children()
+                .each(optionCtx ->
+                        options.add($(optionCtx).children("cell").texts())
                 );
 
         return new Table.ColFamily($(generatorTag)
@@ -199,7 +201,7 @@ public class FileProcessor {
                 Strings.nullToEmpty($(colFamilyCtx).attr("lang")),
                 generatorTag.tag(),
                 attrs,
-                otherLists);
+                options);
     }
 
 }

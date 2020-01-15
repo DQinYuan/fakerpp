@@ -1,12 +1,13 @@
 package org.testany.fakerpp.core.engine.domain;
 
 import lombok.Getter;
+import org.testany.fakerpp.core.engine.DataFeeder;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Getter
-public class ColExec {
+public class ColExec implements DataFeeder {
 
     private final String name;
     private final List<String> data;
@@ -22,5 +23,18 @@ public class ColExec {
 
     public void add(String newData) {
         data.add(newData);
+    }
+
+    @Override
+    public void addAll(List<String> datas) {
+        data.addAll(datas);
+    }
+
+    @Override
+    public String toString() {
+        return "ColExec{" +
+                "name='" + name + '\'' +
+                ",data size:" + data.size() +
+                '}';
     }
 }

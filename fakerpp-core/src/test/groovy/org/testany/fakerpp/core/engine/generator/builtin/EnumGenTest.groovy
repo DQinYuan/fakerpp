@@ -6,14 +6,14 @@ class EnumGenTest extends Specification {
 
     def "generate data from some optins"() {
         given:
-        def options = ["a", "b", "c"]
+        def options = [["a"], ["b"], ["c"]]
 
         when:
         def enumGen = new EnumGen(options: options)
 
         then:
         5.times {
-            assert options.contains(enumGen.nextData()[0])
+            assert options.contains(enumGen.nextData())
         }
 
     }

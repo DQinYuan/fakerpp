@@ -31,12 +31,14 @@ public class Meta {
             this.mapBuiler = new ImmutableMap.Builder<>();
         }
 
-        public void lang(String lang) {
+        public Builder lang(String lang) {
             this.lang = lang;
+            return this;
         }
 
-        public void appendDataSourceInfo(DataSourceInfo info) {
+        public Builder appendDataSourceInfo(DataSourceInfo info) {
             mapBuiler.put(info.getName(), info);
+            return this;
         }
 
         public Meta build() {

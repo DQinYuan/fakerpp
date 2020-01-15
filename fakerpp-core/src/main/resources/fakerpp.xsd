@@ -1,7 +1,7 @@
 <xs:schema
         xmlns:xs='http://www.w3.org/2001/XMLSchema'
         xmlns='https://github.com/dqinyuan/fakerpp'
-        targetNamespace = 'https://github.com/dqinyuan/fakerpp'
+        targetNamespace='https://github.com/dqinyuan/fakerpp'
         elementFormDefault='qualified'>
 
     <xs:complexType name="tableType">
@@ -17,14 +17,14 @@
 
     <xs:complexType name="leftjoinType">
         <xs:sequence>
-            <xs:element ref="map"  minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="map" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="depend" type="xs:token" use="required"/>
     </xs:complexType>
 
     <xs:complexType name="rightjoinType">
         <xs:sequence>
-            <xs:element ref="map"  minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="map" minOccurs="0" maxOccurs="unbounded"/>
         </xs:sequence>
         <xs:attribute name="depend" type="xs:token" use="required"/>
         <xs:attribute name="random" type="xs:boolean" default="false"/>
@@ -81,6 +81,19 @@
         </xs:sequence>
     </xs:complexType>
 
+    <!-- options type -->
+    <xs:complexType name="optionType">
+        <xs:sequence>
+            <xs:element name="cell"
+                        type="xs:string" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="optionsType">
+            <xs:sequence>
+                <xs:element name="option" type="optionType" maxOccurs="unbounded"/>
+            </xs:sequence>
+    </xs:complexType>
+
 
     <!-- built in generators -->
 
@@ -128,13 +141,19 @@
                     <xs:complexContent>
                         <xs:extension base="baseGenType">
                             <xs:sequence>
-                                <xs:element name="options">
-                                    <xs:complexType>
-                                        <xs:sequence>
-                                            <xs:element name="option" type="xs:string" maxOccurs="unbounded"/>
-                                        </xs:sequence>
-                                    </xs:complexType>
-                                </xs:element>
+                                <xs:element name="options" type="optionsType"/>
+                            </xs:sequence>
+                        </xs:extension>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+            <!-- const generator -->
+            <xs:element name="const">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="baseGenType">
+                            <xs:sequence>
+                                <xs:element name="options" type="optionsType"/>
                             </xs:sequence>
                         </xs:extension>
                     </xs:complexContent>
@@ -244,7 +263,7 @@
     </xs:complexType>
 
 
-   <!-- register all generators -->
+    <!-- register all generators -->
     <xs:complexType name="colFamiliesType">
         <!-- in any order any times -->
         <xs:choice minOccurs="0" maxOccurs="unbounded">

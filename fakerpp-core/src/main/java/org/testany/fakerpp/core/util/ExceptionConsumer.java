@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 public interface ExceptionConsumer<T, E extends Exception> {
     void accept(T t) throws E;
 
-    static <T, E extends Exception> Consumer<T> sneaky(ExceptionConsumer<T, E> exceptionConsumer)
+    static <T, E extends Exception> Consumer<T> sneakyConsumer(ExceptionConsumer<T, E> exceptionConsumer)
             throws E {
 
         return i -> {

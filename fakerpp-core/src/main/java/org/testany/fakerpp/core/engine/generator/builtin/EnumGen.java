@@ -10,20 +10,15 @@ import java.util.List;
 
 public class EnumGen implements Generator {
 
-    public List<String> options = new ArrayList<>();
+    public List<List<String>> options = new ArrayList<>();
 
     @Override
     public void init() throws ERMLException {
-        if (options == null || options.isEmpty()) {
-            throw new ERMLException("<enum> sub tag <options> can not be empty");
-        }
     }
 
     @Override
     public List<String> nextData() {
-        return Arrays.asList(
-                options.get(SeedableThreadLocalRandom.nextInt(options.size()))
-        );
+        return options.get(SeedableThreadLocalRandom.nextInt(options.size()));
     }
 
     @Override

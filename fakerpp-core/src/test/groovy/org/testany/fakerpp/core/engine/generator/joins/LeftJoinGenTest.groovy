@@ -1,5 +1,7 @@
 package org.testany.fakerpp.core.engine.generator.joins
 
+import org.testany.fakerpp.core.ERMLException
+
 import static org.testany.fakerpp.core.engine.generator.joins.Tools.getColExec
 import org.testany.fakerpp.core.engine.generator.Generator
 import spock.lang.Specification
@@ -32,6 +34,22 @@ class LeftJoinGenTest extends Specification {
         5.times {
             assert rowData.contains(leftGen.nextData())
         }
+    }
+
+    def "invalid depend cols"() {
+        given:
+        def depenColExecs = [
+                getColExec("a", ["a1", "a2"]),
+                getColExec("b", ["b1"])
+        ]
+
+        when:
+        def gen = new LeftJoinGen(depenColExecs)
+        gen.nextData()
+
+        then:
+        RuntimeException e = thrown()
+        e.getCause() instanceof ERMLException
     }
 
 }

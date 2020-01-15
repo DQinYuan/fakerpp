@@ -1,5 +1,7 @@
 package org.testany.fakerpp.core.engine;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -30,17 +32,16 @@ public class ERMLEngine {
     private final Fakers fakers;
 
     public void exec(ERML erml) throws ERMLException {
-        Scheduler sched = getScheduler(erml);
-        ermlStore.exec(sched);
+        ermlStore.exec(getScheduler(erml));
     }
 
     public Scheduler getScheduler(ERML erml) throws ERMLException {
         // convert to table exec
         // 1. convert every single table to table exec
-        // 2. connect them graph
+        // 2. connect them in graph
         // 3. construct graph
 
-        return new Scheduler(getTableExecMap(erml));
+        return new TopologyScheduler(getTableExecMap(erml));
     }
 
     public Map<String, TableExec> getTableExecMap(ERML erml) throws ERMLException {
@@ -100,13 +101,13 @@ public class ERMLEngine {
             if ("built-in".equals(field)) {
                 generator = generators.builtInGenerator(cf.getGenerator(),
                         cf.getAttributes(),
-                        cf.getOtherLists());
+                        cf.getOptions());
             } else {
-                generator = fakers.fakerGenerator("".equals(cf.getLang()) ? defaultLang: cf.getLang(),
+                generator = fakers.fakerGenerator("default".equals(cf.getLang())
+                                ? defaultLang: cf.getLang(),
                         field,
                         cf.getGenerator(),
-                        cf.getAttributes(),
-                        cf.getOtherLists());
+                        cf.getAttributes());
             }
 
             ColFamilyExec colFamilyExec = new ColFamilyExec(colExecs, generator);
@@ -118,18 +119,18 @@ public class ERMLEngine {
         }
 
         // exclude column
-        Map<String, ColExec> excludes = new HashMap<>();
+        ImmutableMap.Builder<String, ColExec> excludesBuilder = new ImmutableMap.Builder<>();
         for (String excludeColName : table.getExcludes()) {
             if (orderMap.containsKey(excludeColName)) {
                 throw new ERMLException(
                         String.format("<exclude> '%s' column already define", excludeColName)
                 );
             }
-            excludes.put(excludeColName, new ColExec(excludeColName));
+            excludesBuilder.put(excludeColName, new ColExec(excludeColName));
         }
 
         return new TableExec(table.getName(), table.getNum(),
-                dInfo, criticalCfExecs, normalCfExecs, orderMap, excludes);
+                dInfo, criticalCfExecs, normalCfExecs, orderMap, excludesBuilder.build());
     }
 
 

@@ -21,8 +21,9 @@ public class ERML {
             tables = new HashMap<>();
         }
 
-        public void meta(Meta meta) {
+        public Builder meta(Meta meta) {
             this.meta = meta;
+            return this;
         }
 
         public Meta meta() {

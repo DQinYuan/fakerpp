@@ -58,7 +58,7 @@ public class Generators {
 
     public Generator builtInGenerator(String name,
                                       Map<String, String> attrs,
-                                      Map<String, List<String>> listAttrs) throws ERMLException {
+                                      List<List<String>> options) throws ERMLException {
         // construct
         MhAndClass generatorCM =
                 getConsByBuiltInTag(name);
@@ -98,14 +98,13 @@ public class Generators {
             }
         }
 
-        for (Map.Entry<String, List<String>> entry : listAttrs.entrySet()) {
-            try {
-                getFieldSetter(generatorCM.getClazz(), entry.getKey())
-                        .getMh().invokeExact(generator, entry.getValue());
-            } catch (Throwable ignore) {
-                ignore.printStackTrace();
-            }
+
+        try {
+            getFieldSetter(generatorCM.getClazz(),"options")
+                    .getMh().invokeExact(generator, options);
+        } catch (Throwable ignore) {
         }
+
 
         return generator;
     }

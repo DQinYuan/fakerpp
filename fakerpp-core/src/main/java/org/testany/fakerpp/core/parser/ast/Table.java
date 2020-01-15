@@ -42,7 +42,7 @@ public class Table {
         private final String lang;
         private final String generator;
         private final Map<String, String> attributes;
-        private final Map<String, List<String>> otherLists;
+        private final List<List<String>> options;
     }
 
     private final String name;
