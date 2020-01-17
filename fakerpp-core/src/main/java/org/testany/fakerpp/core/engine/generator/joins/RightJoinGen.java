@@ -179,9 +179,9 @@ public class RightJoinGen implements Generator {
                             .collect(Collectors.toList());
 
             return Lists.cartesianProduct(randomPart);
-        } else {
-            return null;
         }
+
+        throw new AssertionError();
     }
 
     private List<String> flatten(List<List<String>> folded) {

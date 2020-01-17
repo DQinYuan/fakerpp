@@ -7,7 +7,11 @@ import javassist.bytecode.LocalVariableAttribute;
 import javassist.bytecode.MethodInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.testany.fakerpp.core.engine.generator.Generator;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,19 +22,17 @@ public class MyReflectUtil {
     private static ConcurrentMap<String, Map<String, List<Method>>> methodMapCache = new ConcurrentHashMap<>();
 
     public static Map<String, List<Method>> getMethodMap(Class clazz) {
-        String cacheKey = clazz.getName();
-        if (!methodMapCache.containsKey(cacheKey)) {
-            Map<String, List<Method>> methodMap = new HashMap<>();
-            for (Method method : clazz.getDeclaredMethods()) {
-                List<Method> before = methodMap.getOrDefault(method.getName(), new ArrayList<>());
-                before.add(method);
-                methodMap.put(method.getName(), before);
-            }
-
-            methodMapCache.putIfAbsent(cacheKey, methodMap);
-        }
-
-        return methodMapCache.get(cacheKey);
+        return methodMapCache.computeIfAbsent(
+                clazz.getName(), cacheKey -> {
+                    Map<String, List<Method>> methodMap = new HashMap<>();
+                    for (Method method : clazz.getDeclaredMethods()) {
+                        List<Method> before = methodMap.getOrDefault(method.getName(), new ArrayList<>());
+                        before.add(method);
+                        methodMap.put(method.getName(), before);
+                    }
+                    return methodMap;
+                }
+        );
     }
 
     @RequiredArgsConstructor
@@ -77,5 +79,29 @@ public class MyReflectUtil {
         }
 
         return null;
+    }
+
+    private static ConcurrentMap<String, MethodHandle> consCache =
+            new ConcurrentHashMap<>();
+
+    public static MethodHandle getNoArgConstructor(String qualifiedName,
+                                                   Class typeToGet) throws ClassNotFoundException {
+        String cacheKey = qualifiedName + "_" +typeToGet.getName();
+        if (!consCache.containsKey(cacheKey)) {
+            Class genClass = null;
+            genClass = Class.forName(qualifiedName);
+            MethodHandle constructor = null;
+            try {
+                constructor = MethodHandles.lookup().findConstructor(genClass,
+                        MethodType.methodType(void.class));
+            } catch (NoSuchMethodException | IllegalAccessException e) {
+                throw new AssertionError(
+                        String.format("class %s do not have no arg constructor", qualifiedName), e);
+            }
+            // https://stackoverflow.com/questions/27278314/why-cant-i-invokeexact-here-even-though-the-methodtype-is-ok
+            consCache.put(cacheKey, constructor.asType(constructor.type().changeReturnType(typeToGet)));
+        }
+
+        return consCache.get(cacheKey);
     }
 }

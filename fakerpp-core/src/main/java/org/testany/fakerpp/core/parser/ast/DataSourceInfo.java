@@ -8,6 +8,7 @@ import lombok.*;
 @EqualsAndHashCode
 public class DataSourceInfo {
     private final String name;
+
     private final String type;
     private final String storer;
     private final String url;

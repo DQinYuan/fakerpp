@@ -89,6 +89,11 @@ public class TableExec implements TableIter {
     }
 
     @Override
+    public List<String> exludes() {
+        return ImmutableList.copyOf(excludes.keySet());
+    }
+
+    @Override
     public long recordNum() {
         long userDefineDataNum = num;
         long finalDataNum = criticalColFamilies.stream()

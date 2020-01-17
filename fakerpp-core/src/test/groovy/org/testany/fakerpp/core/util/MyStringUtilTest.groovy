@@ -4,7 +4,7 @@ import spock.lang.Specification
 
 class MyStringUtilTest extends Specification {
 
-    def "convert line delimit string to camel"() {
+    def "test delimit2Camel"() {
         given:
         def origin = "data-range-ab"
 
@@ -15,6 +15,19 @@ class MyStringUtilTest extends Specification {
         then:
         upper == "DataRangeAb"
         lower == "dataRangeAb"
+    }
+
+    def "test prepareSQL"(){
+        given:
+        def tableName = "test"
+        def cols = ["a", "b", "c"]
+        def recordNum = 3
+
+        when:
+        def pSql = MyStringUtil.prepareInsertSQL(tableName, cols, recordNum)
+
+        then:
+        pSql == "INSERT INTO test(a,b,c) values (?,?,?),(?,?,?),(?,?,?)"
     }
 
 }

@@ -5,6 +5,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.util.MhAndClass;
+import org.testany.fakerpp.core.util.MyReflectUtil;
 import org.testany.fakerpp.core.util.MyStringUtil;
 
 import java.lang.invoke.MethodHandle;
@@ -25,20 +26,12 @@ public class Generators {
         String camelCaseName = MyStringUtil.delimit2Camel(name, true);
         String qualifiedName = String.format(GEN_CLASS_TEMPLATE, camelCaseName);
         try {
-            Class genClass = Class.forName(qualifiedName);
-            MethodHandle constructor = MethodHandles.lookup().findConstructor(genClass,
-                    MethodType.methodType(void.class));
             return new MhAndClass(
-                    // https://stackoverflow.com/questions/27278314/why-cant-i-invokeexact-here-even-though-the-methodtype-is-ok
-                    constructor.asType(constructor.type().changeReturnType(Generator.class)),
-                    genClass);
+                    MyReflectUtil.getNoArgConstructor(qualifiedName, Generator.class),
+                    Class.forName(qualifiedName));
         } catch (ClassNotFoundException e) {
             throw new ERMLException(String.format("built-in generator '%s' can not be found",
                     name));
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
         }
     }
 
