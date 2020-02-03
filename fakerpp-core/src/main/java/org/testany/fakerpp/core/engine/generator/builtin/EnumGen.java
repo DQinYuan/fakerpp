@@ -5,7 +5,6 @@ import org.testany.fakerpp.core.engine.generator.Generator;
 import org.testany.fakerpp.core.util.SeedableThreadLocalRandom;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class EnumGen implements Generator {
@@ -13,7 +12,7 @@ public class EnumGen implements Generator {
     public List<List<String>> options = new ArrayList<>();
 
     @Override
-    public void init() throws ERMLException {
+    public void init(int colNum) throws ERMLException {
     }
 
     @Override

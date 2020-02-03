@@ -25,7 +25,7 @@ class DateGenTest extends Specification {
 
         when:
         def dateGen = new DateGen(format:format, start: start, end:end)
-        dateGen.init()
+        dateGen.init(0)
         def rangeRight = LocalDate.now().toEpochDay()
         def rangeLeft = rangeRight - 60
         def formatter = DateTimeFormatter.ofPattern(format)
@@ -42,7 +42,7 @@ class DateGenTest extends Specification {
 
         when:
         def dateGen = new DateGen(format:format, start: start, end:end)
-        dateGen.init()
+        dateGen.init(0)
         def formatter = DateTimeFormatter.ofPattern(format)
         def rangeRight = LocalDate.parse(end, formatter).toEpochDay()
         def rangeLeft = LocalDate.parse(start, formatter).toEpochDay()
@@ -60,7 +60,7 @@ class DateGenTest extends Specification {
 
         when:
         def dateGen = new DateGen(format:format, start: start, end:end)
-        dateGen.init()
+        dateGen.init(0)
         def formatter = DateTimeFormatter.ofPattern(format)
         def rangeRight = LocalDate.parse(end, formatter).toEpochDay()
         def rangeLeft = LocalDate.parse(start, formatter).toEpochDay()
@@ -78,7 +78,7 @@ class DateGenTest extends Specification {
 
         when:
         def dateGen = new DateGen(format:format, start: start, end:end)
-        dateGen.init()
+        dateGen.init(0)
 
         then:
         ERMLException e = thrown()
@@ -93,7 +93,7 @@ class DateGenTest extends Specification {
 
         when:
         def dateGen = new DateGen(format:format, start: start, end:end)
-        dateGen.init()
+        dateGen.init(0)
 
         then:
         ERMLException e = thrown()

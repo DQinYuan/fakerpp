@@ -9,8 +9,9 @@ public interface Generator {
     /**
      *
      * @throws ERMLException if params is illegal
+     * @param colNum the col number of the col family it will try it's best to generate
      */
-    void init() throws ERMLException;
+    void init(int colNum) throws ERMLException;
 
     /**
      *
@@ -20,7 +21,7 @@ public interface Generator {
 
     /**
      * number of data it can generate
-     * @return if return -1, it can generate unlimited number
+     * @return if return 0, it can generate unlimited number
      */
     long dataNum();
 

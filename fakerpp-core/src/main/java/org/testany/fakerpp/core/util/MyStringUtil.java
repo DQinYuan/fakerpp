@@ -1,9 +1,12 @@
 package org.testany.fakerpp.core.util;
 
+import org.apache.commons.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 import org.apache.commons.text.WordUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class MyStringUtil {
@@ -22,6 +25,17 @@ public class MyStringUtil {
             return new String(chars);
         }
         return upper;
+    }
+
+    /**
+     *
+     * @param source string to be replaced with placeholder
+     * @param param map placeholder to value
+     * @return
+     */
+    public static String replace(String source, Map<String, String> param){
+        StringSubstitutor strSubstitutor = new StringSubstitutor(param);
+        return strSubstitutor.replace(source);
     }
 
 

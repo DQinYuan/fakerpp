@@ -6,21 +6,28 @@ import java.sql.DriverManager
 
 class H2DbTool {
 
-    static printRowSet(RowSet rs) {
+    static void printRowSet(RowSet rs) {
+        println(rowSetToString(rs))
+    }
+
+    static String rowSetToString(RowSet rs) {
+        StringBuilder sb = new StringBuilder()
+        sb.append('\n')
         def count = rs.getMetaData().getColumnCount()
         count.times {
             i ->
-                printf("%5s", rs.getMetaData().getColumnName(i + 1))
+                sb.append(sprintf("%13s", rs.getMetaData().getColumnName(i + 1)))
         }
-        println()
+        sb.append('\n')
         while (rs.next()) {
             count.times {
                 i ->
-                    printf("%5s", rs.getString(i + 1))
+                    sb.append(sprintf("%13s", rs.getString(i + 1)))
             }
-            println()
+            sb.append('\n')
         }
         rs.beforeFirst()
+        return sb.toString()
     }
 
     static RowSet execSqlInH2(String db, String sql) {

@@ -11,6 +11,7 @@ import org.testany.fakerpp.core.store.storers.Storer;
 import org.testany.fakerpp.core.store.storers.Storers;
 import org.testany.fakerpp.core.store.storers.TableStorer;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,11 +39,16 @@ public class ERMLStore {
         tableIter.forEach(storer::store);
         storer.flush();
 
+        if (tableIter.exludes() == null || tableIter.exludes().size() == 0) {
+            // needn't feedBack data
+            return;
+        }
+
         Map<String, List<String>> feadBackData = storer.feedBackData(tableIter.exludes());
         tableIter.feedEachExclude(
                 dataFeeder ->
                         dataFeeder.addAll(
-                                feadBackData.get(dataFeeder.getName())
+                                feadBackData.getOrDefault(dataFeeder.getName(), new ArrayList<>())
                         )
         );
     }

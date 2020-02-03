@@ -11,7 +11,7 @@ class ConstGenTest extends Specification {
         when:
         def gen = new ConstGen()
         gen.options = data
-        gen.init()
+        gen.init(0)
 
         then:
         gen.dataNum() == data.size()

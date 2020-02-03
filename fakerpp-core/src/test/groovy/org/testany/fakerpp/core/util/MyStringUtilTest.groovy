@@ -30,4 +30,16 @@ class MyStringUtilTest extends Specification {
         pSql == "INSERT INTO test(a,b,c) values (?,?,?),(?,?,?),(?,?,?)"
     }
 
+    def "test replace"() {
+        given:
+        def source = '${aaa} is ${bbb}, not ${ccc}'
+        def params = ["aaa":"hi", "bbb": "no", "ccc": "yes"]
+
+        when:
+        def replaced = MyStringUtil.replace(source, params)
+
+        then:
+        replaced == 'hi is no, not yes'
+    }
+
 }

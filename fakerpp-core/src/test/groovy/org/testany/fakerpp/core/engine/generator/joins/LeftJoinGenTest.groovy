@@ -27,7 +27,7 @@ class LeftJoinGenTest extends Specification {
 
         when:
         Generator leftGen = new LeftJoinGen(depenColExecs)
-        leftGen.init()
+        leftGen.init(0)
 
         then:
         leftGen.dataNum() == rowData.size()

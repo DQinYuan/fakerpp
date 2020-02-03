@@ -9,7 +9,7 @@ class StrGenTest extends Specification {
         def prefix = "???"
         def suffix = "+++"
         def strGen = new StrGen(prefix: prefix, suffix: suffix, len: 3)
-        strGen.init()
+        strGen.init(0)
 
         expect:
         5.times {

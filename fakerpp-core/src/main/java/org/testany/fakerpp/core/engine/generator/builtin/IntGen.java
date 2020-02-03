@@ -13,7 +13,7 @@ public class IntGen implements Generator {
     public int max = 100;  // exclusive
 
     @Override
-    public void init() throws ERMLException {
+    public void init(int colNum) throws ERMLException {
         if (max <= min) {
             throw new ERMLException("<int min='...' max='...'> max must be larger than min");
         }

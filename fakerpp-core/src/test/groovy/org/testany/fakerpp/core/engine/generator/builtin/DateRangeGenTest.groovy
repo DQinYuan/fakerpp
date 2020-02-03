@@ -12,7 +12,7 @@ class DateRangeGenTest extends Specification {
 
         when:
         def dateRangeGen = new DateRangeGen(format: format, start: start, end: end)
-        dateRangeGen.init()
+        dateRangeGen.init(0)
 
         then:
         def exps = ["2019-09-01", "2019-09-02", "2019-09-03", "2019-09-04"]
@@ -28,7 +28,7 @@ class DateRangeGenTest extends Specification {
         gen.start = "end-3"
 
         when:
-        gen.init()
+        gen.init(0)
 
         then:
         gen.dataNum() == 3

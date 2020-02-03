@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<table xmlns="https://github.com/dqinyuan/fakerpp"
+       name="user" num="3" ds="mysql0">
+    <col-families>
+        <composes>
+            <cols>
+                <col>name</col>
+            </cols>
+            <compose>
+                <name lang="zh-CN">
+                    <full-name>
+                        <cols>
+                            <col>name</col>
+                        </cols>
+                    </full-name>
+                </name>
+            </compose>
+            <compose weight="5">
+                <name>
+                    <full-name>
+                        <cols>
+                            <col>name</col>
+                        </cols>
+                    </full-name>
+                </name>
+            </compose>
+        </composes>
+    </col-families>
+</table>

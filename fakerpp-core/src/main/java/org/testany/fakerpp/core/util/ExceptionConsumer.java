@@ -13,13 +13,8 @@ public interface ExceptionConsumer<T, E extends Exception> {
             try {
                 exceptionConsumer.accept(i);
             } catch (Exception ex) {
-                throwCheckedUnchecked(ex);
+                ThrowUtil.throwCheckedUnchecked(ex);
             }
         };
-    }
-
-    @SuppressWarnings("unchecked")
-    static <X extends Throwable> void throwCheckedUnchecked(Throwable t) throws X {
-        throw (X) t;
     }
 }

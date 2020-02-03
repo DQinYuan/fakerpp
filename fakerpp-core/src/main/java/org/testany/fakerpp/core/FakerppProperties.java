@@ -14,7 +14,7 @@ import javax.validation.constraints.Min;
 // open the validation
 @Validated
 public class FakerppProperties {
-    private Store store;
+    private Store store = new Store();
 
     @Data
     public static class Store {

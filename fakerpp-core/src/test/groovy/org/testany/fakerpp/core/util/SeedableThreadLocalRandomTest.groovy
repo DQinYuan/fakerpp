@@ -32,4 +32,20 @@ class SeedableThreadLocalRandomTest extends Specification {
         }
     }
 
+    def "test nextDouble(origin, bound)"(double origin, double bound) {
+        expect:
+        5.times {
+            def nextDouble = SeedableThreadLocalRandom.nextDouble(origin, bound)
+            assert nextDouble >= origin
+            assert nextDouble < bound
+        }
+
+        where:
+        origin | bound
+        -3     | -1
+        0      |  3
+        -1     |  0
+        324    |  345
+    }
+
 }

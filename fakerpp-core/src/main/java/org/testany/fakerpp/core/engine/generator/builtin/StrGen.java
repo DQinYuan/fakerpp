@@ -13,7 +13,7 @@ public class StrGen implements Generator {
     public int    len;
 
     @Override
-    public void init(){
+    public void init(int colNum){
     }
 
     @Override

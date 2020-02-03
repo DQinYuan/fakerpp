@@ -77,7 +77,7 @@
     <!-- base generator type -->
     <xs:complexType name="baseGenType">
         <xs:sequence>
-            <xs:element name="cols" type="colsType"/>
+            <xs:element name="cols" type="colsType" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -264,9 +264,8 @@
 
 
     <!-- register all generators -->
-    <xs:complexType name="colFamiliesType">
-        <!-- in any order any times -->
-        <xs:choice minOccurs="0" maxOccurs="unbounded">
+    <xs:group name="anyOneGenerator">
+        <xs:choice>
             <!-- built-in generator -->
 
             <xs:element name="built-in" type="builtInType"/>
@@ -275,6 +274,32 @@
 
             <xs:element name="name" type="nameType"/>
             <xs:element name="number" type="numberType"/>
+        </xs:choice>
+    </xs:group>
+
+    <xs:complexType name="composesType">
+        <xs:complexContent>
+            <xs:extension base="baseGenType">
+                <xs:sequence>
+                    <xs:element name="compose" maxOccurs="unbounded">
+                        <xs:complexType>
+                            <!-- in any order any times -->
+                            <xs:choice>
+                                <xs:group ref="anyOneGenerator"/>
+                            </xs:choice>
+                            <xs:attribute name="weight" type="xs:int" default="1"/>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="colFamiliesType">
+        <!-- in any order any times -->
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:group ref="anyOneGenerator"/>
+            <xs:element name="composes" type="composesType"/>
         </xs:choice>
     </xs:complexType>
 </xs:schema>

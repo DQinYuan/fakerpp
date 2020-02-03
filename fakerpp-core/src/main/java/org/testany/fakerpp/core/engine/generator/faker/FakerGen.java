@@ -7,8 +7,6 @@ import org.testany.fakerpp.core.engine.generator.Generator;
 import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 @RequiredArgsConstructor
 public class FakerGen implements Generator {
@@ -17,7 +15,7 @@ public class FakerGen implements Generator {
     private final Object[] params;
 
     @Override
-    public void init() {
+    public void init(int colNum) {
 
     }
 

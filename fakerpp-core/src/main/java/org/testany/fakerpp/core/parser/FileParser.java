@@ -20,13 +20,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.validation.Schema;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.joox.JOOX.$;
@@ -45,7 +45,7 @@ public class FileParser {
         return ermlBuilder.build();
     }
 
-    public void process(Path path) throws ERMLException {
+    public void processByDir(Path path) throws ERMLException {
         // meta directory
         if (Files.isDirectory(path) && path.endsWith("meta")) {
             if (ermlBuilder.meta() == null) {
@@ -62,9 +62,24 @@ public class FileParser {
         }
     }
 
+    public void processByStream(InputStream metaStream, List<InputStream> tableStreams) throws ERMLException {
+        ermlBuilder.meta(parseMetaXml(getDocument(metaStream, MetaSchema.getInstance())));
+        for (InputStream tableStream : tableStreams) {
+            ermlBuilder.appendTable(parseTableXml(getDocument(tableStream,
+                    FakerppSchema.getInstance())));
+        }
+    }
+
 
     public static Document getDocument(Path xmlPath, Schema schema) throws ERMLException {
+        try {
+            return getDocument(new FileInputStream(xmlPath.toFile()), schema);
+        } catch (FileNotFoundException e) {
+            throw new ERMLException("xml file not found", e);
+        }
+    }
 
+    public static Document getDocument(InputStream xmlContent, Schema schema) throws ERMLException {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         factory.setSchema(schema);
         factory.setExpandEntityReferences(false);
@@ -73,7 +88,7 @@ public class FileParser {
 
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(xmlPath.toFile());
+            Document doc = builder.parse(xmlContent);
             return doc;
         } catch (ParserConfigurationException ignore) {
             log.error("document buld error", ignore);
@@ -139,7 +154,7 @@ public class FileParser {
         return new Table.Joins(lefts, rights);
     }
 
-    public static Table parseTableXml(Document document) {
+    public static Table parseTableXml(Document document) throws ERMLException {
 
         Table.Joins joins = parseJoins($(document).child("joins"));
 
@@ -148,12 +163,24 @@ public class FileParser {
                 .children()
                 .each(ctx -> colFamilies.add(parseColFamily($(ctx))));
 
-        return new Table($(document).attr("name"),
-                Strings.nullToEmpty($(document).attr("ds")),
+        String tableName = $(document).attr("name");
+        // joox will return null if this attr not exists
+        String dataSource = Strings.nullToEmpty($(document).attr("ds"));
+        List<String> excludes = $(document).child("excludes").children().texts();
+        // virtual table can not have excludes
+        if ("".equals(dataSource) && excludes.size() > 0) {
+            throw new ERMLException(
+                    String.format("virtual table %s can not have <excludes> tag",
+                            tableName)
+            );
+        }
+
+        return new Table(tableName,
+                dataSource,
                 Integer.parseInt($(document).attr("num")),
                 joins,
                 colFamilies,
-                $(document).child("excludes").children().texts());
+                excludes);
     }
 
     @Getter
@@ -181,27 +208,50 @@ public class FileParser {
     private static final String COLS_TAG = "cols";
 
     private static Table.ColFamily parseColFamily(Match colFamilyCtx) {
-        Match generatorTag = $(colFamilyCtx).child();
+        if ("composes".equals(colFamilyCtx.tag())) {
+            ArrayList<Table.GeneratorInfo> generatorInfos = new ArrayList<>();
+            $(colFamilyCtx).children("compose")
+                    .each(
+                            composeCtx ->
+                                    generatorInfos.add(parseGenerator($(composeCtx).child(),
+                                            Integer.parseInt($(composeCtx).attr("weight")))
+                                    )
+
+                    );
+            return new Table.ColFamily($(colFamilyCtx).child(COLS_TAG).texts(),
+                    generatorInfos);
+        }
+
+        return new Table.ColFamily($(colFamilyCtx).child()
+                .child(COLS_TAG)
+                .children()
+                .texts(),
+                Arrays.asList(parseGenerator(colFamilyCtx, 1))
+        );
+    }
+
+    private static Table.GeneratorInfo parseGenerator(Match generatorCtx, int weight) {
+        Match generatorTag = $(generatorCtx).child();
+
         Map<String, String> attrs = new HashMap<>();
         getAllAttrs(generatorTag)
                 .forEach(attr -> attrs.put(attr.getName(), attr.getValue()));
+
         List<List<String>> options = new ArrayList<>();
-        $(generatorTag).children()
-                .filter(ctx -> $(ctx).tag() == OPTIONS_TAG)
+        $(generatorTag).child(OPTIONS_TAG)
                 .children()
                 .each(optionCtx ->
                         options.add($(optionCtx).children("cell").texts())
                 );
 
-        return new Table.ColFamily($(generatorTag)
-                .find(COLS_TAG)
-                .children()
-                .texts(),
-                $(colFamilyCtx).tag(),
-                Strings.nullToEmpty($(colFamilyCtx).attr("lang")),
+        return new Table.GeneratorInfo(
+                $(generatorCtx).tag(),
+                Strings.nullToEmpty($(generatorCtx).attr("lang")),
                 generatorTag.tag(),
                 attrs,
-                options);
+                options,
+                weight
+        );
     }
 
 }

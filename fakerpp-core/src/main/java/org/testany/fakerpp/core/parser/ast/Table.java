@@ -38,11 +38,21 @@ public class Table {
     @EqualsAndHashCode
     public static class ColFamily {
         private final List<String> cols;
+        // perhaps compose generators
+        private final List<GeneratorInfo> generatorInfos;
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    @ToString
+    @EqualsAndHashCode
+    public static class GeneratorInfo {
         private final String field;
         private final String lang;
         private final String generator;
         private final Map<String, String> attributes;
         private final List<List<String>> options;
+        private final int weight;
     }
 
     private final String name;

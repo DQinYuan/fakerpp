@@ -1,5 +1,6 @@
 package org.testany.fakerpp.core.engine;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -11,6 +12,7 @@ import org.testany.fakerpp.core.util.ExceptionConsumer;
 
 import java.util.Map;
 
+@Slf4j
 public class TopologyScheduler implements Scheduler {
 
     private Graph<TableExec, DefaultEdge> dag =
@@ -40,6 +42,7 @@ public class TopologyScheduler implements Scheduler {
         TopologicalOrderIterator<TableExec, DefaultEdge> iterator = new TopologicalOrderIterator<>(dag);
         while (iterator.hasNext()) {
             TableExec next = iterator.next();
+            log.info("start generate table {}", next.getName());
             consumer.accept(next);
         }
     }

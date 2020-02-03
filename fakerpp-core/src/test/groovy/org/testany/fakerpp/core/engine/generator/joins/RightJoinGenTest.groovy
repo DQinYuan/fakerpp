@@ -10,7 +10,7 @@ class RightJoinGenTest extends Specification {
 
     private RightJoinGen build(builder) {
         def gen = builder.build()
-        gen.init()
+        gen.init(0)
         return gen
     }
 
@@ -53,7 +53,7 @@ class RightJoinGenTest extends Specification {
         then:
         5.times {
             def rightJoinGen = build(builder)
-            rightJoinGen.init()
+            rightJoinGen.init(0)
             assert rightJoinGen.colOrder()*.name == ["shop_a", "shop_b"]
             assert rightJoinGen.dataNum() == 2
             expectSeq(rightJoinGen, rowData, 2)

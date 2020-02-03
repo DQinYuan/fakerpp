@@ -17,7 +17,7 @@ public class LeftJoinGen implements Generator {
     private RowList rowList;
 
     @Override
-    public void init() throws ERMLException {
+    public void init(int colNum) throws ERMLException {
         rowList = new RowList(dependColExecs);
     }
 

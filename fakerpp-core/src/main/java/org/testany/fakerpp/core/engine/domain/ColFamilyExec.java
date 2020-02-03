@@ -4,7 +4,6 @@ import com.google.common.collect.Streams;
 import lombok.Getter;
 import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.engine.generator.Generator;
-import org.testany.fakerpp.core.parser.ast.ERML;
 
 import java.util.List;
 
@@ -19,7 +18,7 @@ public class ColFamilyExec {
     public ColFamilyExec(List<ColExec> cols, Generator generator) throws ERMLException {
         this.cols = cols;
         this.generator = generator;
-        generator.init();
+        generator.init(cols.size());
     }
 
     public List<String> nextData() throws ERMLException {

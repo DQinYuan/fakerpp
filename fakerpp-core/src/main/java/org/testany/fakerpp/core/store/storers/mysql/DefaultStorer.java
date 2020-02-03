@@ -3,6 +3,7 @@ package org.testany.fakerpp.core.store.storers.mysql;
 import lombok.extern.slf4j.Slf4j;
 import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.parser.ast.DataSourceInfo;
+import org.testany.fakerpp.core.store.storers.BatchableTableStorer;
 import org.testany.fakerpp.core.store.storers.DataSources;
 import org.testany.fakerpp.core.store.storers.Storer;
 import org.testany.fakerpp.core.store.storers.TableStorer;
@@ -37,83 +38,21 @@ public class DefaultStorer implements Storer {
         return new InternalTableStorer(tableName, colNames);
     }
 
-    private class InternalTableStorer implements TableStorer {
+    private class InternalTableStorer extends BatchableTableStorer {
 
         private final String name;
-        private final List<List<String>> batch;
-        private final List<String> cols;
         private final String prepareSQL;
+        private int colNum;
         private final String selectTemplate;
+        private final Function<Integer, String> prepareBySize;
 
         public InternalTableStorer(String name, List<String> cols) {
+            super(batchSize, cols);
             this.name = name;
-            this.batch = new ArrayList<>(batchSize);
-            this.cols = cols;
             this.prepareSQL = MyStringUtil.prepareInsertSQL(name, cols, batchSize);
+            this.prepareBySize = size -> MyStringUtil.prepareInsertSQL(name, cols, size);
             this.selectTemplate = "SELECT %s FROM " + name;
-        }
-
-        @Override
-        public void store(List<String> records) throws ERMLException {
-            batch.add(records);
-            if (batch.size() == batchSize) {
-                commit();
-            }
-        }
-
-        private void commit() throws ERMLException {
-            int colNum = cols.size();
-            checkBatch(colNum);
-            executePrepareSql(prepareSQL);
-            batch.clear();
-        }
-
-        private void executePrepareSql(String pSql) throws ERMLException {
-            int colNum = cols.size();
-            try (Connection conn = dataSource.getConnection();
-                 PreparedStatement pStmt = conn.prepareStatement(pSql)) {
-                for (int i = 0; i < batch.size(); i++) {
-                    int base = colNum * i;
-                    List<String> row = batch.get(i);
-                    for (int j = 0; j < colNum; j++) {
-                        pStmt.setString(base + j + 1, row.get(j));
-                    }
-                }
-                int updateNum = pStmt.executeUpdate();
-                if (updateNum != batchSize) {
-                    log.warn("batch update warning, batch size: {}, real update:{}",
-                            batchSize, updateNum);
-                }
-            } catch (SQLException e) {
-                throw new ERMLException(e);
-            }
-        }
-
-        private void checkBatch(int colNum) throws ERMLException {
-            for (List<String> row : batch) {
-                if (row.size() != colNum) {
-                    throw new ERMLException(
-                            String.format(
-                                    "batch rows with different col number, %s",
-                                    batch.stream()
-                                            .map(List::size)
-                                            .map(Object::toString)
-                                            .collect(Collectors.joining(",", "[", "]"))
-                            )
-                    );
-                }
-            }
-        }
-
-        @Override
-        public void flush() throws ERMLException {
-            if (batch.size() == batchSize) {
-                commit();
-            } else {
-                String flushInsert = MyStringUtil.prepareInsertSQL(name, cols, batch.size());
-                executePrepareSql(flushInsert);
-                batch.clear();
-            }
+            this.colNum = cols.size();
         }
 
         @Override
@@ -136,6 +75,28 @@ public class DefaultStorer implements Storer {
                     );
                 }
                 return dataMap;
+            } catch (SQLException e) {
+                throw new ERMLException(e);
+            }
+        }
+
+        @Override
+        protected void executeCommit(List<List<String>> batch) throws ERMLException {
+            String pSql = batch.size() == batchSize ? prepareSQL : prepareBySize.apply(batch.size());
+            try (Connection conn = dataSource.getConnection();
+                 PreparedStatement pStmt = conn.prepareStatement(pSql)) {
+                for (int i = 0; i < batch.size(); i++) {
+                    int base = colNum * i;
+                    List<String> row = batch.get(i);
+                    for (int j = 0; j < colNum; j++) {
+                        pStmt.setString(base + j + 1, row.get(j));
+                    }
+                }
+                int updateNum = pStmt.executeUpdate();
+                if (updateNum != batchSize) {
+                    log.warn("batch update warning, batch size: {}, real update:{}",
+                            batchSize, updateNum);
+                }
             } catch (SQLException e) {
                 throw new ERMLException(e);
             }

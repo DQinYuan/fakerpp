@@ -12,6 +12,6 @@ public interface Storer {
 
     void init(DataSourceInfo dsi, int batchSize) throws ERMLException;
 
-    TableStorer getTableStorer(String tableName, List<String> colNames);
+    TableStorer getTableStorer(String tableName, List<String> colNames) throws ERMLException;
 
 }

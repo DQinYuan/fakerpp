@@ -3,6 +3,7 @@ package org.testany.fakerpp.core.util;
 import com.github.javafaker.Faker;
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
@@ -25,8 +26,27 @@ public class SeedableThreadLocalRandom {
         return r;
     }
 
+    public static double nextDouble() {
+        return threadLocal.get().nextDouble();
+    }
+
     /**
-     *
+     * @param origin the least value returned
+     * @param bound  the upper bound (exclusive)
+     * @return a pseudorandom {@code double} value between the origin
+     * (inclusive) and the bound (exclusive)
+     * @throws IllegalArgumentException if {@code origin} is greater than
+     *                                  or equal to {@code bound}
+     */
+    public static double nextDouble(double origin, double bound) {
+        double r = nextDouble();
+        r = r * (bound - origin) + origin;
+        if (r >= bound) // correct for rounding
+            r = Math.nextDown(bound);
+        return r;
+    }
+
+    /**
      * @param random
      * @return positive random long
      */
@@ -39,13 +59,12 @@ public class SeedableThreadLocalRandom {
     }
 
     /**
-     *
      * @param origin the least value returned
-     * @param bound the upper bound (exclusive)
+     * @param bound  the upper bound (exclusive)
      * @return a pseudorandom {@code int} value between the origin
-     *         (inclusive) and the bound (exclusive)
+     * (inclusive) and the bound (exclusive)
      * @throws IllegalArgumentException if {@code origin} is greater than
-     *         or equal to {@code bound}
+     *                                  or equal to {@code bound}
      */
     public static int nextInt(int origin, int bound) {
         return origin + threadLocal.get().nextInt(bound - origin);
@@ -58,7 +77,7 @@ public class SeedableThreadLocalRandom {
      * <p>Characters will be chosen from the set of Latin alphabetic
      * characters (a-z, A-Z) and the digits 0-9.</p>
      *
-     * @param count  the length of random string to create
+     * @param count the length of random string to create
      * @return the random string
      */
     public static String randomAlphanumeric(final int count) {
@@ -70,5 +89,7 @@ public class SeedableThreadLocalRandom {
         return new Faker(new Locale(lang), threadLocal.get());
     }
 
-
+    public static <T> T randomItemInList(List<T> list) {
+        return list.get(threadLocal.get().nextInt(list.size()));
+    }
 }

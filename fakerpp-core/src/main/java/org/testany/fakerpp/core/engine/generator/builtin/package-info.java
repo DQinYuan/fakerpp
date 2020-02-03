@@ -6,5 +6,6 @@
  *  2. a public field of basic type (int long String e.t.c)  = an attribute of tag
  *  3. `List<List<String>> options` = options sub tag
  *  4. field default value is the tag default value
+ *  5. must have a no arg constructor
  */
 package org.testany.fakerpp.core.engine.generator.builtin;

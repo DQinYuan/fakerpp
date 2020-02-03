@@ -16,7 +16,7 @@ public class DateRangeGen implements Generator {
     private DateBase dateBase;
 
     @Override
-    public void init() throws ERMLException {
+    public void init(int colNum) throws ERMLException {
         dateBase = new DateBase(format, start, end);
     }
 

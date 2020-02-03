@@ -9,8 +9,10 @@ import org.testany.fakerpp.core.parser.ast.ERML;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.testany.fakerpp.core.util.ExceptionConsumer.sneakyConsumer;
 
@@ -26,7 +28,7 @@ public class ERMLParser {
         FileParser processor = new FileParser();
         try {
             Files.list(path)
-                    .forEach(sneakyConsumer(processor::process));
+                    .forEach(sneakyConsumer(processor::processByDir));
         } catch (IOException e) {
             throw new ERMLException("can not access path" + path, e);
         }
@@ -34,9 +36,15 @@ public class ERMLParser {
         return processor.getERML();
     }
 
-    public void exec(Path path) throws ERMLException {
+    public void execDisk(Path path) throws ERMLException {
         ERML erml = parseDir(path);
         ermlEngine.exec(erml);
+    }
+
+    public void execMemory(InputStream metaStream, List<InputStream> tables) throws ERMLException {
+        FileParser fileParser = new FileParser();
+        fileParser.processByStream(metaStream, tables);
+        ermlEngine.exec(fileParser.getERML());
     }
 
 }

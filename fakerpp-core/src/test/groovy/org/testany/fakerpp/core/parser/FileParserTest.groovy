@@ -48,27 +48,36 @@ class FileParserTest extends Specification {
 
                         [new Table.ColFamily(
                                 ["amount", "mmmm"],
-                                "number",
-                                "zh-CN",
-                                "random-double",
-                                ["max-number-of-decimals": "2", min: "90", max: "10000"],
-                                []
+                                [new Table.GeneratorInfo(
+                                        "number",
+                                        "zh-CN",
+                                        "random-double",
+                                        ["max-number-of-decimals": "2", min: "90", max: "10000"],
+                                        [],
+                                        1
+                                )]
                         ),
                          new Table.ColFamily(
                                  ["name"],
-                                 "name",
-                                 "default",
-                                 "full-name",
-                                 [:],
-                                 []
+                                 [new Table.GeneratorInfo(
+                                         "name",
+                                         "default",
+                                         "full-name",
+                                         [:],
+                                         [],
+                                         1
+                                 )]
                          ),
                          new Table.ColFamily(
                                  ["oppp"],
-                                 "built-in",
-                                 "",
-                                 "enum",
-                                 [:],
-                                 [["sdd", "opo"], ["dds"]]
+                                 [new Table.GeneratorInfo(
+                                         "built-in",
+                                         "",
+                                         "enum",
+                                         [:],
+                                         [["sdd", "opo"], ["dds"]],
+                                         1
+                                 )]
                          )],
                         ["id"]
                 )

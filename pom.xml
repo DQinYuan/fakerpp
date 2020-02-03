@@ -19,6 +19,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.spockframework</groupId>
+                <artifactId>spock-bom</artifactId>
+                <version>1.2-groovy-2.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -31,13 +38,13 @@
 
     <modules>
         <module>fakerpp-core</module>
+        <module>fakerpp-plugin</module>
     </modules>
 
     <dependencies>
         <dependency>
             <groupId>org.spockframework</groupId>
             <artifactId>spock-core</artifactId>
-            <version>1.0-groovy-2.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>

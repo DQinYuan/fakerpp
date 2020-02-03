@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <table xmlns="https://github.com/dqinyuan/fakerpp"
-       name="user" num="15">
+       name="user" num="15" ds="mysql0">
     <col-families>
         <name lang="zh-CN">
             <full-name>

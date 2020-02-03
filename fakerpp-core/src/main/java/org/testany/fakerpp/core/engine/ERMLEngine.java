@@ -10,6 +10,7 @@ import org.testany.fakerpp.core.ERMLException;
 import org.testany.fakerpp.core.engine.domain.ColExec;
 import org.testany.fakerpp.core.engine.domain.ColFamilyExec;
 import org.testany.fakerpp.core.engine.domain.TableExec;
+import org.testany.fakerpp.core.engine.generator.ComposeGen;
 import org.testany.fakerpp.core.engine.generator.faker.Fakers;
 import org.testany.fakerpp.core.engine.generator.Generator;
 import org.testany.fakerpp.core.engine.generator.Generators;
@@ -17,8 +18,12 @@ import org.testany.fakerpp.core.parser.ast.DataSourceInfo;
 import org.testany.fakerpp.core.parser.ast.ERML;
 import org.testany.fakerpp.core.parser.ast.Table;
 import org.testany.fakerpp.core.store.ERMLStore;
+import org.testany.fakerpp.core.util.WeightedRandom;
 
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.testany.fakerpp.core.util.ExceptionFunction.sneakyFunction;
 
 @Component
 @RequiredArgsConstructor
@@ -96,19 +101,23 @@ public class ERMLEngine {
                 colExecs.add(colExec);
             }
 
-            String field = cf.getField();
-            Generator generator = null;
-            if ("built-in".equals(field)) {
-                generator = generators.builtInGenerator(cf.getGenerator(),
-                        cf.getAttributes(),
-                        cf.getOptions());
-            } else {
-                generator = fakers.fakerGenerator("default".equals(cf.getLang())
-                                ? defaultLang: cf.getLang(),
-                        field,
-                        cf.getGenerator(),
-                        cf.getAttributes());
+            if (cf.getGeneratorInfos().size() <= 0) {
+                throw new ERMLException("generator can not be empty");
             }
+            Generator generator = null;
+            if (cf.getGeneratorInfos().size() == 1) {
+                generator = getGeneratorByInfo(cf.getGeneratorInfos().get(0), defaultLang);
+            } else {
+                // compose generator
+                ImmutableList.Builder<WeightedRandom.WeightedItem<Generator>>
+                        weightedItemsBuilder = ImmutableList.builder();
+                for (Table.GeneratorInfo info : cf.getGeneratorInfos()) {
+                    weightedItemsBuilder.add(new WeightedRandom.WeightedItem(info.getWeight(),
+                            getGeneratorByInfo(info, defaultLang)));
+                }
+                generator = new ComposeGen(weightedItemsBuilder.build());
+            }
+
 
             ColFamilyExec colFamilyExec = new ColFamilyExec(colExecs, generator);
             if (generator.dataNum() > 0) {
@@ -131,6 +140,22 @@ public class ERMLEngine {
 
         return new TableExec(table.getName(), table.getNum(),
                 dInfo, criticalCfExecs, normalCfExecs, orderMap, excludesBuilder.build());
+    }
+
+    private Generator getGeneratorByInfo(Table.GeneratorInfo gi, String defaultLang) throws ERMLException {
+        String field = gi.getField();
+        Generator generator = null;
+        if ("built-in".equals(field)) {
+            return generators.builtInGenerator(gi.getGenerator(),
+                    gi.getAttributes(),
+                    gi.getOptions());
+        } else {
+            return fakers.fakerGenerator("default".equals(gi.getLang())
+                            ? defaultLang : gi.getLang(),
+                    field,
+                    gi.getGenerator(),
+                    gi.getAttributes());
+        }
     }
 
 

@@ -46,11 +46,14 @@ class ERMLEngineTest extends Specification {
                         ),
                         [new Table.ColFamily(
                                 ["oppp"],
-                                "built-in",
-                                "default",
-                                "enum",
-                                [:],
-                                [["sdd"], ["dds"]]
+                                [new Table.GeneratorInfo(
+                                        "built-in",
+                                        "default",
+                                        "enum",
+                                        [:],
+                                        [["sdd"], ["dds"]],
+                                        1
+                                )]
                         )],
                         ["id"]
                 ),
@@ -69,11 +72,14 @@ class ERMLEngineTest extends Specification {
                         new Table.Joins([], []),
                         [new Table.ColFamily(
                                 ["dt"],
-                                "built-in",
-                                "",
-                                "date-range",
-                                [:],
-                                []
+                                [new Table.GeneratorInfo(
+                                        "built-in",
+                                        "",
+                                        "date-range",
+                                        [:],
+                                        [],
+                                        1
+                                )]
                         )],
                         []
                 ),
@@ -163,13 +169,16 @@ class ERMLEngineTest extends Specification {
                         ),
                         [new Table.ColFamily(
                                 ["amount"],
-                                "number",
-                                "default",
-                                "random-double",
-                                ["max-number-of-decimals": "2",
-                                 "min"                   : "90",
-                                 "max"                   : "10000"],
-                                []
+                                [new Table.GeneratorInfo(
+                                        "number",
+                                        "default",
+                                        "random-double",
+                                        ["max-number-of-decimals": "2",
+                                         "min"                   : "90",
+                                         "max"                   : "10000"],
+                                        [],
+                                        1
+                                )]
                         )],
                         ["id"]
                 ),
@@ -181,11 +190,14 @@ class ERMLEngineTest extends Specification {
                                 []),
                         [new Table.ColFamily(
                                 ["sex"],
-                                "built-in",
-                                "",
-                                "enum",
-                                [:],
-                                [["male"], ["female"]]
+                                [new Table.GeneratorInfo(
+                                        "built-in",
+                                        "",
+                                        "enum",
+                                        [:],
+                                        [["male"], ["female"]],
+                                        1
+                                )]
                         )],
                         ["id"]
                 ),
@@ -196,11 +208,14 @@ class ERMLEngineTest extends Specification {
                         new Table.Joins([], []),
                         [new Table.ColFamily(
                                 ["dt"],
-                                "built-in",
-                                "",
-                                "date-range",
-                                [start: "end-3", end: "2020-01-09"],
-                                []
+                                [new Table.GeneratorInfo(
+                                        "built-in",
+                                        "",
+                                        "date-range",
+                                        [start: "end-3", end: "2020-01-09"],
+                                        [],
+                                        1
+                                )]
                         )],
                         []
                 ),
@@ -211,11 +226,14 @@ class ERMLEngineTest extends Specification {
                         new Table.Joins([], []),
                         [new Table.ColFamily(
                                 ["name"],
-                                "built-in",
-                                "",
-                                "str",
-                                [len: "3", prefix: "Shop_"],
-                                []
+                                [new Table.GeneratorInfo(
+                                        "built-in",
+                                        "",
+                                        "str",
+                                        [len: "3", prefix: "Shop_"],
+                                        [],
+                                        1
+                                )]
                         )],
                         ["id"]
                 ),
@@ -226,11 +244,14 @@ class ERMLEngineTest extends Specification {
                         new Table.Joins([], []),
                         [new Table.ColFamily(
                                 ["a", "b"],
-                                "built-in",
-                                "",
-                                "const",
-                                [:],
-                                [["a1", "b1"], ["a2", "b2"], ["a3", "b3"]]
+                                [new Table.GeneratorInfo(
+                                        "built-in",
+                                        "",
+                                        "const",
+                                        [:],
+                                        [["a1", "b1"], ["a2", "b2"], ["a3", "b3"]],
+                                        1
+                                )]
                         )],
                         []
                 )
@@ -319,11 +340,14 @@ class ERMLEngineTest extends Specification {
                         new Table.Joins([], []),
                         [new Table.ColFamily(
                                 ["dt"],
-                                "built-in",
-                                "",
-                                "date-range",
-                                [start: "end-${genNum}".toString(), end: "2020-01-09"],
-                                []
+                                [new Table.GeneratorInfo(
+                                        "built-in",
+                                        "",
+                                        "date-range",
+                                        [start: "end-${genNum}".toString(), end: "2020-01-09"],
+                                        [],
+                                        1
+                                )]
                         )],
                         []
                 ),

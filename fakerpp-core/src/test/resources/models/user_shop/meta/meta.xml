@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<meta xmlns='https://github.com/dqinyuan/fakerpp/meta'>
+    <datasources>
+        <datasource name="mysql0" type="mysql" storer="default">
+            <url>jdbc:h2:mem:ERMLExecutorTest.diskExec</url>
+            <user></user>
+            <passwd></passwd>
+        </datasource>
+    </datasources>
+</meta>

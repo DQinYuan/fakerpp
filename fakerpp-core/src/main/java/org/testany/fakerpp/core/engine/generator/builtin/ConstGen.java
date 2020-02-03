@@ -12,7 +12,7 @@ public class ConstGen implements Generator {
 
 
     @Override
-    public void init() throws ERMLException {
+    public void init(int colNum) throws ERMLException {
         cursor = 0;
     }
 

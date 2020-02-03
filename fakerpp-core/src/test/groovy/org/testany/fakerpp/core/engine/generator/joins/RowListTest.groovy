@@ -22,19 +22,14 @@ class RowListTest extends Specification {
                 getColExec("c", colData[2]),
                 getColExec("d", colData[3]),
         ]
-        def spyList = Spy(ArrayList.class)
-        spyList.addAll(colExecs)
 
         when:
-        def rl = new RowList(spyList)
-        rl[0]
-        rl[0]
-        rl[1]
-        rl[0]
-        rl[1]
+        def rl = new RowList(colExecs)
 
         then:
-        2 * spyList.stream()
+        rowData.eachWithIndex { List<String> entry, int i ->
+            assert entry == rl[i]
+        }
     }
 
 }

@@ -85,7 +85,7 @@ public class RightJoinGen implements Generator {
     private int dataNum = 0;
 
     @Override
-    public void init() throws ERMLException {
+    public void init(int colNum) throws ERMLException {
     }
 
     private void initCheck(List<Dimension> dimensions) throws ERMLException {
