@@ -1,0 +1,126 @@
+<xs:schema
+        xmlns:xs='http://www.w3.org/2001/XMLSchema'
+        xmlns='https://github.com/dqinyuan/fakerpp'
+        targetNamespace='https://github.com/dqinyuan/fakerpp'
+        elementFormDefault='qualified'>
+
+    <xs:complexType name="tableType">
+        <xs:sequence>
+            <xs:element ref="joins" minOccurs="0"/>
+            <xs:element ref="col-families"/>
+            <xs:element ref="excludes" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:token" use="required"/>
+        <xs:attribute name="ds" type="xs:string" default=""/>
+        <xs:attribute name="num" type="xs:int" default="0"/>
+    </xs:complexType>
+
+    <xs:complexType name="leftjoinType">
+        <xs:sequence>
+            <xs:element ref="map" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="depend" type="xs:token" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="rightjoinType">
+        <xs:sequence>
+            <xs:element ref="map" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="depend" type="xs:token" use="required"/>
+        <xs:attribute name="random" type="xs:boolean" default="false"/>
+    </xs:complexType>
+
+    <xs:complexType name="mapType">
+        <xs:simpleContent>
+            <xs:extension base="xs:token">
+                <xs:attribute name="from" type="xs:token" use="required"/>
+            </xs:extension>
+        </xs:simpleContent>
+    </xs:complexType>
+
+    <xs:complexType name="joinsType">
+        <!-- in any order any times -->
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:element ref="leftjoin"/>
+            <xs:element ref="rightjoin"/>
+        </xs:choice>
+    </xs:complexType>
+
+    <xs:complexType name="excludesType">
+        <xs:sequence>
+            <xs:element name="exclude" type="xs:token" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="table" type="tableType"/>
+    <xs:element name="joins" type="joinsType"/>
+    <xs:element name="col-families" type="colFamiliesType"/>
+    <xs:element name="excludes" type="excludesType"/>
+    <xs:element name="map" type="mapType"/>
+    <xs:element name="leftjoin" type="leftjoinType"/>
+    <xs:element name="rightjoin" type="rightjoinType"/>
+
+
+    <!-- col and cols -->
+    <!-- col tag can not be empty or null -->
+    <xs:simpleType name="colType">
+        <xs:restriction base="xs:string">
+            <!-- \S reparents all non empty char -->
+            <xs:pattern value="\S+"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="colsType">
+        <xs:sequence>
+            <xs:element name="col" type="colType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <!-- base generator type -->
+    <xs:complexType name="baseGenType">
+        <xs:sequence>
+            <xs:element name="cols" type="colsType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- options type -->
+    <xs:complexType name="optionType">
+        <xs:sequence>
+            <xs:element name="cell"
+                        type="xs:string" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="optionsType">
+        <xs:sequence>
+            <xs:element name="option" type="optionType" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="baseFakerFieldType">
+        <xs:attribute name="lang" default="default"/>
+    </xs:complexType>
+
+    <xs:complexType name="composesType">
+        <xs:complexContent>
+            <xs:extension base="baseGenType">
+                <xs:sequence>
+                    <xs:element name="compose" maxOccurs="unbounded">
+                        <xs:complexType>
+                            <!-- in any order any times -->
+                            <xs:choice>
+                                <xs:group ref="anyOneGenerator"/>
+                            </xs:choice>
+                            <xs:attribute name="weight" type="xs:int" default="1"/>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:complexType name="colFamiliesType">
+        <!-- in any order any times -->
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+            <xs:group ref="anyOneGenerator"/>
+            <xs:element name="composes" type="composesType"/>
+        </xs:choice>
+    </xs:complexType>
+</xs:schema>

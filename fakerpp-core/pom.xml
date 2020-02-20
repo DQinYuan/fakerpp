@@ -4,30 +4,67 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <artifactId>fakerpp</artifactId>
-        <groupId>org.testany</groupId>
+        <groupId>org.testd</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>fakerpp-core</artifactId>
 
-
     <packaging>jar</packaging>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.gmavenplus</groupId>
+                <artifactId>gmavenplus-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate fakerpp.xsd</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>execute</goal>
+                        </goals>
+                        <configuration>
+                            <scripts>file:${basedir}/xsdgen/genXsd.groovy</scripts>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>spock test compile</id>
+                        <goals>
+                            <goal>addSources</goal>
+                            <goal>compile</goal>
+                            <goal>compileTests</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.1</version>
+                <executions>
+                    <execution>
+                        <id>copy faker classes</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeGroupIds>com.github.javafaker</includeGroupIds>
+                            <outputDirectory>xsdgen</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
-            <groupId>org.spockframework</groupId>
-            <artifactId>spock-spring</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>1.2</version>
         </dependency>
         <dependency>
             <groupId>com.github.javafaker</groupId>
@@ -57,7 +94,7 @@
         <dependency>
             <groupId>org.javassist</groupId>
             <artifactId>javassist</artifactId>
-            <version>3.26.0-GA</version>
+            <version>${javassist.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jgrapht</groupId>
@@ -99,7 +136,6 @@
             <version>1.0</version>
         </dependency>
     </dependencies>
-
 
 
 </project>
