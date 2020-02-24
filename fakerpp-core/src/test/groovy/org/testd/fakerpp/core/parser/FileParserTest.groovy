@@ -25,11 +25,11 @@ class FileParserTest extends Specification {
         def metaBuilder = Meta.builder()
         metaBuilder.lang("en")
         metaBuilder.appendDataSourceInfo(new DataSourceInfo("mysql0", "mysql",
-                "s", "mysql0Url",
+                "s", 100, "mysql0Url",
                 "mysql0User", "123456"))
         metaBuilder.appendDataSourceInfo(new DataSourceInfo(
                 "redis", "redis",
-                "default", "redisUrl",
+                "default", 100, "redisUrl",
                 "redisUser", "redis123"))
         FileParser.parseMetaXml(getDocFromClassPath("meta.xml", MetaSchema.getInstance())) ==
                 metaBuilder.build()

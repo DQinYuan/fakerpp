@@ -1,10 +1,10 @@
 package org.testd.fakerpp.core.store.storers.mysql
 
 import org.testd.fakerpp.core.parser.ast.DataSourceInfo
-import org.testd.fakerpp.core.parser.ast.DataSourceInfo
 import spock.lang.Specification
 
-import static org.testd.fakerpp.core.store.H2DbTool.*
+import static org.testd.fakerpp.core.store.H2DbTool.execSqlInH2
+import static org.testd.fakerpp.core.store.H2DbTool.expectDbData
 
 class DefaultStorerTest extends Specification {
 
@@ -16,6 +16,7 @@ class DefaultStorerTest extends Specification {
                 "mysql0",
                 "mysql",
                 "default",
+                3,
                 "jdbc:h2:mem:${dbName}",
                 "",
                 ""
@@ -29,7 +30,7 @@ class DefaultStorerTest extends Specification {
 
         when:
         def dStorer = new DefaultStorer()
-        dStorer.init(dsi, 3)
+        dStorer.init(dsi)
         def tableStorer = dStorer.getTableStorer(tableName, ["a", "b"])
         5.times {
             i ->

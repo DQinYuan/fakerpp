@@ -36,4 +36,9 @@ public class CustomKeyGenerator extends CachingConfigurerSupport implements KeyG
         return new CustomKeyGenerator();
     }
 
+    @Bean
+    public CacheManager cacheManager() {
+        return new ConcurrentMapCacheManager();
+    }
+
 }

@@ -32,10 +32,10 @@ public class DefaultStorer implements Storer {
     private int batchSize;
 
     @Override
-    public void init(DataSourceInfo dsi, int batchSize) throws ERMLException {
+    public void init(DataSourceInfo dsi) throws ERMLException {
         this.dataSource = DataSources.getDataSource(dsi.getUrl(),
                 dsi.getUser(), dsi.getPasswd());
-        this.batchSize = batchSize;
+        this.batchSize = dsi.getBatchSize();
 
     }
 

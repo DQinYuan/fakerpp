@@ -133,6 +133,7 @@ public class FileParser {
                                         $(ctx).attr("name"),
                                         $(ctx).attr("type"),
                                         $(ctx).attr("storer"),
+                                        Integer.parseInt($(ctx).attr("batch-size")),
                                         $(ctx).child("url").text(),
                                         $(ctx).child("user").text(),
                                         $(ctx).child("passwd").text())

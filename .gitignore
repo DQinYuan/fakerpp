@@ -9,3 +9,6 @@
 out
 gen
 .attach_*
+plugindoc.log
+*.jar
+!javafaker-for-test.jar

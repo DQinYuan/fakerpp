@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="220.0" prefWidth="450.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.testd.ui.view.OpenDialogView">
+   <children>
+      <VBox layoutX="41.0" layoutY="14.0" spacing="10.0">
+         <children>
+            <Button mnemonicParsing="false" onAction="#handleOpenEmpty" text="Open Empty model" />
+            <Label text="Or generate model template from database :">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font>
+            </Label>
+            <Label text="(recommand for beginner):" />
+            <Button mnemonicParsing="false" text="Open From DataBase" />
+            <Label text="Or you want to open a model in a directory:">
+               <font>
+                  <Font name="System Bold" size="14.0" />
+               </font></Label>
+            <Button mnemonicParsing="false" onAction="#handleOpenDirectory" text="Open From Directory" />
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>

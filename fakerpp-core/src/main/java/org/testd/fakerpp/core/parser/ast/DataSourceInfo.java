@@ -11,6 +11,7 @@ public class DataSourceInfo {
 
     private final String type;
     private final String storer;
+    private final int batchSize;
     private final String url;
     private final String user;
     private final String passwd;

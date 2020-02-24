@@ -4,6 +4,7 @@ import org.testd.fakerpp.core.ERMLException
 import org.testd.fakerpp.core.engine.DataFeeder
 import org.testd.fakerpp.core.engine.TableIter
 import org.testd.fakerpp.core.parser.ast.DataSourceInfo
+import org.testd.fakerpp.core.store.storers.Storers
 import org.testd.fakerpp.core.store.storers.StorersTest
 import org.testd.fakerpp.core.util.ExceptionConsumer
 import org.testd.fakerpp.core.engine.DataFeeder
@@ -18,7 +19,7 @@ class ERMLStoreTest extends Specification {
         given:
         def dbName = "ERMLStoreTest"
         def tableName = "storeTableTest"
-        ERMLStore storeLayer = new ERMLStore(StorersTest.getStorers())
+        ERMLStore storeLayer = new ERMLStore(new Storers())
         def dataToInsert = [["a1", "b1", "c1"],
                             ["a2", "b2", "c2"],
                             ["a3", "b3", "c3"]]
@@ -33,6 +34,7 @@ class ERMLStoreTest extends Specification {
                                     "mysql0",
                                     "mysql",
                                     "default",
+                                    100,
                                     "jdbc:h2:mem:${dbName}",
                                     "",
                                     ""

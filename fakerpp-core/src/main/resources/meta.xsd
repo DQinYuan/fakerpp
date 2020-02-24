@@ -25,6 +25,7 @@
                     <xs:attribute name="name" type="xs:token" use="required"/>
                     <xs:attribute name="type" type="xs:token" default="mysql"/>
                     <xs:attribute name="storer" type="xs:string" default="default"/>
+                    <xs:attribute name="batch-size" type="xs:int" default="100"/>
                 </xs:complexType>
             </xs:element>
         </xs:sequence>

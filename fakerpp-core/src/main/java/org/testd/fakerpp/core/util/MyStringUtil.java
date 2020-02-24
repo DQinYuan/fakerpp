@@ -10,9 +10,15 @@ import java.util.stream.Collectors;
 
 public class MyStringUtil {
 
+
+    private static boolean isUpCase(char c) {
+        return c >= 'A' && c <= 'Z';
+    }
+
     /**
      *
      * @param origin
+     * @param capitalUpper is keep capital case up
      * @return
      */
     public static String delimit2Camel(String origin, boolean capitalUpper) {
@@ -24,6 +30,16 @@ public class MyStringUtil {
             return new String(chars);
         }
         return upper;
+    }
+
+    public static String camelToDelimit(String str) {
+        if (isUpCase(str.charAt(0))) {
+            char[] chars = str.toCharArray();
+            chars[0] += 32;
+            str = new String(chars);
+        }
+
+        return str.replaceAll("[A-Z]", "-$0").toLowerCase();
     }
 
     /**

@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface Storer {
 
-    void init(DataSourceInfo dsi, int batchSize) throws ERMLException;
+    void init(DataSourceInfo dsi) throws ERMLException;
 
     TableStorer getTableStorer(String tableName, List<String> colNames) throws ERMLException;
 

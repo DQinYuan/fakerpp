@@ -1,27 +1,19 @@
 package org.testd.fakerpp.core.store.storers
 
-import org.testd.fakerpp.core.FakerppProperties
 import org.testd.fakerpp.core.parser.ast.DataSourceInfo
 import org.testd.fakerpp.core.store.storers.mocks.DiscardStorer
-import org.testd.fakerpp.core.parser.ast.DataSourceInfo
 import spock.lang.Specification
 
 class StorersTest extends Specification {
 
-    static Storers getStorers(int batchSize=10) {
-        def prop = new FakerppProperties()
-        prop.store = new FakerppProperties.Store()
-        prop.store.batchSize = batchSize
-        return new Storers(prop)
-    }
-
     def "test getInitedStorer"() {
         given:
-        def storers = getStorers()
+        def storers = new Storers()
         def dsi = new DataSourceInfo(
                 "mysql0",
                 "mocks",
                 "discard",
+                100,
                 "jdbc:mysql//...",
                 "root",
                 "123456"
@@ -34,4 +26,18 @@ class StorersTest extends Specification {
         storer instanceof DiscardStorer
         storer.inited == true
     }
+
+/*    def "test storers"() {
+        expect:
+        def storers = new Storers().storers()
+
+        storers.each { type, sub ->
+            println("-------")
+            println(type)
+            sub.each {
+                name, storer ->
+                    println(name)
+            }
+        }
+    }*/
 }

@@ -13,10 +13,10 @@ class DefaultStorerTest extends Specification {
     @Rule
     TemporaryFolder temporaryFolder = new TemporaryFolder()
 
-    def "test temp"() {
+/*    def "test temp"() {
         expect:
         println(temporaryFolder.newFile().getParent())
-    }
+    }*/
 
     def "store data in `dsi.name/tableName.csv`"() {
         given:
@@ -27,8 +27,9 @@ class DefaultStorerTest extends Specification {
         def csvFilePath = Paths.get(dsName, tableName + ".csv")
 
         when:
-        def dsi = new DataSourceInfo(dsName, "", "", "", "", "")
-        storer.init(dsi, 2)
+        // batchSize 2
+        def dsi = new DataSourceInfo(dsName, "", "", 2, "", "", "")
+        storer.init(dsi)
         def tStorer = storer.getTableStorer(tableName, ["a", "b"])
         5.times {
             i ->

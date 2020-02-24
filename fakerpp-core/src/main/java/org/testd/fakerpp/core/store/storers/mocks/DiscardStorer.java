@@ -15,7 +15,7 @@ public class DiscardStorer implements Storer {
     private boolean inited = false;
 
     @Override
-    public void init(DataSourceInfo dsi, int batchSize) throws ERMLException {
+    public void init(DataSourceInfo dsi) throws ERMLException {
         inited = true;
     }
 

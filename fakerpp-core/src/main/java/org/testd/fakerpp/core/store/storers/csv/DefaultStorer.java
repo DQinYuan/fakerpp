@@ -24,8 +24,8 @@ public class DefaultStorer implements Storer {
     private Path dataDir;
 
     @Override
-    public void init(DataSourceInfo dsi, int batchSize) throws ERMLException {
-        this.batchSize = batchSize;
+    public void init(DataSourceInfo dsi) throws ERMLException {
+        this.batchSize = dsi.getBatchSize();
         try {
             dataDir = Paths.get(dsi.getName());
             if (!Files.exists(dataDir)) {
