@@ -16,10 +16,8 @@ class FakersTest extends Specification {
     def "get faker gen"(String field, String generator,
                         Map<String, String> attrs) {
         expect:
-        def fakerGen = fakers.fakerGenerator("en", field,
-                generator,
-                attrs
-        )
+        def fakerGens = fakers.fakerGenerators()
+        def fakerGen = fakerGens[field][generator].getGenerator("en", attrs, [])
         fakerGen.nextData()
 
         where:

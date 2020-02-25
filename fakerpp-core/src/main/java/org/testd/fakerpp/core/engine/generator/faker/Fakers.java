@@ -1,21 +1,30 @@
 package org.testd.fakerpp.core.engine.generator.faker;
 
 import com.github.javafaker.Faker;
+import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.engine.generator.Generator;
+import org.testd.fakerpp.core.engine.generator.GeneratorSupplier;
+import org.testd.fakerpp.core.engine.generator.Generators;
 import org.testd.fakerpp.core.util.MhAndClass;
 import org.testd.fakerpp.core.util.MyReflectUtil;
 import org.testd.fakerpp.core.util.MyStringUtil;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class Fakers {
@@ -28,44 +37,6 @@ public class Fakers {
     private static class ParamVal {
         private final Class clazz;
         private final Object val;
-    }
-
-    public Generator fakerGenerator(String lang, String field, String generator,
-                                    Map<String, String> attrs) throws ERMLException {
-        Faker langFaker = fakerFactory.getLangFaker(lang);
-        MhAndClass mhAndClass = fakerInvoker.fieldInvoker(field);
-        Object fieldFaker = null;
-        try {
-            fieldFaker = mhAndClass.getMh().invokeExact(langFaker);
-        } catch (Throwable throwable) {
-            throw new ERMLException(
-                    String.format("field %s invoke fail", field),
-                    throwable);
-        }
-
-        // bindTo
-        FakerInvoker.MethodInfo methodInfo = fakerInvoker
-                .generatorMethod(fieldFaker.getClass(), generator);
-        Map<String, MyReflectUtil.ParamInfo> paramInfos = methodInfo.getParams();
-        ParamVal[] params = new ParamVal[methodInfo.getParams().size()];
-
-        for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            String paramName = MyStringUtil.delimit2Camel(entry.getKey(), false);
-            String value = entry.getValue();
-            MyReflectUtil.ParamInfo paramInfo = paramInfos.get(paramName);
-            if (paramInfo == null) {
-                throw new ERMLException(
-                        String.format("param %s not exist in field %s, generator %s", paramName,
-                                field, generator)
-                );
-            }
-            params[paramInfo.getOrder()] = new ParamVal(paramInfo.getParamClass(),
-                    value);
-        }
-
-        return new FakerGen(
-                methodInfo.getMh().bindTo(fieldFaker),
-                convertParams(params));
     }
 
     private Object[] convertParams(ParamVal[] params) {
@@ -99,6 +70,69 @@ public class Fakers {
             }
         }
         return realParams.toArray();
+    }
+
+    private Object newFakerField(MethodHandle fieldGetter, String lang) {
+        Faker langFaker = fakerFactory.getLangFaker(lang);
+        Object fieldFaker = null;
+        try {
+            fieldFaker = fieldGetter.invokeExact(langFaker);
+        } catch (Throwable throwable) {
+            throw new RuntimeException(throwable);
+        }
+        return fieldFaker;
+    }
+
+    private Object[] generatorParams(FakerInvoker.MethodInfo generatorMethodInfo,
+                                     Map<String, String> attributes) {
+        Map<String, MyReflectUtil.ParamInfo> paramInfos = generatorMethodInfo.getParams();
+        ParamVal[] params = new ParamVal[generatorMethodInfo.getParams().size()];
+
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            String paramName = MyStringUtil.delimit2Camel(entry.getKey(), false);
+            String value = entry.getValue();
+            MyReflectUtil.ParamInfo paramInfo = paramInfos.get(paramName);
+            if (paramInfo == null) {
+                log.warn("param {} not exist in generator", paramName);
+                continue;
+            }
+            params[paramInfo.getOrder()] = new ParamVal(paramInfo.getParamClass(),
+                    value);
+        }
+
+        return convertParams(params);
+    }
+
+    @Cacheable("fakerGenerators")
+    public Map<String, Map<String, GeneratorSupplier>> fakerGenerators() {
+        ImmutableMap.Builder<String, Map<String, GeneratorSupplier>> fieldBuilder
+                 = ImmutableMap.builder();
+        Map<String, MhAndClass> fakerFields = fakerInvoker.fakerFieldMap();
+
+        for (Map.Entry<String, MhAndClass> fieldsEn : fakerFields.entrySet()) {
+            String fieldName = fieldsEn.getKey();
+            MhAndClass fieldMh = fieldsEn.getValue();
+
+            ImmutableMap.Builder<String, GeneratorSupplier> generatorBuilder
+                    = new ImmutableMap.Builder<>();
+
+            for (Map.Entry<String, FakerInvoker.MethodInfo> generatorsEn :
+                    fakerInvoker.fieldMethodMap(fieldMh.getClazz()).entrySet()) {
+                String generatorName = generatorsEn.getKey();
+                FakerInvoker.MethodInfo generatorMethodInfo = generatorsEn.getValue();
+                generatorBuilder.put(MyStringUtil.camelToDelimit(generatorName),
+                        (lang, attributes, options) -> new FakerGen(
+                                generatorMethodInfo.getMh().bindTo(newFakerField(fieldMh.getMh(), lang)),
+                                generatorParams(generatorMethodInfo, attributes)
+                        ));
+            }
+
+
+            fieldBuilder.put(MyStringUtil.camelToDelimit(fieldName),
+                    generatorBuilder.build());
+        }
+
+        return fieldBuilder.build();
     }
 
 }

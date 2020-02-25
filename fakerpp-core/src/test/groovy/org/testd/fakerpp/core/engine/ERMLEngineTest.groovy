@@ -21,8 +21,8 @@ class ERMLEngineTest extends Specification {
     ERMLEngine engine
 
     def setupSpec() {
-        engine = new ERMLEngine(null, new Generators(), new Fakers(new FakerFactory(),
-                new FakerInvoker()))
+        engine = new ERMLEngine(null,
+                new Generators(new Fakers(new FakerFactory(), new FakerInvoker())))
     }
 
     def "parse erml to tableExec"() {

@@ -18,19 +18,19 @@ class FakerInvokerTest extends Specification {
 
     def "get faker field object"() {
         expect:
-        def invoker = fakerInvoker.fieldInvoker("animal")
+        def invoker = fakerInvoker.fakerFieldMap()["animal"]
         invoker.mh.invokeWithArguments(new Faker()) instanceof Animal
-        def invoker2 = fakerInvoker.fieldInvoker("harry-potter")
+        def invoker2 = fakerInvoker.fakerFieldMap()["harryPotter"]
         invoker2.mh.invokeWithArguments(new Faker()) instanceof HarryPotter
     }
 
     def "test generatorMethod"() {
         given:
         def clazz = Number.class
-        def gName = "random-double"
+        def gName = "randomDouble"
 
         when:
-        def methodInfo = fakerInvoker.generatorMethod(clazz, gName)
+        def methodInfo = fakerInvoker.fieldMethodMap(clazz)[gName]
         def obj = new Faker().number()
 
         then:

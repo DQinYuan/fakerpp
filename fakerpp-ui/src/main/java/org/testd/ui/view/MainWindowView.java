@@ -9,14 +9,16 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.FlowPane;
 import lombok.RequiredArgsConstructor;
-import net.rgielen.fxweaver.core.FxmlView;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
 import org.testd.fakerpp.core.parser.ast.ERML;
 import org.testd.fakerpp.core.parser.ast.Meta;
 import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
+import org.testd.ui.fxweaver.core.FxWeaver;
+import org.testd.ui.fxweaver.core.FxmlView;
 
 import java.util.List;
 
@@ -29,6 +31,7 @@ public class MainWindowView {
     //------------ di
     private final DefaultsConfig defaultsConfig;
     private final PrimaryStageHolder primaryStageHolder;
+    private final FxWeaver fxWeaver;
 
     //------------ JavaFx Component
 
@@ -44,6 +47,8 @@ public class MainWindowView {
     private TableColumn<DataSourceInfo, String> dsTypeCol;
     @FXML
     private TableColumn<DataSourceInfo, String> dsUrlCol;
+    @FXML
+    private FlowPane drawBoard;
 
     @FXML
     private void initialize() {
@@ -68,7 +73,6 @@ public class MainWindowView {
         dsNameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
         dsTypeCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getType()));
         dsUrlCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getUrl()));
-
     }
 
 

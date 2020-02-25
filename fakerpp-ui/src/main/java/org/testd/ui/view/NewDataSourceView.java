@@ -1,18 +1,17 @@
 package org.testd.ui.view;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import lombok.RequiredArgsConstructor;
-import net.rgielen.fxweaver.core.FxmlView;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.store.storers.Storer;
 import org.testd.fakerpp.core.store.storers.Storers;
 import org.testd.ui.DefaultsConfig;
+import org.testd.ui.fxweaver.core.FxmlView;
 
 import java.util.Map;
 import java.util.function.Supplier;

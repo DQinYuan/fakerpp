@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
+import org.testd.fakerpp.core.util.MyReflectUtil;
 import org.testd.fakerpp.core.util.MyStringUtil;
 
 import java.lang.reflect.Modifier;
@@ -37,9 +38,7 @@ public class Storers {
     @Cacheable("storers")
     public Map<String, Map<String, Supplier<Storer>>> storers() {
         String pack = "org.testd.fakerpp.core.store.storers";
-        Reflections reflections = new Reflections(pack);
-        Set<Class<? extends Storer>> storers = reflections.getSubTypesOf(Storer.class);
-        return storers.stream()
+        return MyReflectUtil.subtypes(pack, Storer.class)
                 .filter(s -> s.getSimpleName().endsWith("Storer") && !Modifier.isAbstract(s.getModifiers()))
                 .filter(s -> !s.getPackage().getName().equals(pack))
                 .map(s -> {

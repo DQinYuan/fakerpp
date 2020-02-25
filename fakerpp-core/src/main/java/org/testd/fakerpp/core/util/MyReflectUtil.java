@@ -8,6 +8,7 @@ import javassist.bytecode.LocalVariableAttribute;
 import javassist.bytecode.MethodInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.reflections.Reflections;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -17,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MyReflectUtil {
 
@@ -53,7 +55,7 @@ public class MyReflectUtil {
     @RequiredArgsConstructor
     @Getter
     public static class ParamInfo {
-        private final Class paramClass;
+        private final Class<?> paramClass;
         private final int order;
     }
 
@@ -96,27 +98,27 @@ public class MyReflectUtil {
         return null;
     }
 
-    private static ConcurrentMap<String, MethodHandle> consCache =
-            new ConcurrentHashMap<>();
-
     public static MethodHandle getNoArgConstructor(String qualifiedName,
-                                                   Class typeToGet) throws ClassNotFoundException {
-        String cacheKey = qualifiedName + "_" +typeToGet.getName();
-        if (!consCache.containsKey(cacheKey)) {
-            Class genClass = null;
-            genClass = Class.forName(qualifiedName);
-            MethodHandle constructor = null;
-            try {
-                constructor = MethodHandles.lookup().findConstructor(genClass,
-                        MethodType.methodType(void.class));
-            } catch (NoSuchMethodException | IllegalAccessException e) {
-                throw new AssertionError(
-                        String.format("class %s do not have no arg constructor", qualifiedName), e);
-            }
-            // https://stackoverflow.com/questions/27278314/why-cant-i-invokeexact-here-even-though-the-methodtype-is-ok
-            consCache.put(cacheKey, constructor.asType(constructor.type().changeReturnType(typeToGet)));
+                                                   Class<?> typeToGet) throws ClassNotFoundException {
+        Class genClass = Class.forName(qualifiedName);
+        return getNoArgConstructor(genClass, typeToGet);
+    }
+
+    public static MethodHandle getNoArgConstructor(Class<?> clazz, Class<?> typeToGet) {
+        MethodHandle constructor = null;
+        try {
+            constructor = MethodHandles.lookup().findConstructor(clazz,
+                    MethodType.methodType(void.class));
+        } catch (NoSuchMethodException | IllegalAccessException e) {
+            throw new AssertionError(
+                    String.format("class %s do not have no arg constructor", clazz.getName()), e);
         }
 
-        return consCache.get(cacheKey);
+        return constructor.asType(constructor.type().changeReturnType(typeToGet));
+    }
+
+    public static <T> Stream<Class<? extends T>> subtypes(String pack, Class<T> superType) {
+        Reflections reflections = new Reflections(pack);
+        return reflections.getSubTypesOf(superType).stream();
     }
 }

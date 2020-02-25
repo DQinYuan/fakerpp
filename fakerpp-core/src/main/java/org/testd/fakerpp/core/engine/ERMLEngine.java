@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.engine.domain.ColExec;
@@ -34,8 +35,6 @@ public class ERMLEngine {
     private final ERMLStore ermlStore;
 
     private final Generators generators;
-
-    private final Fakers fakers;
 
     public void exec(ERML erml) throws ERMLException {
         ermlStore.exec(getScheduler(erml));
@@ -144,20 +143,10 @@ public class ERMLEngine {
     }
 
     private Generator getGeneratorByInfo(Table.GeneratorInfo gi, String defaultLang) throws ERMLException {
-        String field = gi.getField();
-        Generator generator = null;
-        if ("built-in".equals(field)) {
-            return generators.builtInGenerator(gi.getGenerator(),
-                    gi.getAttributes(),
-                    gi.getOptions());
-        } else {
-            return fakers.fakerGenerator("default".equals(gi.getLang())
-                            ? defaultLang : gi.getLang(),
-                    field,
-                    gi.getGenerator(),
-                    gi.getAttributes());
-        }
+        return generators.generators()
+                .get(gi.getField())
+                .get(gi.getGenerator())
+                .getGenerator("default".equals(gi.getLang()) ? defaultLang : gi.getLang(),
+                        gi.getAttributes(), gi.getOptions());
     }
-
-
 }

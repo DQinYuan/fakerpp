@@ -4,9 +4,9 @@ import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
-import net.rgielen.fxweaver.core.FxWeaver;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
+import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.view.OpenDialogView;
 
 import java.util.function.Consumer;

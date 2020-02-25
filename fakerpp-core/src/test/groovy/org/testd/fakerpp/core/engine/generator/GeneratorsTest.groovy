@@ -16,15 +16,6 @@ class GeneratorsTest extends Specification {
         generators = new Generators()
     }
 
-    def "get built-in class by tag name"() {
-        expect:
-        def genConsHandler = generators.getConsByBuiltInTag("date-range")
-        // can not invoke 'invokeExact' in Groovy
-        // so we use invokeWithArguments instead
-        def genor = genConsHandler.mh.invokeWithArguments()
-        genor instanceof DateRangeGen
-    }
-
     def "get built-in class field setter"() {
         given:
         def gField = generators.getFieldSetter(clazz, fieldName)
@@ -42,7 +33,8 @@ class GeneratorsTest extends Specification {
 
     def "get built in generator object"(String tag, Map attrs, List options, Map exp) {
         given:
-        def generator = generators.builtInGenerator(tag, attrs, options)
+        def builtInGens = generators.builtInGenerators()
+        def generator = builtInGens[tag].getGenerator("", attrs, options)
 
         expect:
         exp.each {
