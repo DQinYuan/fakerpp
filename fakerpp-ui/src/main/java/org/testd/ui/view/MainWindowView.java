@@ -5,11 +5,10 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Separator;
-import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
@@ -19,6 +18,9 @@ import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
+import org.testd.ui.service.TableInfoService;
+import org.testd.ui.view.dynamic.FollowRightMouseMenu;
+import org.testd.ui.view.dynamic.MyTableView;
 
 import java.util.List;
 
@@ -32,6 +34,7 @@ public class MainWindowView {
     private final DefaultsConfig defaultsConfig;
     private final PrimaryStageHolder primaryStageHolder;
     private final FxWeaver fxWeaver;
+    private final TableInfoService tableInfoService;
 
     //------------ JavaFx Component
 
@@ -48,7 +51,7 @@ public class MainWindowView {
     @FXML
     private TableColumn<DataSourceInfo, String> dsUrlCol;
     @FXML
-    private FlowPane drawBoard;
+    private Pane drawBoard;
 
     @FXML
     private void initialize() {
@@ -64,17 +67,40 @@ public class MainWindowView {
             items.add(locales.get(i));
         }
 
-
         langs.setItems(items);
         langs.getSelectionModel()
                 .select(localesConfig.getDefaultLocale());
 
         // init dataSourceTable
-        dsNameCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getName()));
-        dsTypeCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getType()));
-        dsUrlCol.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getUrl()));
+        dsNameCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getName()));
+        dsTypeCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getType()));
+        dsUrlCol.setCellValueFactory(cellData ->
+                new SimpleStringProperty(cellData.getValue().getUrl()));
+
+        // init draw board 'New Table' menu
+        drawBoard.addEventHandler(MouseEvent.MOUSE_CLICKED,
+                // getScene return null
+                new FollowRightMouseMenu(false, drawBoard,
+                        mouseEvent -> {
+                            MenuItem newTable = new MenuItem("New Table");
+                            newTable.setOnAction(event -> {
+                                MyTableView table =
+                                        fxWeaver.loadControl(MyTableView.class);
+                                table.setTranslateX(mouseEvent.getX());
+                                table.setTranslateY(mouseEvent.getY());
+                                drawBoard.getChildren().add(table);
+                                tableInfoService.addTable(table);
+                            });
+                            return newTable;
+                        }));
     }
 
+    public void deleteTableFromDrawBoard(MyTableView tableView) {
+        drawBoard.getChildren().remove(tableView);
+        tableInfoService.deleteTable(tableView);
+    }
 
     @FXML
     private void handleExit() {
@@ -93,7 +119,6 @@ public class MainWindowView {
             dataSourceTable.getItems().addAll(meta.getDataSourceInfos().values());
         }
     }
-
 
 
 }

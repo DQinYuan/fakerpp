@@ -1,5 +1,7 @@
 package org.testd.ui;
 
+import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -50,8 +52,12 @@ public class PrimaryStageHolder implements ApplicationListener<StageReadyEvent> 
     }
 
     public void newSceneInChild(Class<?> target) {
+        newSceneInChild(fxWeaver.loadView(target));
+    }
+
+    public void newSceneInChild(Parent content) {
         Stage child = child();
-        child.setScene(new Scene(fxWeaver.loadView(target)));
+        child.setScene(new Scene(content));
         child.showAndWait();
     }
 }

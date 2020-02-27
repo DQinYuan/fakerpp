@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ContextMenu?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<fx:root prefHeight="0.0" prefWidth="300.0" type="javafx.scene.layout.BorderPane" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
+   <top>
+      <ToolBar fx:id="toolBar" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+        <items>
+            <Label text="Test">
+               <padding>
+                  <Insets right="10.0" />
+               </padding>
+               <font>
+                  <Font name="System Bold" size="15.0" />
+               </font>
+               <contextMenu>
+                  <ContextMenu>
+                    <items>
+                      <MenuItem fx:id="deleteTableMenu" mnemonicParsing="false" text="Delete Table" />
+                    </items>
+                  </ContextMenu>
+               </contextMenu>
+            </Label>
+          <Button mnemonicParsing="false" text="New Col Family">
+               <font>
+                  <Font size="10.0" />
+               </font></Button>
+            <Button mnemonicParsing="false" text="Connect To">
+               <font>
+                  <Font size="10.0" />
+               </font></Button>
+            <Button mnemonicParsing="false" onAction="#handleMetaConf" text="Meta Conf">
+               <font>
+                  <Font size="10.0" />
+               </font>
+            </Button>
+        </items>
+         <opaqueInsets>
+            <Insets bottom="1.0" right="1.0" top="1.0" />
+         </opaqueInsets>
+      </ToolBar>
+   </top>
+   <center>
+      <VBox fx:id="colFamiliesInput" prefHeight="200.0" prefWidth="100.0" style="-fx-background-color: beige;" BorderPane.alignment="CENTER" />
+   </center>
+</fx:root>
