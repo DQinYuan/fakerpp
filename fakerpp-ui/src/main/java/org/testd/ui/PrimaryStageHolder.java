@@ -1,14 +1,13 @@
 package org.testd.ui;
 
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 import org.testd.ui.fxweaver.core.FxWeaver;
+import org.testd.ui.util.Stages;
 import org.testd.ui.view.OpenDialogView;
 
 import java.util.function.Consumer;
@@ -45,10 +44,7 @@ public class PrimaryStageHolder implements ApplicationListener<StageReadyEvent> 
     }
 
     public Stage child() {
-        Stage s = new Stage();
-        s.initOwner(primaryStage.getScene().getWindow());
-        s.initModality(Modality.WINDOW_MODAL);
-        return s;
+        return Stages.child(primaryStage.getScene().getWindow());
     }
 
     public void newSceneInChild(Class<?> target) {
@@ -56,8 +52,6 @@ public class PrimaryStageHolder implements ApplicationListener<StageReadyEvent> 
     }
 
     public void newSceneInChild(Parent content) {
-        Stage child = child();
-        child.setScene(new Scene(content));
-        child.showAndWait();
+        Stages.newSceneInChild(content, primaryStage.getScene().getWindow());
     }
 }

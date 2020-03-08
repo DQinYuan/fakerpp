@@ -6,9 +6,9 @@ import javafx.beans.property.SimpleStringProperty;
 
 public class TableMetaProperty {
 
-    private SimpleStringProperty nameProperty;
-    private SimpleBooleanProperty virtualProperty;
-    private SimpleIntegerProperty numberProperty;
+    private final SimpleStringProperty nameProperty;
+    private final SimpleBooleanProperty virtualProperty;
+    private final SimpleIntegerProperty numberProperty;
 
     public TableMetaProperty() {
         this("Test", false, 0);

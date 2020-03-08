@@ -5,6 +5,10 @@ import javafx.collections.ObservableList;
 import org.springframework.stereotype.Service;
 import org.testd.ui.view.dynamic.MyTableView;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 @Service
 public class TableInfoService {
 
@@ -18,4 +22,14 @@ public class TableInfoService {
         displayTables.remove(tableView);
     }
 
+    public List<MyTableView> tablesExcept(MyTableView tableView) {
+        return displayTables.stream()
+                .filter(t -> t != tableView)
+                .collect(Collectors.toList());
+    }
+
+    public boolean nameExists(String tableName) {
+        return displayTables.stream().anyMatch(tableView ->
+                Objects.equals(tableName, tableView.getName()));
+    }
 }

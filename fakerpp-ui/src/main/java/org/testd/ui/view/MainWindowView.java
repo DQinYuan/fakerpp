@@ -4,8 +4,8 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.TableView;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -18,11 +18,15 @@ import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
+import org.testd.ui.model.TableMetaProperty;
 import org.testd.ui.service.TableInfoService;
+import org.testd.ui.util.FxDialogs;
 import org.testd.ui.view.dynamic.FollowRightMouseMenu;
 import org.testd.ui.view.dynamic.MyTableView;
+import org.testd.ui.view.dynamic.TableMetaConfView;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 
 @Component
@@ -83,18 +87,23 @@ public class MainWindowView {
         drawBoard.addEventHandler(MouseEvent.MOUSE_CLICKED,
                 // getScene return null
                 new FollowRightMouseMenu(false, drawBoard,
-                        mouseEvent -> {
-                            MenuItem newTable = new MenuItem("New Table");
-                            newTable.setOnAction(event -> {
-                                MyTableView table =
-                                        fxWeaver.loadControl(MyTableView.class);
-                                table.setTranslateX(mouseEvent.getX());
-                                table.setTranslateY(mouseEvent.getY());
-                                drawBoard.getChildren().add(table);
-                                tableInfoService.addTable(table);
-                            });
-                            return newTable;
-                        }));
+                        FollowRightMouseMenu.menuEntry("New Table",
+                                mouseEvent -> event -> handleNewTable(mouseEvent)))
+        );
+    }
+
+    private void handleNewTable(MouseEvent mouseEvent) {
+        TableMetaProperty tableMetaProperty = new TableMetaProperty();
+        primaryStageHolder.newSceneInChild(TableMetaConfView
+                .getView(tableMetaProperty, name -> !tableInfoService.nameExists(name)));
+
+        MyTableView table =
+                fxWeaver.loadControl(MyTableView.class);
+        table.initTableMetaProperty(tableMetaProperty);
+        table.setTranslateX(mouseEvent.getX());
+        table.setTranslateY(mouseEvent.getY());
+        drawBoard.getChildren().add(table);
+        tableInfoService.addTable(table);
     }
 
     public void deleteTableFromDrawBoard(MyTableView tableView) {

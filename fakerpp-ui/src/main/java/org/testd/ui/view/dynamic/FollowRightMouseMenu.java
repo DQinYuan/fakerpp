@@ -1,11 +1,13 @@
 package org.testd.ui.view.dynamic;
 
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import lombok.RequiredArgsConstructor;
 
 import java.util.function.Function;
 
@@ -14,12 +16,26 @@ public class FollowRightMouseMenu implements EventHandler<MouseEvent> {
 
     private final boolean isAcceptBubblingEvent;
     private final Node windowNode; // null
-    private final Function<MouseEvent, MenuItem>[] itemGetters;
+    private final EntryNameAndAction[] entryNameAndActions;
 
-    public FollowRightMouseMenu(boolean acceptBubblingEvent, Node node, Function<MouseEvent, MenuItem>... items) {
-        isAcceptBubblingEvent = acceptBubblingEvent;
-        windowNode = node;
-        itemGetters = items;
+    @RequiredArgsConstructor
+    public static class EntryNameAndAction {
+        private final String entryName;
+        private final Function<MouseEvent,
+                EventHandler<ActionEvent>> action;
+    }
+
+    public static EntryNameAndAction menuEntry(String entryName,
+                                               Function<MouseEvent,
+                                                       EventHandler<ActionEvent>> action) {
+        return new EntryNameAndAction(entryName, action);
+    }
+
+    public FollowRightMouseMenu(boolean acceptBubblingEvent, Node node,
+                                EntryNameAndAction... entryNameAndActions) {
+        this.isAcceptBubblingEvent = acceptBubblingEvent;
+        this.windowNode = node;
+        this.entryNameAndActions = entryNameAndActions;
     }
 
     @Override
@@ -29,8 +45,10 @@ public class FollowRightMouseMenu implements EventHandler<MouseEvent> {
                 // avoid event bubbling
                 && (isAcceptBubblingEvent || event.getTarget() == event.getSource())) {
             ContextMenu contextMenu = new ContextMenu();
-            for (Function<MouseEvent, MenuItem> itemGetter : itemGetters) {
-                contextMenu.getItems().add(itemGetter.apply(event));
+            for (EntryNameAndAction entryNameAndAction : entryNameAndActions) {
+                MenuItem mi = new MenuItem(entryNameAndAction.entryName);
+                mi.setOnAction(entryNameAndAction.action.apply(event));
+                contextMenu.getItems().add(mi);
             }
             contextMenu.show(windowNode.getScene().getWindow(),
                     event.getScreenX(),

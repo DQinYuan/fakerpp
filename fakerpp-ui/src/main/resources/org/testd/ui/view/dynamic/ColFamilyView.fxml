@@ -14,7 +14,7 @@
       <Insets left="10.0" right="10.0" />
    </padding>
    <left>
-      <ColFamilyInputMenu/>
+      <ColFamilyInputMenu fx:id="colsInput"/>
    </left>
    <opaqueInsets>
       <Insets bottom="10.0" top="10.0" />

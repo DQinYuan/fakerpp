@@ -12,6 +12,10 @@ import javafx.stage.Stage;
 public class Forms {
 
     public static Parent renderForm(Form form) {
+        return renderForm(form, ()->{});
+    }
+
+    public static Parent renderForm(Form form, Runnable okAction) {
         BorderPane borderPane = new BorderPane();
         borderPane.setCenter(new FormRenderer(form));
 
@@ -31,6 +35,7 @@ public class Forms {
                 Button button = (Button) e.getSource();
                 Stage stage = (Stage) button.getScene().getWindow();
                 stage.close();
+                okAction.run();
             }
         });
         BorderPane.setAlignment(okBu, Pos.CENTER);

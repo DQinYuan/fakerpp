@@ -5,9 +5,12 @@ import com.dlsc.formsfx.model.structure.Form
 import com.dlsc.formsfx.model.structure.Group
 import com.dlsc.formsfx.view.renderer.FormRenderer
 import javafx.application.Platform
+import javafx.beans.property.ObjectProperty
+import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
-import javafx.scene.Scene
-import javafx.stage.Stage
+import javafx.beans.value.ChangeListener
+import javafx.collections.FXCollections
 import org.junit.Rule
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -41,36 +44,39 @@ class FakerppUIApplicationTest extends Specification {
         println(defaultsConfig.getBatchSize())
     }
 
-    def showContent(content) {
-        def stage = new Stage()
-        def scene = new Scene(content)
-        stage.setScene(scene)
-        stage.showAndWait()
-        return true
-    }
-
-    def show(Class<?> viewClass) {
-        return showContent(fxWeaver.loadControl(viewClass))
-    }
-
     def "test ColFamilyView"() {
         expect:
-        show(ColFamilyView.class)
+        Tools.show(ColFamilyView.class)
     }
 
     def "test TableView"() {
         expect:
-        show(MyTableView.class)
+        Tools.show(MyTableView.class)
     }
 
     def "test JoinView"() {
         expect:
-        show(JoinReceiveView.class)
+        Tools.show(JoinReceiveView.class)
     }
 
     class Model {
         SimpleStringProperty username = new SimpleStringProperty("")
         SimpleStringProperty password = new SimpleStringProperty("")
+    }
+
+    class Person {
+        String name
+        int age
+
+
+        @Override
+        String toString() {
+            return name
+        }
+    }
+
+    Person of(String name, int age) {
+        return new Person(name: name, age: age)
     }
 
     def "test form"() {
@@ -81,18 +87,31 @@ class FakerppUIApplicationTest extends Specification {
             println newV
         })*/
 
+        ObjectProperty<Person> op = new SimpleObjectProperty()
+
+        op.addListener((ChangeListener<? super Person>) { ob, oldV, newV ->
+            println(newV)
+        })
+
+
         Form loginForm = Form.of(
                 Group.of(
                         Field.ofStringType(model.username)
                                 .label("Username"),
                         Field.ofStringType(model.password)
                                 .label("Password")
-                                .required("This field can’t be empty")
+                                .required("This field can’t be empty"),
+                        Field.ofSingleSelectionType(new SimpleListProperty<Person>(
+                                FXCollections.<Person> observableArrayList(of("tom", 2),
+                                        of("worker", 10))), op)
+                                .label("Sex"),
+                        Field.ofMultiSelectionType(new SimpleListProperty<String>("aaaaa", "bbbbb"))
+                                .label("childs")
                 )
         ).title("Login")
 
         def renderer = new FormRenderer(loginForm)
-        showContent(renderer)
+        Tools.showContent(renderer)
 
         Platform.exit()
     }

@@ -401,6 +401,10 @@ public class FxWeaver {
         }
     }
 
+    public <C> C loadBean(Class<C> beanClass) {
+        return beanClass.cast(beanFactory.call(beanClass));
+    }
+
     <C, V extends Node> FxControllerAndView<C, V> loadByViewUsingFxmlLoader(FXMLLoader loader, URL url,
                                                                             ResourceBundle resourceBundle) {
         try (InputStream fxmlStream = url.openStream()) {
