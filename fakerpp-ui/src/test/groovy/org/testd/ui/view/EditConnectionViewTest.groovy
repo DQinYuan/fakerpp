@@ -7,10 +7,11 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.testd.ui.JavaFXThreadingRule
 import org.testd.ui.Tools
 import org.testd.ui.fxweaver.core.FxWeaver
+import org.testd.ui.view.dynamic.EditConnectionView
 import spock.lang.Specification
 
 @SpringBootTest
-class NewConnectionViewTest extends Specification {
+class EditConnectionViewTest extends Specification {
 
     @Autowired
     FxWeaver fxWeaver
@@ -20,7 +21,7 @@ class NewConnectionViewTest extends Specification {
 
     def "test new connection view"() {
         expect:
-        Tools.showContent(fxWeaver.loadView(NewConnectionView.class))
+        Tools.showContent(fxWeaver.loadView(EditConnectionView.class))
         Platform.exit()
     }
 

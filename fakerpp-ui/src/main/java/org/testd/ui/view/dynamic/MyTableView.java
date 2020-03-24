@@ -1,17 +1,14 @@
 package org.testd.ui.view.dynamic;
 
-import com.google.common.annotations.VisibleForTesting;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -20,17 +17,18 @@ import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.ColFamilyProperty;
-import org.testd.ui.model.JoinType;
+import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.TableMetaProperty;
 import org.testd.ui.service.TableInfoService;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.MyVBox;
 import org.testd.ui.util.Stages;
 import org.testd.ui.view.MainWindowView;
-import org.testd.ui.view.NewConnectionView;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Component
@@ -44,6 +42,7 @@ public class MyTableView extends BorderPane {
     private final MainWindowView mainWindowView;
     private final PrimaryStageHolder primaryStageHolder;
     private final TableInfoService tableInfoService;
+    private final BeanFactory beanFactory;
 
     //----------- property
     private TableMetaProperty tableMetaProperty;
@@ -118,13 +117,68 @@ public class MyTableView extends BorderPane {
             return;
         }
 
-        primaryStageHolder.newSceneInChild(NewConnectionView.class);
+        ConnectionView connectionView = beanFactory.getBean(ConnectionView.class);
+        ConnectionProperty connectionProperty = new ConnectionProperty(this);
+        connectionView.register(connectionProperty);
+
+        EditConnectionView editConnectionView = fxWeaver.loadControl(EditConnectionView.class);
+        editConnectionView.initFromConnectionProperty(connectionProperty);
+
+        Stages.newSceneInChild(editConnectionView, this.getScene().getWindow());
     }
 
-    public List<ColFamilyProperty> getColFamilyProperty() {
+    public <T extends ColFamilyViewInterface> List<ColFamilyProperty>
+        getColFamiliesExcept(Class<T> viewType, Predicate<T> predicate) {
+        return colFamiliesInput.getMyChildren().stream()
+                .filter(c -> {
+                    if (!c.getClass().equals(viewType)) {
+                        return true;
+                    }
+
+                    return predicate.test(viewType.cast(c));
+                })
+                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .collect(Collectors.toList());
+    }
+
+    public List<ColFamilyProperty> getColFamilies() {
         return colFamiliesInput.getMyChildren()
                 .stream().map(ColFamilyViewInterface::getColFamilyProperty)
                 .collect(Collectors.toList());
+    }
+
+    public List<ColFamilyProperty> getColFamiliesExcept(ColFamilyViewInterface expect) {
+        return colFamiliesInput.getMyChildren().stream()
+                .filter(c -> c != expect)
+                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * col families except join col families
+     * @return
+     */
+    public List<ColFamilyProperty> getNormalColFamilies() {
+        return colFamiliesInput.getMyChildren()
+                .stream().filter(vi -> vi instanceof ColFamilyView)
+                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .collect(Collectors.toList());
+    }
+
+    public boolean containsAny(Collection<String> colNames) {
+        return getColFamilies().stream()
+                .map(ColFamilyProperty::colsProperty)
+                .flatMap(Set::stream)
+                .anyMatch(colNames::contains);
+    }
+
+    public boolean containsAnyExcept(Collection<String> colNames, ColFamilyViewInterface expect) {
+        return colFamiliesInput.getMyChildren().stream()
+                .filter(c -> c != expect)
+                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .map(ColFamilyProperty::colsProperty)
+                .flatMap(Set::stream)
+                .anyMatch(colNames::contains);
     }
 
     @FXML
@@ -134,16 +188,22 @@ public class MyTableView extends BorderPane {
         EditColFamilyView editColFamilyView = fxWeaver.loadControl(EditColFamilyView.class);
         editColFamilyView.initFromMyTableView(this, colFamilyProperty);
 
-        Stages.newSceneInChild(editColFamilyView, this.getScene().getWindow());
-
         ColFamilyView colFamilyView = fxWeaver.loadControl(ColFamilyView.class);
-        colFamilyView.initFromTableAndColFamilyProperty(this, colFamilyProperty);
-        colFamiliesInput.getMyChildren().add(colFamilyView);
-        colFamilyProperty.colsProperty().addListener((ListChangeListener<String>) c -> {
-            if (c.getList().isEmpty()) {
+        colFamilyProperty.visibleProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                colFamilyView.initFromTableAndColFamilyProperty(this, colFamilyProperty);
+                colFamiliesInput.getMyChildren().add(colFamilyView);
+            } else {
                 colFamiliesInput.getMyChildren().remove(colFamilyView);
             }
         });
+        colFamilyProperty.colsProperty().addListener((SetChangeListener<? super String>)  c -> {
+            if (c.getSet().isEmpty()) {
+                colFamilyProperty.visibleProperty().set(false);
+            }
+        });
+
+        Stages.newSceneInChild(editColFamilyView, this.getScene().getWindow());
     }
 
     public void addTableColFamilies(Collection<ColFamilyViewInterface> tcv) {
@@ -158,13 +218,8 @@ public class MyTableView extends BorderPane {
         colFamiliesInput.getMyChildren().remove(colFamilyView);
     }
 
-    @VisibleForTesting
-    protected void wrapInJoinSendView(String targetTableName, JoinType joinType,
-                                      List<ColFamilyView> colFamilyViews) {
-        JoinSendView joinSendView = fxWeaver.loadControl(JoinSendView.class);
-        joinSendView.setJoinTypeAndTarget(joinType, targetTableName);
-        joinSendView.addColFamilies(colFamilyViews);
-
-        colFamiliesInput.getMyChildren().add(joinSendView);
+    public void flushColFamilyView() {
+        colFamiliesInput.requestFocus();
+        colFamiliesInput.layout();
     }
 }

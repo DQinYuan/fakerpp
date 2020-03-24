@@ -17,6 +17,8 @@ public class DefaultsConfig {
 
     private String storeType;
 
+    private double lineEvadeInterval;
+
     @Data
     public class SupportedLocales {
 

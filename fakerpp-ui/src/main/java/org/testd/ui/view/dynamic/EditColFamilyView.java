@@ -1,5 +1,6 @@
 package org.testd.ui.view.dynamic;
 
+import com.google.common.collect.ImmutableSet;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
@@ -16,6 +17,7 @@ import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.Stages;
 
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -35,7 +37,7 @@ public class EditColFamilyView extends BorderPane {
     private List<ColFamilyProperty> otherColFamilies;
 
     public void initFromMyTableView(MyTableView tableView, ColFamilyProperty colFamilyProperty) {
-        this.otherColFamilies = tableView.getColFamilyProperty().stream()
+        this.otherColFamilies = tableView.getNormalColFamilies().stream()
                 .filter(cf -> !cf.equals(colFamilyProperty))
                 .collect(Collectors.toList());
         otherColFamilies.forEach(
@@ -52,10 +54,10 @@ public class EditColFamilyView extends BorderPane {
     @FXML
     private void handleOk() {
         // add new cols and delete empty strings
-        List<String> extraCols = Pattern.compile("\n")
+        Set<String> extraCols = Pattern.compile("\n")
                 .splitAsStream(newCols.getText())
                 .filter(s -> !s.trim().equals(""))
-                .collect(Collectors.toList());
+                .collect(ImmutableSet.toImmutableSet());
 
         // catch other cols and delete from origin col families
         ObservableList<String> catchCols = catchOtherCols.getCheckModel().getCheckedItems();
@@ -67,10 +69,24 @@ public class EditColFamilyView extends BorderPane {
                     "Col family empty", "Col family can not be empty!!");
             return;
         }
+        if (otherColFamilies.stream()
+                .map(ColFamilyProperty::colsProperty)
+                .flatMap(Set::stream)
+                .anyMatch(extraCols::contains)) {
+            FxDialogs.showError("Empty Col Family Error",
+                    "Col Name duplicate", "Col Name can not duplicate!!");
+            return;
+        }
 
-        colFamilyProperty.clearCols();
-        colFamilyProperty.addCols(extraCols);
-        colFamilyProperty.addCols(catchCols);
+        ImmutableSet.Builder<String> currentColsBuilder = ImmutableSet.builder();
+        currentColsBuilder.addAll(extraCols);
+        currentColsBuilder.addAll(catchCols);
+        Set<String> currentCols = currentColsBuilder.build();
+
+        // col family ui will be auto removed when col family property is empty, so we must add first, then delete
+        colFamilyProperty.replace(currentCols);
+
+        colFamilyProperty.visibleProperty().set(true);
         Stages.closeWindow(getScene().getWindow());
     }
 

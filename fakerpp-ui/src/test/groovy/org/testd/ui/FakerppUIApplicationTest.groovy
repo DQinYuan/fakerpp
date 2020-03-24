@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.testd.fakerpp.core.ERMLExecutor
 import org.testd.ui.fxweaver.core.FxWeaver
 import org.testd.ui.view.dynamic.ColFamilyView
-import org.testd.ui.view.dynamic.JoinReceiveView
+import org.testd.ui.view.dynamic.JoinView
 import org.testd.ui.view.dynamic.MyTableView
 import spock.lang.Specification
 
@@ -56,7 +56,7 @@ class FakerppUIApplicationTest extends Specification {
 
     def "test JoinView"() {
         expect:
-        Tools.show(JoinReceiveView.class)
+        Tools.show(JoinView.class)
     }
 
     class Model {

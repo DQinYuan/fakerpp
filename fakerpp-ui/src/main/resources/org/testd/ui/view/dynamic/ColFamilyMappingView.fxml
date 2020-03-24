@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 
@@ -9,6 +9,6 @@
    <children>
       <CheckBox fx:id="checkbox" mnemonicParsing="false" text="[col1,col2,col3]" />
        <ImageView fx:id="rightArrow" fitHeight="15.0" fitWidth="20.0" visible="false" />
-      <Label fx:id="mappingCols" text="[col1,col2,col3]" visible="false" />
+      <TextField fx:id="mapCol" visible="false" />
    </children>
 </fx:root>

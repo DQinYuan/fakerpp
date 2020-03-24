@@ -14,11 +14,11 @@
       <Insets bottom="10.0" top="10.0" />
    </opaqueInsets>
    <left>
-      <ColFamilyInputMenu />
+      <ColFamilyInputMenu fx:id="partInCols"/>
    </left>
    <right>
       <HBox alignment="CENTER_LEFT" prefHeight="50.0" prefWidth="162.0" spacing="10.0" BorderPane.alignment="CENTER">
-         <Label text="Join From xxx" />
+         <Label text="Join From xxx" fx:id="joinText"/>
       </HBox>
    </right>
 </fx:root>

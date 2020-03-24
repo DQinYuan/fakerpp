@@ -4,9 +4,12 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.Node;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +23,11 @@ import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.TableMetaProperty;
 import org.testd.ui.service.TableInfoService;
-import org.testd.ui.util.FxDialogs;
 import org.testd.ui.view.dynamic.FollowRightMouseMenu;
 import org.testd.ui.view.dynamic.MyTableView;
 import org.testd.ui.view.dynamic.TableMetaConfView;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 
 @Component
@@ -102,12 +103,12 @@ public class MainWindowView {
         table.initTableMetaProperty(tableMetaProperty);
         table.setTranslateX(mouseEvent.getX());
         table.setTranslateY(mouseEvent.getY());
-        drawBoard.getChildren().add(table);
+        appendInDrawBoard(table);
         tableInfoService.addTable(table);
     }
 
     public void deleteTableFromDrawBoard(MyTableView tableView) {
-        drawBoard.getChildren().remove(tableView);
+        removeFromDrawBoard(tableView);
         tableInfoService.deleteTable(tableView);
     }
 
@@ -127,6 +128,14 @@ public class MainWindowView {
             langs.getSelectionModel().select(meta.getLang());
             dataSourceTable.getItems().addAll(meta.getDataSourceInfos().values());
         }
+    }
+
+    public void appendInDrawBoard(Node element) {
+        drawBoard.getChildren().add(element);
+    }
+
+    public void removeFromDrawBoard(Node element) {
+        drawBoard.getChildren().remove(element);
     }
 
 

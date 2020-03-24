@@ -18,6 +18,7 @@ class MyTableViewTest extends Specification {
     @Autowired
     FxWeaver fxWeaver
 
+/*
     def "test wrapInJoinSendView"() {
         expect:
         List<ColFamilyView> familyViews = Arrays.asList(fxWeaver.loadControl(ColFamilyView.class),
@@ -29,6 +30,7 @@ class MyTableViewTest extends Specification {
 
         Tools.showContent(myTableView)
     }
+*/
 
 
 

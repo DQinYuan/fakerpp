@@ -1,6 +1,7 @@
 fakerdefaults:
   storeType: mysql
   batchSize: 100
+  lineEvadeInterval: 10.0
   localesInfo:
     defaultLocale: en
     separateBelow: 2

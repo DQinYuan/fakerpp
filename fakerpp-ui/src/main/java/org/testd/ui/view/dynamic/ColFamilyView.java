@@ -2,6 +2,8 @@ package org.testd.ui.view.dynamic;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
+import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -20,6 +22,7 @@ import org.testd.ui.model.ColFamilyProperty;
 import org.testd.ui.util.Stages;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -49,9 +52,14 @@ public class ColFamilyView extends BorderPane implements ColFamilyViewInterface 
         Map<String, Map<String, GeneratorSupplier>> gens = generators.generators();
         fieldInput.setItems(FXCollections.observableArrayList(gens.keySet()));
         fieldInput.valueProperty().addListener((observable, oldValue, newValue) -> {
-            generatorInput.setItems(FXCollections
-                    .observableArrayList(gens.get(newValue).keySet()));
+            ObservableList<String> generators = FXCollections
+                    .observableArrayList(gens.get(newValue).keySet());
+            generatorInput.setItems(generators);
+            if (generators.size() > 0) {
+                generatorInput.getSelectionModel().select(0);
+            }
         });
+        fieldInput.getSelectionModel().select("built-in");
 
         // init edit cols menu
         colsInput.setFollowRightMenu(
@@ -72,7 +80,7 @@ public class ColFamilyView extends BorderPane implements ColFamilyViewInterface 
         this.colFamilyProperty = colFamilyProperty;
         colsInputSync();
         colFamilyProperty.colsProperty()
-                .addListener((ListChangeListener<String>) c -> colsInputSync());
+                .addListener((SetChangeListener<String>) c -> colsInputSync());
 
         colFamilyProperty.fieldProperty()
                 .bindBidirectional(fieldInput.valueProperty());

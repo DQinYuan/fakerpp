@@ -32,4 +32,15 @@ public class TableInfoService {
         return displayTables.stream().anyMatch(tableView ->
                 Objects.equals(tableName, tableView.getName()));
     }
+
+    /**
+     * throw Exception if not exist
+     * @param name
+     * @return
+     */
+    public MyTableView getTableByName(String name) {
+        return displayTables.stream()
+                .filter(t -> Objects.equals(t.getName(), name))
+                .findFirst().get();
+    }
 }
