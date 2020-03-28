@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.JoinType;
 import org.testd.ui.util.BindingUtil;
 import org.testd.ui.util.Equaler;
@@ -50,14 +51,14 @@ public class JoinView extends BorderPane implements ColFamilyViewInterface {
         return send;
     }
 
-    public void init(ObservableSet<String> colsSet) {
+    public void init(ObservableSet<ColProperty> colsSet) {
         this.colFamilyProperty = new ColFamilyProperty(colsSet);
 
         // bind ui and property
         BindingUtil.mapContent(
                 TypeUtil.saftCast(partInCols.getChildren(), Label.class),
                 colFamilyProperty.colsProperty(),
-                Label::new,
+                col -> new Label(col.getColName()),
                 Equaler.withExtrator(Label::getText));
     }
 

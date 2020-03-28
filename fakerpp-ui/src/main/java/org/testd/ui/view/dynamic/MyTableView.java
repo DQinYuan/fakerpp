@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -17,6 +18,7 @@ import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.TableMetaProperty;
 import org.testd.ui.service.TableInfoService;
@@ -46,6 +48,7 @@ public class MyTableView extends BorderPane {
 
     //----------- property
     private TableMetaProperty tableMetaProperty;
+    private Pane drawBoard;
 
     //----------- JavaFx Component
     @FXML
@@ -67,7 +70,8 @@ public class MyTableView extends BorderPane {
         deleteTableMenu.setOnAction(event -> mainWindowView.deleteTableFromDrawBoard(this));
     }
 
-    public void initTableMetaProperty(TableMetaProperty metaProperty) {
+    public void initTableMetaProperty(TableMetaProperty metaProperty, Pane drawBoard) {
+        this.drawBoard = drawBoard;
         this.tableMetaProperty = metaProperty;
         tableNameLabel.textProperty().bind(metaProperty.nameProperty());
     }
@@ -94,18 +98,26 @@ public class MyTableView extends BorderPane {
             double translateX = mouseEvent.getSceneX() + dragDelta.x;
             double translateY = mouseEvent.getSceneY() + dragDelta.y;
 
-            this.setTranslateX(translateX);
+            double maxX = translateX + getWidth();
+            if (maxX > drawBoard.getMinWidth()) {
+                drawBoard.setMinWidth(maxX);
+            }
+            double maxY = translateY + getHeight();
+            if (maxY > drawBoard.getMinHeight()) {
+                drawBoard.setMinHeight(maxY);
+            }
 
-            this.setTranslateY(translateY);
+            this.setTranslateX(Math.max(translateX, 0.0));
+
+            this.setTranslateY(Math.max(translateY, 0.0));
         });
     }
 
     @FXML
     private void handleMetaConf() {
-        primaryStageHolder.newSceneInChild(
-                TableMetaConfView.getView(tableMetaProperty,
-                        name -> !tableInfoService.nameExists(name))
-        );
+        Stages.newSceneInChild(TableMetaConfView.getView(tableMetaProperty,
+                name -> !tableInfoService.nameExistsExcept(name, this)),
+                getScene().getWindow());
     }
 
     @FXML
@@ -127,6 +139,13 @@ public class MyTableView extends BorderPane {
         Stages.newSceneInChild(editConnectionView, this.getScene().getWindow());
     }
 
+    /**
+     *  get except viewType class not meet predicate
+     * @param viewType
+     * @param predicate
+     * @param <T>
+     * @return
+     */
     public <T extends ColFamilyViewInterface> List<ColFamilyProperty>
         getColFamiliesExcept(Class<T> viewType, Predicate<T> predicate) {
         return colFamiliesInput.getMyChildren().stream()
@@ -147,6 +166,16 @@ public class MyTableView extends BorderPane {
                 .collect(Collectors.toList());
     }
 
+    public <T extends ColFamilyViewInterface> List<ColFamilyProperty>
+        getColFamilies(Class<T> viewType, Predicate<T> predicate) {
+        return colFamiliesInput.getMyChildren().stream()
+                .filter(c -> c.getClass().equals(viewType))
+                .filter(c -> predicate.test(viewType.cast(c)))
+                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .collect(Collectors.toList());
+    }
+
+
     public List<ColFamilyProperty> getColFamiliesExcept(ColFamilyViewInterface expect) {
         return colFamiliesInput.getMyChildren().stream()
                 .filter(c -> c != expect)
@@ -156,6 +185,7 @@ public class MyTableView extends BorderPane {
 
     /**
      * col families except join col families
+     *
      * @return
      */
     public List<ColFamilyProperty> getNormalColFamilies() {
@@ -197,7 +227,7 @@ public class MyTableView extends BorderPane {
                 colFamiliesInput.getMyChildren().remove(colFamilyView);
             }
         });
-        colFamilyProperty.colsProperty().addListener((SetChangeListener<? super String>)  c -> {
+        colFamilyProperty.colsProperty().addListener((SetChangeListener<ColProperty>) c -> {
             if (c.getSet().isEmpty()) {
                 colFamilyProperty.visibleProperty().set(false);
             }

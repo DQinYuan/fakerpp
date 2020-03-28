@@ -3,6 +3,7 @@ package org.testd.ui.view.dynamic;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.SetChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
@@ -16,6 +17,7 @@ import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.view.MainWindowView;
 
@@ -44,6 +46,12 @@ public class ConnectionView {
         joinRecvView = fxWeaver.loadControl(JoinView.class);
         joinRecvView.init(connectionProperty.recvSet());
 
+        connectionProperty.sendSet().addListener((SetChangeListener<ColProperty>) change -> {
+            if (change.getSet().isEmpty()) {
+                connectionProperty.visibleProperty().set(false);
+            }
+        });
+
         connectionProperty.visibleProperty()
                 .addListener((observable, oldValue, newValue) -> {
                     if (newValue) {
@@ -65,7 +73,7 @@ public class ConnectionView {
                 tableView -> {
                     Set<String> checkCols =
                             tableView.getColFamiliesExcept(joinRecvView).stream()
-                            .map(ColFamilyProperty::colsProperty).flatMap(Set::stream)
+                            .map(ColFamilyProperty::colsStr).flatMap(Set::stream)
                             .collect(Collectors.toSet());
                     return col -> !checkCols.contains(col);
                 }
@@ -150,7 +158,7 @@ public class ConnectionView {
 
         tableView.translateXProperty().addListener(listener);
         tableView.translateYProperty().addListener(listener);
-        tableView.layoutYProperty().addListener(listener);
+        joinView.layoutYProperty().addListener(listener);
         Runnable listenerDeleter = () -> {
             tableView.translateXProperty().removeListener(listener);
             tableView.translateYProperty().removeListener(listener);

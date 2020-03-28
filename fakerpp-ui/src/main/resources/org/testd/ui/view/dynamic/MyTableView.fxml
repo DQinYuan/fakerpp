@@ -24,15 +24,15 @@
                   </ContextMenu>
                </contextMenu>
             </Label>
-          <Button mnemonicParsing="false" onAction="#handleNewColFamily" text="New Col Family">
+          <Button fx:id="newColFamily" mnemonicParsing="false" onAction="#handleNewColFamily" text="New Col Family">
                <font>
                   <Font size="10.0" />
                </font></Button>
-            <Button mnemonicParsing="false" onAction="#handleNewConnection" text="Connect To">
+            <Button fx:id="newConnection" mnemonicParsing="false" onAction="#handleNewConnection" text="Connect To">
                <font>
                   <Font size="10.0" />
                </font></Button>
-            <Button mnemonicParsing="false" onAction="#handleMetaConf" text="Meta Conf">
+            <Button fx:id="editMetaConf" mnemonicParsing="false" onAction="#handleMetaConf" text="Meta Conf">
                <font>
                   <Font size="10.0" />
                </font>

@@ -6,8 +6,6 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.VBox?>
-
 <?import org.testd.ui.view.dynamic.ColFamilyInputMenu?>
 <fx:root prefHeight="50.0" prefWidth="300.0" style="-fx-border-color: black; -fx-border-width: 0.3;" type="javafx.scene.layout.BorderPane" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
    <padding>

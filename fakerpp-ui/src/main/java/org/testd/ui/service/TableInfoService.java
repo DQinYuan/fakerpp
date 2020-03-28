@@ -33,6 +33,13 @@ public class TableInfoService {
                 Objects.equals(tableName, tableView.getName()));
     }
 
+    public boolean nameExistsExcept(String tableName, MyTableView except) {
+        return displayTables.stream()
+                .filter(tableView -> tableView!=except)
+                .anyMatch(tableView ->
+                        Objects.equals(tableName, tableView.getName()));
+    }
+
     /**
      * throw Exception if not exist
      * @param name

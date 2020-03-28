@@ -17,12 +17,16 @@ public class TableMetaConfView {
         Form form = Form.of(
                 Group.of(
                         Field.ofStringType(metaProperty.nameProperty())
+                                .id("tableName")
                                 .required("Table Name must not be empty")
                                 .label("Table Name:")
-                        .validate(CustomValidator.forPredicate(nameValidator,
-                                "table name should be unique")),
-                        Field.ofBooleanType(metaProperty.virtualProperty()).label("Virtual:"),
+                                .validate(CustomValidator.forPredicate(nameValidator,
+                                        "table name should be unique")),
+                        Field.ofBooleanType(metaProperty.virtualProperty())
+                                .id("virtual")
+                                .label("Virtual:"),
                         Field.ofIntegerType(metaProperty.numberProperty())
+                                .id("number")
                                 .validate(IntegerRangeValidator.atLeast(0, ">= 0"))
                                 .label("Number:")
                 )

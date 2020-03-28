@@ -21,6 +21,7 @@ public class Forms {
 
         // ok button
         Button okBu = new Button("OK");
+        okBu.setId("formOkButton");
         form.validProperty().addListener((ob, oldV, newV) -> {
             if (newV) {
                 okBu.setDisable(false);

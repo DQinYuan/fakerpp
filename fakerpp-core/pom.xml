@@ -26,6 +26,9 @@
                             <goal>execute</goal>
                         </goals>
                         <configuration>
+                            <properties>
+                                <basedir>${basedir}</basedir>
+                            </properties>
                             <scripts>file:${basedir}/xsdgen/genXsd.groovy</scripts>
                         </configuration>
                     </execution>

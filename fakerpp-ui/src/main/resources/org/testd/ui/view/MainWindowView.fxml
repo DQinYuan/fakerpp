@@ -66,11 +66,13 @@
                                 </VBox>
                             </children>
                         </AnchorPane>
-                        <ScrollPane fx:id="boardScroll" prefHeight="200.0" prefWidth="200.0">
+                        <ScrollPane maxWidth="Infinity" maxHeight="Infinity"
+                                    pannable="true" fx:id="boardScroll"
+                                    fitToWidth="true" fitToHeight="true">
                            <content>
-                              <Pane fx:id="drawBoard" prefWidth="${boardScroll.width}"
-                                    prefHeight="${boardScroll.height}"/>
-                           </content></ScrollPane>
+                              <Pane fx:id="drawBoard"/>
+                           </content>
+                        </ScrollPane>
                     </items>
                   </SplitPane>
                </content>

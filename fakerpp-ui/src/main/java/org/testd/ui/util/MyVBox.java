@@ -1,12 +1,9 @@
 package org.testd.ui.util;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
-
-import java.util.Collection;
 
 public class MyVBox<T> extends VBox {
 
@@ -14,10 +11,7 @@ public class MyVBox<T> extends VBox {
 
     @SuppressWarnings("unchecked")
     public MyVBox() {
-        paramChildren.addListener((ListChangeListener<T>) c -> {
-            super.getChildren().clear();
-            super.getChildren().addAll((Collection<? extends Node>) c.getList());
-        });
+        BindingUtil.bindContentTypeUnsafe(super.getChildren(), paramChildren);
     }
 
     public ObservableList<T> getMyChildren() {

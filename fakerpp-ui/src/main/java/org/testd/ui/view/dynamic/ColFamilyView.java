@@ -19,6 +19,7 @@ import org.testd.fakerpp.core.engine.generator.Generators;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.model.ColProperty;
 import org.testd.ui.util.Stages;
 
 import java.util.Map;
@@ -70,17 +71,21 @@ public class ColFamilyView extends BorderPane implements ColFamilyViewInterface 
                             Stages.newSceneInChild(editColFamilyView, getScene().getWindow());
                         }),
                 FollowRightMouseMenu.menuEntry("delete cols",
-                        ignore -> event -> ownerTable.deleteTableColFamily(this))
+                        ignore -> event -> {
+                            ownerTable.deleteTableColFamily(this);
+                            colFamilyProperty.clear();
+                        }
+                )
         );
     }
 
     public void initFromTableAndColFamilyProperty(MyTableView ownerTable,
-            ColFamilyProperty colFamilyProperty) {
+                                                  ColFamilyProperty colFamilyProperty) {
         this.ownerTable = ownerTable;
         this.colFamilyProperty = colFamilyProperty;
         colsInputSync();
         colFamilyProperty.colsProperty()
-                .addListener((SetChangeListener<String>) c -> colsInputSync());
+                .addListener((SetChangeListener<ColProperty>) c -> colsInputSync());
 
         colFamilyProperty.fieldProperty()
                 .bindBidirectional(fieldInput.valueProperty());
@@ -92,7 +97,8 @@ public class ColFamilyView extends BorderPane implements ColFamilyViewInterface 
         colsInput.getChildren().clear();
         colsInput.getChildren().addAll(
                 colFamilyProperty.colsProperty().stream()
-                        .map(Label::new).collect(Collectors.toList())
+                        .map(colProperty -> new Label(colProperty.getColName()))
+                        .collect(Collectors.toList())
         );
     }
 

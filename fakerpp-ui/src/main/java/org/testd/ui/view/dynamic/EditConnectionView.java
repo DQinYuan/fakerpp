@@ -3,39 +3,27 @@ package org.testd.ui.view.dynamic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Streams;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
-import org.javatuples.Pair;
-import org.javatuples.Triplet;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.testd.ui.DefaultsConfig;
-import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.JoinType;
 import org.testd.ui.service.TableInfoService;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.FxProperties;
 import org.testd.ui.util.Stages;
-import org.testd.ui.view.MainWindowView;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -49,9 +37,7 @@ public class EditConnectionView extends VBox {
 
     private final FxWeaver fxWeaver;
     private final TableInfoService tableInfoService;
-
-
-    private final PrimaryStageHolder primaryStageHolder;
+    private final ColPropertyFactory colPropertyFactory;
 
     @FXML
     private VBox colFamiliesSelectBoxes;
@@ -105,7 +91,8 @@ public class EditConnectionView extends VBox {
                 (s, r) -> {
                     ColFamilyMappingView colFamilyMappingView =
                             fxWeaver.loadControl(ColFamilyMappingView.class);
-                    colFamilyMappingView.initFromOriginAndMappingCol(s, r);
+                    colFamilyMappingView.initFromOriginAndMappingCol(s.getColName(),
+                            r.getColName());
                     colFamilyMappingView.select();
                     colFamiliesSelectBoxes.getChildren().add(colFamilyMappingView);
                 });
@@ -118,7 +105,8 @@ public class EditConnectionView extends VBox {
                 .map(col -> {
                     ColFamilyMappingView colFamilyMappingView =
                             fxWeaver.loadControl(ColFamilyMappingView.class);
-                    colFamilyMappingView.initFromOriginAndMappingCol(col, col);
+                    colFamilyMappingView.initFromOriginAndMappingCol(col.getColName(),
+                            col.getColName());
                     return colFamilyMappingView;
                 }).forEach(colFamiliesSelectBoxes.getChildren()::add);
     }
@@ -195,12 +183,21 @@ public class EditConnectionView extends VBox {
         connectionProperty.targetProperty().set(targetTableView);
         connectionProperty.joinTypeProperty().set(getJoinType());
 
-        connectionProperty.sendSet().clear();
-        connectionProperty.recvSet().clear();
-        resColMap.forEach((send, recv) -> {
-            connectionProperty.sendSet().add(send);
-            connectionProperty.recvSet().add(recv);
-        });
+        Set<ColProperty> sendColProperties = new LinkedHashSet<>();
+        Set<ColProperty> recvColProperties = new LinkedHashSet<>();
+        for (Map.Entry<String, String> sendRecvEntry : resColMap.entrySet()) {
+            ColProperty sendProperty = new ColProperty(sendRecvEntry.getKey());
+            ColProperty recvProperty = colPropertyFactory.colPropertyWithListener(sendRecvEntry.getValue(),
+                    targetTableView);
+            // when send col deleted, corresponding recv col must be deleted at same time
+            sendProperty.addDeleteListener(colName ->
+                connectionProperty.recvSet().remove(recvProperty));
+            sendColProperties.add(sendProperty);
+            recvColProperties.add(recvProperty);
+        }
+
+        connectionProperty.replaceSendSet(sendColProperties);
+        connectionProperty.replaceRecvSet(recvColProperties);
 
         if (!connectionProperty.visibleProperty().get()) {
             connectionProperty.visibleProperty().set(true);

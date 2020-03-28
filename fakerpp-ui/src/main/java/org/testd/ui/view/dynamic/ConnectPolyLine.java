@@ -17,8 +17,6 @@ import java.util.List;
 
 public class ConnectPolyLine extends Group {
 
-
-
     private final double evadeInterval;
     private final DoubleProperty sourceXProperty;
     private final DoubleProperty sourceYProperty;
@@ -43,12 +41,14 @@ public class ConnectPolyLine extends Group {
         this.targetXProperty = targetX;
         this.targetYProperty = targetY;
         Polyline polyline = new Polyline();
-        ChangeListener<Number> numberChangeListener =
+        ChangeListener<Number> changeListener =
                 (observable, oldValue, newValue) -> connect(source, target, polyline);
-        sourceX.addListener(numberChangeListener);
-        sourceY.addListener(numberChangeListener);
-        targetX.addListener(numberChangeListener);
-        targetY.addListener(numberChangeListener);
+        sourceX.addListener(changeListener);
+        sourceY.addListener(changeListener);
+        targetX.addListener(changeListener);
+        targetY.addListener(changeListener);
+        source.heightProperty().addListener(changeListener);
+        target.heightProperty().addListener(changeListener);
 
         this.evadeInterval = evadeInterval;
         connect(source, target, polyline);

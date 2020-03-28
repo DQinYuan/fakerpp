@@ -1,5 +1,6 @@
 package org.testd.ui.model;
 
+import com.google.common.collect.Sets;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -8,9 +9,12 @@ import javafx.collections.ObservableSet;
 import org.testd.ui.view.dynamic.ColFamilyView;
 import org.testd.ui.view.dynamic.MyTableView;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ConnectionProperty {
 
@@ -24,9 +28,9 @@ public class ConnectionProperty {
     private final BooleanProperty visible = new SimpleBooleanProperty(false);
 
     // bind with join send view
-    private final ObservableSet<String> sendSet = FXCollections.observableSet(new LinkedHashSet<>());
+    private final ObservableSet<ColProperty> sendSet = FXCollections.observableSet(new LinkedHashSet<>());
     // bind with join receive view
-    private final ObservableSet<String> recvSet = FXCollections.observableSet(new LinkedHashSet<>());
+    private final ObservableSet<ColProperty> recvSet = FXCollections.observableSet(new LinkedHashSet<>());
 
     public ConnectionProperty(MyTableView source) {
         this.source = new SimpleObjectProperty<>(source);
@@ -49,12 +53,25 @@ public class ConnectionProperty {
         return visible;
     }
 
-    public ObservableSet<String> sendSet() {
+    public ObservableSet<ColProperty> sendSet() {
         return sendSet;
     }
 
-    public ObservableSet<String> recvSet() {
+    public void replaceSendSet(Set<ColProperty> replacer) {
+        // cols in send set is redundant, so needn't call cols' deleted listener
+        sendSet.addAll(replacer);
+        sendSet.removeAll(Sets.difference(sendSet, replacer));
+    }
+
+    public ObservableSet<ColProperty> recvSet() {
         return recvSet;
+    }
+
+    public void replaceRecvSet(Set<ColProperty> replacer) {
+        Set<ColProperty> deleted = Sets.difference(recvSet, replacer);
+        deleted.forEach(ColProperty::deleted);
+        recvSet.addAll(replacer);
+        recvSet.removeAll(deleted);
     }
 
     public void setRecvChecker(Function<MyTableView, Predicate<String>> recvChecker) {

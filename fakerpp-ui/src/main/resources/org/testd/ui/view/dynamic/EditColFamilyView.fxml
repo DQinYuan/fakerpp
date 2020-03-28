@@ -19,7 +19,7 @@
                </font>
             </Label>
             <TextArea fx:id="newCols" prefHeight="200.0" prefWidth="200.0" />
-            <Button mnemonicParsing="false" onAction="#handleOk" text="OK">
+            <Button fx:id="okButton" mnemonicParsing="false" onAction="#handleOk" text="OK">
                <VBox.margin>
                   <Insets top="50.0" />
                </VBox.margin></Button>

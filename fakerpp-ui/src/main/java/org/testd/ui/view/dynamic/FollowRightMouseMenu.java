@@ -1,5 +1,6 @@
 package org.testd.ui.view.dynamic;
 
+import com.google.common.base.Strings;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;
@@ -47,6 +48,7 @@ public class FollowRightMouseMenu implements EventHandler<MouseEvent> {
             ContextMenu contextMenu = new ContextMenu();
             for (EntryNameAndAction entryNameAndAction : entryNameAndActions) {
                 MenuItem mi = new MenuItem(entryNameAndAction.entryName);
+                mi.setId(entryNameAndAction.entryName.replace(" ", "_") + "_mi");
                 mi.setOnAction(entryNameAndAction.action.apply(event));
                 contextMenu.getItems().add(mi);
             }

@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class EditColFamilyView extends BorderPane {
 
+    private final ColPropertyFactory colPropertyFactory;
+
     @FXML
     private TextArea newCols;
 
@@ -35,19 +37,21 @@ public class EditColFamilyView extends BorderPane {
 
     private ColFamilyProperty colFamilyProperty;
     private List<ColFamilyProperty> otherColFamilies;
+    private MyTableView ownerTable;
 
     public void initFromMyTableView(MyTableView tableView, ColFamilyProperty colFamilyProperty) {
+        this.ownerTable = tableView;
         this.otherColFamilies = tableView.getNormalColFamilies().stream()
                 .filter(cf -> !cf.equals(colFamilyProperty))
                 .collect(Collectors.toList());
         otherColFamilies.forEach(
-                cp -> catchOtherCols.getItems().addAll(cp.colsProperty())
+                cp -> catchOtherCols.getItems().addAll(cp.colsStr())
         );
 
         this.colFamilyProperty = colFamilyProperty;
 
         newCols.setText(
-                String.join("\n", colFamilyProperty.colsProperty())
+                String.join("\n", colFamilyProperty.colsStr())
         );
     }
 
@@ -72,7 +76,7 @@ public class EditColFamilyView extends BorderPane {
         if (otherColFamilies.stream()
                 .map(ColFamilyProperty::colsProperty)
                 .flatMap(Set::stream)
-                .anyMatch(extraCols::contains)) {
+                .anyMatch(cp -> extraCols.contains(cp.getColName()))) {
             FxDialogs.showError("Empty Col Family Error",
                     "Col Name duplicate", "Col Name can not duplicate!!");
             return;
@@ -83,8 +87,8 @@ public class EditColFamilyView extends BorderPane {
         currentColsBuilder.addAll(catchCols);
         Set<String> currentCols = currentColsBuilder.build();
 
-        // col family ui will be auto removed when col family property is empty, so we must add first, then delete
-        colFamilyProperty.replace(currentCols);
+        colFamilyProperty.replace(colPropertyFactory.colPropertiesWithListener(currentCols,
+                ownerTable));
 
         colFamilyProperty.visibleProperty().set(true);
         Stages.closeWindow(getScene().getWindow());

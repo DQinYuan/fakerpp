@@ -100,7 +100,7 @@ public class MainWindowView {
 
         MyTableView table =
                 fxWeaver.loadControl(MyTableView.class);
-        table.initTableMetaProperty(tableMetaProperty);
+        table.initTableMetaProperty(tableMetaProperty, drawBoard);
         table.setTranslateX(mouseEvent.getX());
         table.setTranslateY(mouseEvent.getY());
         appendInDrawBoard(table);

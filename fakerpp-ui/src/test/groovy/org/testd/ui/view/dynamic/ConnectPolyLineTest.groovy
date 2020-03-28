@@ -42,7 +42,6 @@ class ConnectPolyLineTest extends Specification {
     }
 
     Set<Point> toPointSet(List<Double> doubles) {
-        List<Point> ps = new ArrayList<>()
         doubles.inject(new ArrayList<Point>(), { acc, val ->
             if (acc.isEmpty() || acc.last().y != null) {
                 def p = new Point()
@@ -86,13 +85,6 @@ class ConnectPolyLineTest extends Specification {
                                                  ofPoint(0, 35), ofPoint(11, 35)]
         10.0    | 10.0    | 9.0     | 30.0    | [ofPoint(20.0, 15.0), ofPoint(30.0, 15.0),
                                                  ofPoint(30.0, 35.0), ofPoint(19.0, 35.0)]
-    }
-
-
-    def "test load img"() {
-        expect:
-        def url = getClass().getResource("/img/rightarrow.png")
-        println(url)
     }
 
 
