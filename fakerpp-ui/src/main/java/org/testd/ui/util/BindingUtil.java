@@ -1,18 +1,23 @@
 package org.testd.ui.util;
 
-import com.sun.javafx.binding.ContentBinding;
 import javafx.beans.WeakListener;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
-import javafx.collections.SetChangeListener;
+import org.testd.ui.util.binders.ListContentBinder;
+import org.testd.ui.util.binders.ListSetContentBinder;
+import org.testd.ui.util.binders.MapListContentBinder;
+import org.testd.ui.util.binders.SetListContentBinder;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 public class BindingUtil {
 
@@ -30,12 +35,41 @@ public class BindingUtil {
         source.addListener(contentBinding);
     }
 
+    public static <E, FK, FV> void mapContentWithFilter(Map<FK, FV> mapped, ObservableList<E> source,
+                                                   Function<? super E, ? extends FK> keyMapper,
+                                                   Function<? super E, ? extends FV> valueMapper,
+                                                   Predicate<E> filter) {
+        MapListContentBinder<E, FK, FV> contentBinder =
+                new MapListContentBinder<>(mapped, keyMapper, valueMapper, filter);
+        mapped.clear();
+        mapped.putAll(
+                source.stream().collect(toMap(keyMapper, valueMapper))
+        );
+        source.removeListener(contentBinder);
+        source.addListener(contentBinder);
+    }
+
+    public static <E, F> void mapContentWithFilter(Set<F> mapped, ObservableList<E> source,
+                                                   Function<E, F> mapper, Predicate<E> filter) {
+        final SetListContentBinder<E, F> contentBinder =
+                new SetListContentBinder<>(mapped, mapper, filter);
+        mapped.clear();
+        mapped.addAll(source.stream().map(mapper).collect(toList()));
+        source.removeListener(contentBinder);
+        source.addListener(contentBinder);
+    }
+
+    public static <E, F> void mapContent(Set<F> mapped, ObservableList<E> source,
+                                         Function<E, F> mapper) {
+        mapContentWithFilter(mapped, source, mapper, e -> true);
+    }
+
     public static <E, F> void mapContent(ObservableList<F> mapped, ObservableSet<E> source,
                                          Function<E, F> mapper,
                                          Equaler<F> mappedEqualer) {
-        final ListSetContentMapping<E, F> contentMapping =
-                new ListSetContentMapping<E, F>(mapped, mapper, mappedEqualer);
-        mapped.setAll(source.stream().map(mapper::apply).collect(toList()));
+        final ListSetContentBinder<E, F> contentMapping =
+                new ListSetContentBinder<>(mapped, mapper, mappedEqualer);
+        mapped.setAll(source.stream().map(mapper).collect(toList()));
         source.removeListener(contentMapping);
         source.addListener(contentMapping);
     }
@@ -45,7 +79,7 @@ public class BindingUtil {
         mapContent(mapped, source, mapper, Equaler.natural());
     }
 
-    public static <E, F> void mapContent(ObservableList<F> mapped, ObservableList< E> source,
+    public static <E, F> void mapContent(ObservableList<F> mapped, ObservableList<E> source,
                                          Function<? super E, ? extends F> mapper) {
         final ListContentMapping<E, F> contentMapping = new ListContentMapping<E, F>(mapped, mapper);
         mapped.setAll(source.stream().map(mapper::apply).collect(toList()));
@@ -53,65 +87,7 @@ public class BindingUtil {
         source.addListener(contentMapping);
     }
 
-    private static class ListContentBinder implements ListChangeListener, WeakListener {
-        private final WeakReference<List> listRef;
 
-        public ListContentBinder(List list) {
-            this.listRef = new WeakReference<>(list);
-        }
-
-        @Override
-        public void onChanged(Change change) {
-            final List list = listRef.get();
-            if (list == null) {
-                change.getList().removeListener(this);
-            } else {
-                while (change.next()) {
-                    if (change.wasPermutated()) {
-                        list.subList(change.getFrom(), change.getTo()).clear();
-                        list.addAll(change.getFrom(), change.getList().subList(change.getFrom(), change.getTo()));
-                    } else {
-                        if (change.wasRemoved()) {
-                            list.subList(change.getFrom(), change.getFrom() + change.getRemovedSize()).clear();
-                        }
-                        if (change.wasAdded()) {
-                            list.addAll(change.getFrom(), change.getAddedSubList());
-                        }
-                    }
-                }
-            }
-        }
-
-        @Override
-        public boolean wasGarbageCollected() {
-            return listRef.get() == null;
-        }
-
-        @Override
-        public int hashCode() {
-            final List list = listRef.get();
-            return (list == null)? 0 : list.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-
-            final List list1 = listRef.get();
-            if (list1 == null) {
-                return false;
-            }
-
-            if (obj instanceof ListContentBinder) {
-                final ListContentBinder other = (ListContentBinder) obj;
-                final List list2 = other.listRef.get();
-                return list1 == list2;
-            }
-            return false;
-        }
-    }
 
     private static class ListContentMapping<E, F> implements ListChangeListener<E>, WeakListener {
         private final WeakReference<List<F>> mappedRef;
@@ -149,68 +125,6 @@ public class BindingUtil {
         @Override
         public boolean wasGarbageCollected() {
             return mappedRef.get() == null;
-        }
-
-        @Override
-        public int hashCode() {
-            final List<F> list = mappedRef.get();
-            return (list == null) ? 0 : list.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-
-            final List<F> mapped1 = mappedRef.get();
-            if (mapped1 == null) {
-                return false;
-            }
-
-            if (obj instanceof ListContentMapping) {
-                final ListContentMapping<?, ?> other = (ListContentMapping<?, ?>) obj;
-                final List<?> mapped2 = other.mappedRef.get();
-                return mapped1 == mapped2;
-            }
-            return false;
-        }
-    }
-
-    private static class ListSetContentMapping<E, F> implements SetChangeListener<E>, WeakListener {
-
-        private final WeakReference<List<F>> mappedRef;
-        private final Function<? super E, ? extends F> mapper;
-        private final Equaler<F> equaler;
-
-        private ListSetContentMapping(List<F> mappedRef,
-                                      Function<? super E, ? extends F> mapper,
-                                      Equaler<F> equaler) {
-            this.mappedRef = new WeakReference<>(mappedRef);
-            this.mapper = mapper;
-            this.equaler = equaler;
-        }
-
-        @Override
-        public boolean wasGarbageCollected() {
-            return mappedRef.get() == null;
-        }
-
-        @Override
-        public void onChanged(Change<? extends E> change) {
-            final List<F> mapped = mappedRef.get();
-            if (mapped == null) {
-                change.getSet().removeListener(this);
-            } else if (change.wasAdded()) {
-                mapped.add(mapper
-                        .apply(change.getElementAdded()));
-            } else if (change.wasRemoved()) {
-                Optional<F> needRemoved = mapped.stream()
-                        .filter(e -> equaler.equal(e,
-                                mapper.apply(change.getElementRemoved())))
-                        .findFirst();
-                needRemoved.map(mapped::remove);
-            }
         }
 
         @Override

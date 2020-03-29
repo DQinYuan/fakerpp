@@ -21,11 +21,10 @@ import org.testd.ui.model.ColFamilyProperty;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.TableMetaProperty;
-import org.testd.ui.service.TableInfoService;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.MyVBox;
 import org.testd.ui.util.Stages;
-import org.testd.ui.view.MainWindowView;
+import org.testd.ui.view.DrawBoardView;
 
 import java.util.Collection;
 import java.util.List;
@@ -41,9 +40,8 @@ public class MyTableView extends BorderPane {
 
     //----------- di
     private final FxWeaver fxWeaver;
-    private final MainWindowView mainWindowView;
+    private final DrawBoardView drawBoardView;
     private final PrimaryStageHolder primaryStageHolder;
-    private final TableInfoService tableInfoService;
     private final BeanFactory beanFactory;
 
     //----------- property
@@ -67,7 +65,7 @@ public class MyTableView extends BorderPane {
     private void initialize() {
         dragable();
 
-        deleteTableMenu.setOnAction(event -> mainWindowView.deleteTableFromDrawBoard(this));
+        deleteTableMenu.setOnAction(event -> drawBoardView.remove(this));
     }
 
     public void initTableMetaProperty(TableMetaProperty metaProperty, Pane drawBoard) {
@@ -116,13 +114,13 @@ public class MyTableView extends BorderPane {
     @FXML
     private void handleMetaConf() {
         Stages.newSceneInChild(TableMetaConfView.getView(tableMetaProperty,
-                name -> !tableInfoService.nameExistsExcept(name, this)),
+                name -> !drawBoardView.nameExists(name, this)),
                 getScene().getWindow());
     }
 
     @FXML
     private void handleNewConnection() {
-        List<MyTableView> otherTables = tableInfoService.tablesExcept(this);
+        List<MyTableView> otherTables = drawBoardView.tablesExcept(this);
         if (CollectionUtils.isEmpty(otherTables)) {
             FxDialogs.showError("new connection error", "no other tables",
                     "there has not other tables");

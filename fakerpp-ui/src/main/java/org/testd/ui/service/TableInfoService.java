@@ -28,11 +28,6 @@ public class TableInfoService {
                 .collect(Collectors.toList());
     }
 
-    public boolean nameExists(String tableName) {
-        return displayTables.stream().anyMatch(tableView ->
-                Objects.equals(tableName, tableView.getName()));
-    }
-
     public boolean nameExistsExcept(String tableName, MyTableView except) {
         return displayTables.stream()
                 .filter(tableView -> tableView!=except)

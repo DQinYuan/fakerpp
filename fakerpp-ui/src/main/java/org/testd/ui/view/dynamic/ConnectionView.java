@@ -19,7 +19,7 @@ import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.model.ColFamilyProperty;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
-import org.testd.ui.view.MainWindowView;
+import org.testd.ui.view.DrawBoardView;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,7 +31,7 @@ public class ConnectionView {
 
     private final FxWeaver fxWeaver;
     private final DefaultsConfig defaultsConfig;
-    private final MainWindowView mainWindowView;
+    private final DrawBoardView drawBoardView;
     private final PrimaryStageHolder primaryStageHolder;
 
     private JoinView joinSendView;
@@ -61,7 +61,7 @@ public class ConnectionView {
                         assert connectionProperty.sourceProperty().get() != null;
                         assert connectionProperty.targetProperty().get() != null;
                         listenerDeleter.run();
-                        mainWindowView.removeFromDrawBoard(connectLine);
+                        drawBoardView.remove(connectLine);
                         connectionProperty.sourceProperty().get()
                                 .deleteTableColFamily(joinSendView);
                         connectionProperty.targetProperty().get()
@@ -120,7 +120,7 @@ public class ConnectionView {
         mouseHoverHighlight(joinSendView);
         mouseHoverHighlight(joinRecvView);
 
-        mainWindowView.appendInDrawBoard(connectLine);
+        drawBoardView.append(connectLine);
         listenerDeleter = () -> {
             sendPos.deleter.run();
             recvPos.deleter.run();

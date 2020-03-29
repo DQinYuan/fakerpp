@@ -70,7 +70,7 @@
                                     pannable="true" fx:id="boardScroll"
                                     fitToWidth="true" fitToHeight="true">
                            <content>
-                              <Pane fx:id="drawBoard"/>
+                              <Pane/>
                            </content>
                         </ScrollPane>
                     </items>

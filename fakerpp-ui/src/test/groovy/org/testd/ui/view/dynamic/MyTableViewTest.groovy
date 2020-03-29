@@ -138,9 +138,7 @@ aaa
         then:
         myTableView.colFamilies.size() == 1
         listTargetWindows().size() == 3
-        interact(
-                {((Stage)listTargetWindows()[2]).close()}
-        )
+        interact({((Stage)listTargetWindows()[2]).close()})
     }
 
     def "duplicate col with self will reserve only one"() {

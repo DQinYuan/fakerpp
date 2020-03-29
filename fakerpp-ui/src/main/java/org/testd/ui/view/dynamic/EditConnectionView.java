@@ -20,10 +20,10 @@ import org.testd.ui.model.ColFamilyProperty;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.JoinType;
-import org.testd.ui.service.TableInfoService;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.FxProperties;
 import org.testd.ui.util.Stages;
+import org.testd.ui.view.DrawBoardView;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class EditConnectionView extends VBox {
 
     private final FxWeaver fxWeaver;
-    private final TableInfoService tableInfoService;
+    private final DrawBoardView drawBoardView;
     private final ColPropertyFactory colPropertyFactory;
 
     @FXML
@@ -68,7 +68,7 @@ public class EditConnectionView extends VBox {
                 sourceTable.getName()));
 
         // Target Table
-        List<String> otherTables = tableInfoService.tablesExcept(sourceTable)
+        List<String> otherTables = drawBoardView.tablesExcept(sourceTable)
                 .stream().map(MyTableView::getName).collect(Collectors.toList());
         targetInput.getItems().addAll(otherTables);
 
@@ -141,7 +141,7 @@ public class EditConnectionView extends VBox {
                     "Target table can not be empty");
             return;
         }
-        MyTableView targetTableView = tableInfoService.getTableByName(targetTable);
+        MyTableView targetTableView = drawBoardView.getTableByName(targetTable);
 
         List<ColFamilyMappingView> selectedMapping = colFamiliesSelectBoxes
                 .getChildren()
