@@ -1,6 +1,5 @@
 package org.testd.ui.view.dynamic;
 
-import com.google.common.base.Strings;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Node;

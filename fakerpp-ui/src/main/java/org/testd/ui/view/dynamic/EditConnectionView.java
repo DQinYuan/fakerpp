@@ -14,6 +14,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.ColFamilyProperty;
@@ -38,6 +39,7 @@ public class EditConnectionView extends VBox {
     private final FxWeaver fxWeaver;
     private final DrawBoardView drawBoardView;
     private final ColPropertyFactory colPropertyFactory;
+    private final DrawBoardController drawBoardController;
 
     @FXML
     private VBox colFamiliesSelectBoxes;
@@ -68,8 +70,8 @@ public class EditConnectionView extends VBox {
                 sourceTable.getName()));
 
         // Target Table
-        List<String> otherTables = drawBoardView.tablesExcept(sourceTable)
-                .stream().map(MyTableView::getName).collect(Collectors.toList());
+        List<String> otherTables = drawBoardController.tablesExcept(sourceTable.tableProperty())
+                .stream().map(tp -> tp.getName().get()).collect(Collectors.toList());
         targetInput.getItems().addAll(otherTables);
 
         FxProperties.runIfExists(connectionProperty.targetProperty(),

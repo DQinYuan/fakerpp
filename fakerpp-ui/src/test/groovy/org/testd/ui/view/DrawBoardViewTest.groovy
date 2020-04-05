@@ -8,8 +8,9 @@ import javafx.stage.Stage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.testd.ui.Tools
+import org.testd.ui.controller.DrawBoardController
 import org.testd.ui.fxweaver.core.FxWeaver
-import org.testd.ui.model.TableMetaProperty
+import org.testd.ui.model.TableProperty
 import org.testd.ui.view.dynamic.JoinView
 import org.testd.ui.view.dynamic.MyTableView
 import org.testfx.api.FxToolkit
@@ -23,6 +24,9 @@ class DrawBoardViewTest extends ApplicationSpec {
 
     @Autowired
     DrawBoardView drawBoardView
+
+    @Autowired
+    DrawBoardController drawBoardController
 
     @Override
     void init() throws Exception {
@@ -42,22 +46,18 @@ class DrawBoardViewTest extends ApplicationSpec {
 
     def initTablesCfs() {
         def table1 = fxWeaver.loadControl(MyTableView.class)
-        table1.initTableMetaProperty(new TableMetaProperty("Table1",
-                true,
-                10), drawBoardView)
+        table1.initTableProperty(new TableProperty("Table1"))
         table1.setTranslateX(10)
         table1.setTranslateY(10)
 
         def table2 = fxWeaver.loadControl(MyTableView.class)
-        table2.initTableMetaProperty(new TableMetaProperty("Table2",
-                true,
-                30), drawBoardView)
+        table2.initTableProperty(new TableProperty("Table2"))
         table2.setTranslateX(350)
         table2.setTranslateY(150)
 
         interact({
-            drawBoardView.append(table1)
-            drawBoardView.append(table2)
+            drawBoardController.append(table1)
+            drawBoardController.append(table2)
             table1.setId("Table1")
             table2.setId("Table2")
         })

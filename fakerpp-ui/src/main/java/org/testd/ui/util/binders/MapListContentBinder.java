@@ -1,6 +1,7 @@
 package org.testd.ui.util.binders;
 
 import javafx.beans.WeakListener;
+import javafx.beans.property.Property;
 import javafx.collections.ListChangeListener;
 
 import java.lang.ref.WeakReference;
@@ -13,13 +14,13 @@ import static java.util.stream.Collectors.toMap;
 public class MapListContentBinder<E, FK, FV> implements ListChangeListener<E>, WeakListener {
 
     private final WeakReference<Map<FK, FV>> mapRef;
-    private final Function<? super E, ? extends FK> keyMapper;
-    private final Function<? super E, ? extends FV> valueMapper;
+    private final Function<E, Property<FK>> keyMapper;
+    private final Function<E, FV> valueMapper;
     private final Predicate<E> filter;
 
     public MapListContentBinder(Map<FK, FV> map,
-                                Function<? super E, ? extends FK> keyMapper,
-                                Function<? super E, ? extends FV> valueMapper,
+                                Function<E, Property<FK>> keyMapper,
+                                Function<E, FV> valueMapper,
                                 Predicate<E> filter) {
         this.mapRef = new WeakReference<>(map);
         this.keyMapper = keyMapper;
@@ -38,7 +39,7 @@ public class MapListContentBinder<E, FK, FV> implements ListChangeListener<E>, W
                     if (change.wasRemoved()) {
                         change.getRemoved().stream()
                                 .filter(filter)
-                                .map(keyMapper)
+                                .map(item -> keyMapper.apply(item).getValue())
                                 .forEach(map::remove);
                     }
                     if (change.wasAdded()) {
@@ -46,7 +47,14 @@ public class MapListContentBinder<E, FK, FV> implements ListChangeListener<E>, W
                                 change.getAddedSubList()
                                         .stream()
                                         .filter(filter)
-                                        .collect(toMap(keyMapper, valueMapper))
+                                        .collect(toMap(item -> {
+                                            Property<FK> keyProperty = keyMapper.apply(item);
+                                            keyProperty.addListener((observable, oldValue, newValue) -> {
+                                                map.remove(oldValue);
+                                                map.put(newValue, valueMapper.apply(item));
+                                            });
+                                            return keyProperty.getValue();
+                                        }, valueMapper))
                         );
                     }
                 }

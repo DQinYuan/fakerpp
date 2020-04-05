@@ -1,5 +1,6 @@
 package org.testd.fakerpp.core.parser.ast;
 
+import com.google.common.collect.ImmutableMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -41,6 +42,9 @@ public class ERML {
         }
 
         public ERML build() {
+            if (this.meta == null) {
+                return new ERML(new Meta("", ImmutableMap.of()), this.tables);
+            }
             return new ERML(this.meta, this.tables);
         }
     }

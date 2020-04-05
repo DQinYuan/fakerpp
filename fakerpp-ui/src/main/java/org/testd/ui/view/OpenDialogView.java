@@ -1,5 +1,6 @@
 package org.testd.ui.view;
 
+import com.google.common.collect.ImmutableMap;
 import javafx.fxml.FXML;
 import javafx.stage.DirectoryChooser;
 import lombok.RequiredArgsConstructor;
@@ -7,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.parser.ERMLParser;
 import org.testd.fakerpp.core.parser.ast.ERML;
+import org.testd.fakerpp.core.parser.ast.Meta;
+import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.util.FxDialogs;
@@ -24,9 +27,16 @@ public class OpenDialogView {
 
     private final MainWindowView mainWindowView;
 
+    private final DefaultsConfig defaultsConfig;
+
     @FXML
     private void handleOpenEmpty() {
-        primaryStageHolder.changeSceneFullScene(MainWindowView.class);
+        ERML emptyErml = new ERML(
+                new Meta(defaultsConfig.getLocalesInfo().getDefaultLocale(), ImmutableMap.of()),
+                ImmutableMap.of()
+        );
+        primaryStageHolder.changeSceneFullSceneWithParam(MainWindowView.class,
+                emptyErml, mainWindowView::initFromErml);
     }
 
     @FXML

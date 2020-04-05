@@ -10,7 +10,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="400.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.testd.ui.view.NewDataSourceView">
+<fx:root type="AnchorPane" prefHeight="400.0" prefWidth="400.0"
+         xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Label layoutX="14.0" layoutY="27.0" text="Create New DataSource">
          <font>
@@ -44,28 +45,28 @@
             <HBox spacing="25.0">
                <children>
                   <Label text="url:" />
-                  <TextField />
+                  <TextField fx:id="urlInput" />
                </children>
             </HBox>
             <HBox spacing="15.0">
                <children>
                   <Label text="user:" />
-                  <TextField />
+                  <TextField fx:id="userInput" />
                </children>
             </HBox>
             <HBox spacing="10.0">
                <children>
                   <Label text="password:" />
-                  <PasswordField prefHeight="26.0" prefWidth="142.0" />
+                  <PasswordField fx:id="passwdInput" prefHeight="26.0" prefWidth="142.0" />
                </children>
             </HBox>
          </children>
       </VBox>
       <HBox layoutX="59.0" layoutY="343.0" spacing="10.0">
          <children>
-            <Button mnemonicParsing="false" text="Complete" />
+            <Button fx:id="okButton" mnemonicParsing="false" text="Complete" onAction="#handleComplete"/>
             <Button mnemonicParsing="false" text="Test Connection" />
          </children>
       </HBox>
    </children>
-</AnchorPane>
+</fx:root>

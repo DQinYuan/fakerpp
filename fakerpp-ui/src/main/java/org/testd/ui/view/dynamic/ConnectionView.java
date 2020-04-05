@@ -15,11 +15,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
+import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.model.ColFamilyProperty;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
-import org.testd.ui.view.DrawBoardView;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,8 +31,8 @@ public class ConnectionView {
 
     private final FxWeaver fxWeaver;
     private final DefaultsConfig defaultsConfig;
-    private final DrawBoardView drawBoardView;
     private final PrimaryStageHolder primaryStageHolder;
+    private final DrawBoardController drawBoardController;
 
     private JoinView joinSendView;
     private JoinView joinRecvView;
@@ -61,7 +61,7 @@ public class ConnectionView {
                         assert connectionProperty.sourceProperty().get() != null;
                         assert connectionProperty.targetProperty().get() != null;
                         listenerDeleter.run();
-                        drawBoardView.remove(connectLine);
+                        drawBoardController.remove(connectLine);
                         connectionProperty.sourceProperty().get()
                                 .deleteTableColFamily(joinSendView);
                         connectionProperty.targetProperty().get()
@@ -120,7 +120,7 @@ public class ConnectionView {
         mouseHoverHighlight(joinSendView);
         mouseHoverHighlight(joinRecvView);
 
-        drawBoardView.append(connectLine);
+        drawBoardController.append(connectLine);
         listenerDeleter = () -> {
             sendPos.deleter.run();
             recvPos.deleter.run();

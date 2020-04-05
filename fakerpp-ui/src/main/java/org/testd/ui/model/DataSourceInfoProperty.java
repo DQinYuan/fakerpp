@@ -1,0 +1,47 @@
+package org.testd.ui.model;
+
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import lombok.Getter;
+import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
+
+@Getter
+public class DataSourceInfoProperty {
+    private final StringProperty name;
+
+    private final StringProperty type;
+    private final StringProperty storer;
+    private final IntegerProperty batchSize;
+    private final StringProperty url;
+    private final StringProperty user;
+    private final StringProperty passwd;
+
+    public DataSourceInfoProperty(DataSourceInfo dataSourceInfo) {
+        this(dataSourceInfo.getName(),
+                dataSourceInfo.getType(),
+                dataSourceInfo.getStorer(),
+                dataSourceInfo.getBatchSize(),
+                dataSourceInfo.getUrl(),
+                dataSourceInfo.getUser(),
+                dataSourceInfo.getPasswd());
+    }
+
+    public DataSourceInfoProperty(String name, String type, String storer,
+                                  int batchSize, String url, String user, String passwd) {
+        this.name = new SimpleStringProperty(name);
+        this.type = new SimpleStringProperty(type);
+        this.storer = new SimpleStringProperty(storer);
+        this.batchSize = new SimpleIntegerProperty(batchSize);
+        this.url = new SimpleStringProperty(url);
+        this.user = new SimpleStringProperty(user);
+        this.passwd = new SimpleStringProperty(passwd);
+    }
+
+    @Override
+    public String toString() {
+        return "DataSourceInfoProperty{" +
+                "name=" + name.get() + '}';
+    }
+}

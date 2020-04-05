@@ -1,5 +1,6 @@
 package org.testd.ui.view.dynamic;
 
+import javafx.beans.property.StringProperty;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
@@ -7,24 +8,25 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.testd.ui.PrimaryStageHolder;
+import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.ColFamilyProperty;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
-import org.testd.ui.model.TableMetaProperty;
+import org.testd.ui.model.TableProperty;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.MyVBox;
 import org.testd.ui.util.Stages;
 import org.testd.ui.view.DrawBoardView;
+import org.testd.ui.view.form.TableMetaConfView;
+import org.testd.ui.vo.TableMetaVO;
 
 import java.util.Collection;
 import java.util.List;
@@ -41,12 +43,12 @@ public class MyTableView extends BorderPane {
     //----------- di
     private final FxWeaver fxWeaver;
     private final DrawBoardView drawBoardView;
-    private final PrimaryStageHolder primaryStageHolder;
+    private final DrawBoardController drawBoardController;
     private final BeanFactory beanFactory;
+    private final TableMetaConfView tableMetaConfView;
 
     //----------- property
-    private TableMetaProperty tableMetaProperty;
-    private Pane drawBoard;
+    private TableProperty tableProperty;
 
     //----------- JavaFx Component
     @FXML
@@ -65,17 +67,24 @@ public class MyTableView extends BorderPane {
     private void initialize() {
         dragable();
 
-        deleteTableMenu.setOnAction(event -> drawBoardView.remove(this));
+        deleteTableMenu.setOnAction(event -> drawBoardController.remove(this));
     }
 
-    public void initTableMetaProperty(TableMetaProperty metaProperty, Pane drawBoard) {
-        this.drawBoard = drawBoard;
-        this.tableMetaProperty = metaProperty;
-        tableNameLabel.textProperty().bind(metaProperty.nameProperty());
+    public void initTableProperty(TableProperty tableProperty) {
+        this.tableProperty = tableProperty;
+        tableNameLabel.textProperty().bind(tableProperty.getName());
+    }
+
+    public TableProperty tableProperty() {
+        return tableProperty;
+    }
+
+    public StringProperty nameProperty() {
+        return tableProperty.getName();
     }
 
     public String getName() {
-        return tableMetaProperty.nameProperty().get();
+        return tableProperty.getName().get();
     }
 
     private static class Delta {
@@ -97,12 +106,12 @@ public class MyTableView extends BorderPane {
             double translateY = mouseEvent.getSceneY() + dragDelta.y;
 
             double maxX = translateX + getWidth();
-            if (maxX > drawBoard.getMinWidth()) {
-                drawBoard.setMinWidth(maxX);
+            if (maxX > drawBoardView.getMinWidth()) {
+                drawBoardView.setMinWidth(maxX);
             }
             double maxY = translateY + getHeight();
-            if (maxY > drawBoard.getMinHeight()) {
-                drawBoard.setMinHeight(maxY);
+            if (maxY > drawBoardView.getMinHeight()) {
+                drawBoardView.setMinHeight(maxY);
             }
 
             this.setTranslateX(Math.max(translateX, 0.0));
@@ -113,14 +122,14 @@ public class MyTableView extends BorderPane {
 
     @FXML
     private void handleMetaConf() {
-        Stages.newSceneInChild(TableMetaConfView.getView(tableMetaProperty,
-                name -> !drawBoardView.nameExists(name, this)),
+        Stages.newSceneInChild(tableMetaConfView.getView(new TableMetaVO(tableProperty),
+                name -> !drawBoardController.tableNameExists(name, tableProperty)),
                 getScene().getWindow());
     }
 
     @FXML
     private void handleNewConnection() {
-        List<MyTableView> otherTables = drawBoardView.tablesExcept(this);
+        List<TableProperty> otherTables = drawBoardController.tablesExcept(tableProperty);
         if (CollectionUtils.isEmpty(otherTables)) {
             FxDialogs.showError("new connection error", "no other tables",
                     "there has not other tables");

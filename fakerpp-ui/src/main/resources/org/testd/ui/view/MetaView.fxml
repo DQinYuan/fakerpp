@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:id="mainOptionsPane"
+            fx:controller="org.testd.ui.view.MetaView"
+            maxWidth="250" minWidth="0.0" prefWidth="250.0" style="-fx-background-color: #e0e0eb;">
+    <children>
+        <HBox layoutX="5.0" layoutY="64.0" spacing="10.0">
+            <children>
+                <Label text="Gloabal Lang:" />
+                <ChoiceBox fx:id="langs" prefHeight="26.0" prefWidth="66.0" />
+            </children>
+        </HBox>
+        <Label layoutX="5.0" layoutY="14.0" text="Meta Options:">
+            <font>
+                <Font name="System Bold" size="15.0" />
+            </font>
+        </Label>
+        <VBox layoutX="5.0" layoutY="157.0" spacing="10.0">
+            <children>
+                <HBox spacing="10.0">
+                    <children>
+                        <Label text="DataSources:" />
+                        <Button mnemonicParsing="false" onAction="#handleNewDataSource" text="New" />
+                    </children>
+                </HBox>
+                <ScrollPane prefHeight="150.0" prefWidth="${mainOptionsPane.width}">
+                    <content>
+                        <TableView fx:id="dataSourceTable" prefHeight="152.0" prefWidth="248.0">
+                            <columns>
+                                <TableColumn fx:id="dsNameCol" maxWidth="70.0" minWidth="70.0" text="name" />
+                                <TableColumn fx:id="dsTypeCol" maxWidth="70.0" minWidth="70.0" text="type" />
+                                <TableColumn fx:id="dsUrlCol" minWidth="0.0" text="url" />
+                            </columns>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                        </TableView>
+                    </content>
+                </ScrollPane>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>

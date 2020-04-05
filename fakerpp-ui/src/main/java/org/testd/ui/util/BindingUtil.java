@@ -1,6 +1,8 @@
 package org.testd.ui.util;
 
 import javafx.beans.WeakListener;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.Property;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
@@ -21,6 +23,16 @@ import static java.util.stream.Collectors.toMap;
 
 public class BindingUtil {
 
+    public static <T> void bindWithSourceInit(Property<T> bind, Property<T> source) {
+        source.setValue(bind.getValue());
+        bind.bind(source);
+    }
+
+    public static <T> void bindWithSourceInit(List<T> bind, ObservableList<T> source) {
+        source.setAll(bind);
+        Bindings.bindContent(bind, source);
+    }
+
     @SuppressWarnings("unchecked")
     public static void bindContentTypeUnsafe(List bind, ObservableList source) {
         final ListContentBinder contentBinding =
@@ -35,15 +47,22 @@ public class BindingUtil {
         source.addListener(contentBinding);
     }
 
+    public static <E, FK, FV> void mapContent(Map<FK, FV> mapped, ObservableList<E> source,
+                                              Function<E, Property<FK>> keyMapper,
+                                              Function<E, FV> valueMapper) {
+        mapContentWithFilter(mapped, source, keyMapper, valueMapper, s->true);
+    }
+
     public static <E, FK, FV> void mapContentWithFilter(Map<FK, FV> mapped, ObservableList<E> source,
-                                                   Function<? super E, ? extends FK> keyMapper,
-                                                   Function<? super E, ? extends FV> valueMapper,
+                                                   Function<E, Property<FK>> keyMapper,
+                                                   Function<E, FV> valueMapper,
                                                    Predicate<E> filter) {
         MapListContentBinder<E, FK, FV> contentBinder =
                 new MapListContentBinder<>(mapped, keyMapper, valueMapper, filter);
         mapped.clear();
         mapped.putAll(
-                source.stream().collect(toMap(keyMapper, valueMapper))
+                source.stream().collect(toMap(item -> keyMapper.apply(item).getValue(),
+                        valueMapper))
         );
         source.removeListener(contentBinder);
         source.addListener(contentBinder);

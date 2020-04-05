@@ -1,5 +1,7 @@
 package org.testd.ui.util
 
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
 import javafx.collections.ObservableSet
@@ -24,7 +26,6 @@ class BindingUtilTest extends Specification {
     def "test map set to list"() {
         given:
         ObservableList<Lo> list = FXCollections.observableArrayList()
-        FXCollections.observableSet()
         ObservableSet<String> set =
                 FXCollections.observableSet(["a", "bbb", "c", "lm"] as Set)
         BindingUtil.mapContent(list, set, {new Lo(it)},
@@ -36,6 +37,40 @@ class BindingUtilTest extends Specification {
 
         then:
         list*.toString() == ["a", "c", "lm", "xxx"]
+    }
+
+    static class LoProperty {
+        StringProperty name
+        int age
+
+        LoProperty(String name, int age) {
+            this.name = new SimpleStringProperty(name)
+            this.age = age
+        }
+
+    }
+
+    def "test map list to map with filter and key modify"() {
+        given:
+        ObservableList<LoProperty> list = FXCollections.observableArrayList()
+        Map<String, LoProperty> map = new HashMap<>()
+
+        when:
+        BindingUtil.mapContentWithFilter(map, list, {lo->lo.name}, {it},
+                {it.age%2 == 0})
+        def liNa = new LoProperty("LiNa", 10)
+        list.add(liNa)
+        def worker =  new LoProperty("Worker", 11)
+        list.add(worker)
+        def linlin = new LoProperty("linlin", 22)
+        list.add(linlin)
+
+        then:
+        map == ["LiNa":liNa, "linlin":linlin]
+        liNa.name.set("HaNa")
+        map == ["HaNa":liNa, "linlin":linlin]
+        list.remove(liNa)
+        map == ["linlin":linlin]
     }
 
 }

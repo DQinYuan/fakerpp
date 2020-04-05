@@ -1,15 +1,12 @@
 package org.testd.ui.view.dynamic;
 
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.layout.BorderPane;
-import javafx.util.StringConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -23,7 +20,6 @@ import org.testd.ui.model.ColProperty;
 import org.testd.ui.util.Stages;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component

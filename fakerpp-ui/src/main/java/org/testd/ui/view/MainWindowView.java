@@ -1,21 +1,22 @@
 package org.testd.ui.view;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
 import org.testd.fakerpp.core.parser.ast.ERML;
-import org.testd.fakerpp.core.parser.ast.Meta;
-import org.testd.ui.DefaultsConfig;
-import org.testd.ui.PrimaryStageHolder;
+import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
+import org.testd.ui.model.DataSourceInfoProperty;
+import org.testd.ui.model.ERMLProperty;
+import org.testd.ui.model.MetaProperty;
+import org.testd.ui.model.TableProperty;
+import org.testd.ui.util.BindingUtil;
 
-import java.util.List;
+import java.util.Map;
 
 
 @Component
@@ -24,55 +25,24 @@ import java.util.List;
 public class MainWindowView {
 
     //------------ di
-    private final DefaultsConfig defaultsConfig;
-    private final PrimaryStageHolder primaryStageHolder;
     private final DrawBoardView drawBoardView;
+    private final MetaView metaView;
+    private final FxWeaver fxWeaver;
 
     //------------ JavaFx Component
 
     @FXML
-    private ChoiceBox<String> langs;
-
-    @FXML
-    private TableView<DataSourceInfo> dataSourceTable;
-
-    @FXML
-    private TableColumn<DataSourceInfo, String> dsNameCol;
-    @FXML
-    private TableColumn<DataSourceInfo, String> dsTypeCol;
-    @FXML
-    private TableColumn<DataSourceInfo, String> dsUrlCol;
-    @FXML
     private ScrollPane boardScroll;
+    @FXML
+    private SplitPane mainSplit;
 
     @FXML
     private void initialize() {
+        // init meta
+        mainSplit.getItems().set(0, fxWeaver.loadView(MetaView.class));
+
         // init drawBoard
         boardScroll.setContent(drawBoardView);
-
-        // init langs
-        ObservableList items = FXCollections.observableArrayList();
-        DefaultsConfig.SupportedLocales localesConfig = this.defaultsConfig.getLocalesInfo();
-        List<String> locales = localesConfig.getSupportedLocales();
-
-        for (int i = 0; i < locales.size(); i++) {
-            if (i == localesConfig.getSeparateBelow()) {
-                items.add(new Separator());
-            }
-            items.add(locales.get(i));
-        }
-
-        langs.setItems(items);
-        langs.getSelectionModel()
-                .select(localesConfig.getDefaultLocale());
-
-        // init dataSourceTable
-        dsNameCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getName()));
-        dsTypeCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getType()));
-        dsUrlCol.setCellValueFactory(cellData ->
-                new SimpleStringProperty(cellData.getValue().getUrl()));
     }
 
     @FXML
@@ -80,18 +50,15 @@ public class MainWindowView {
         Platform.exit();
     }
 
-    @FXML
-    private void handleNewDataSource() {
-        primaryStageHolder.newSceneInChild(NewDataSourceView.class);
-    }
-
     public void initFromErml(ERML erml) {
-        Meta meta = erml.getMeta();
-        if (meta != null) {
-            langs.getSelectionModel().select(meta.getLang());
-            dataSourceTable.getItems().addAll(meta.getDataSourceInfos().values());
-        }
-    }
+        ERMLProperty ermlProperty = ERMLProperty.map(erml);
 
+        // bind meta info
+        MetaProperty metaProperty = ermlProperty.getMeta();
+        metaView.initFromMetaProperty(metaProperty);
+
+        Map<String, TableProperty> tables = ermlProperty.getTables();
+        drawBoardView.init(tables);
+    }
 
 }

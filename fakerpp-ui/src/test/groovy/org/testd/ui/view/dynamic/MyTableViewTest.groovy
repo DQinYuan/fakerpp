@@ -8,12 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.testd.ui.Tools
 import org.testd.ui.fxweaver.core.FxWeaver
-import org.testd.ui.matchers.SimpleControlMatchers
-import org.testd.ui.model.TableMetaProperty
-import org.testfx.api.FxAssert
+import org.testd.ui.model.TableProperty
+import org.testd.ui.vo.TableMetaVO
 import org.testfx.api.FxToolkit
 import org.testfx.framework.spock.ApplicationSpec
-import org.testfx.matcher.control.LabeledMatchers
 
 @SpringBootTest
 class MyTableViewTest extends ApplicationSpec {
@@ -31,9 +29,7 @@ class MyTableViewTest extends ApplicationSpec {
     @Override
     void start(Stage stage) throws Exception {
         myTableView = fxWeaver.loadControl(MyTableView.class)
-        myTableView.initTableMetaProperty(new TableMetaProperty("MyTableViewTest",
-                true,
-                10), new Pane())
+        myTableView.initTableProperty(new TableProperty("MyTableViewTest"))
         stage.setScene(new Scene(myTableView, 600, 400))
         stage.show()
     }
@@ -41,36 +37,6 @@ class MyTableViewTest extends ApplicationSpec {
     @Override
     void stop() throws Exception {
         FxToolkit.hideStage()
-    }
-
-    def "meta conf display"() {
-        expect:
-        FxAssert.verifyThat("#tableNameLabel",
-                LabeledMatchers.hasText("MyTableViewTest"))
-        clickOn("#editMetaConf")
-        FxAssert.verifyThat("#tableName",
-                SimpleControlMatchers.equals("MyTableViewTest"))
-        FxAssert.verifyThat("#virtual",
-                SimpleControlMatchers.equals(true))
-        FxAssert.verifyThat("#number",
-                SimpleControlMatchers.equals(10))
-    }
-
-    def "meta conf edit"() {
-        when:
-        clickOn("#editMetaConf")
-        // select child element
-        clickOn("#virtual .check-box")
-        clickOn("#formOkButton")
-        clickOn("#editMetaConf")
-
-        then:
-        FxAssert.verifyThat("#tableName",
-                SimpleControlMatchers.equals("MyTableViewTest"))
-        FxAssert.verifyThat("#virtual",
-                SimpleControlMatchers.equals(false))
-        FxAssert.verifyThat("#number",
-                SimpleControlMatchers.equals(10))
     }
 
     def "add new col family"() {
