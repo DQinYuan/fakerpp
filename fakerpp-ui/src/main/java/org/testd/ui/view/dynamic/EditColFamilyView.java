@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.testd.ui.fxweaver.core.FxmlView;
-import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.Stages;
 
@@ -35,23 +35,23 @@ public class EditColFamilyView extends BorderPane {
     @FXML
     private CheckListView<String> catchOtherCols;
 
-    private ColFamilyProperty colFamilyProperty;
-    private List<ColFamilyProperty> otherColFamilies;
+    private ColFamilyVO colFamilyVO;
+    private List<ColFamilyVO> otherColFamilies;
     private MyTableView ownerTable;
 
-    public void initFromMyTableView(MyTableView tableView, ColFamilyProperty colFamilyProperty) {
+    public void initFromMyTableView(MyTableView tableView, ColFamilyVO colFamilyVO) {
         this.ownerTable = tableView;
         this.otherColFamilies = tableView.getNormalColFamilies().stream()
-                .filter(cf -> !cf.equals(colFamilyProperty))
+                .filter(cf -> !cf.equals(colFamilyVO))
                 .collect(Collectors.toList());
         otherColFamilies.forEach(
                 cp -> catchOtherCols.getItems().addAll(cp.colsStr())
         );
 
-        this.colFamilyProperty = colFamilyProperty;
+        this.colFamilyVO = colFamilyVO;
 
         newCols.setText(
-                String.join("\n", colFamilyProperty.colsStr())
+                String.join("\n", colFamilyVO.colsStr())
         );
     }
 
@@ -74,7 +74,7 @@ public class EditColFamilyView extends BorderPane {
             return;
         }
         if (otherColFamilies.stream()
-                .map(ColFamilyProperty::colsProperty)
+                .map(ColFamilyVO::colsProperty)
                 .flatMap(Set::stream)
                 .anyMatch(cp -> extraCols.contains(cp.getColName()))) {
             FxDialogs.showError("Empty Col Family Error",
@@ -87,10 +87,10 @@ public class EditColFamilyView extends BorderPane {
         currentColsBuilder.addAll(catchCols);
         Set<String> currentCols = currentColsBuilder.build();
 
-        colFamilyProperty.replace(colPropertyFactory.colPropertiesWithListener(currentCols,
+        colFamilyVO.replace(colPropertyFactory.colPropertiesWithListener(currentCols,
                 ownerTable));
 
-        colFamilyProperty.visibleProperty().set(true);
+        colFamilyVO.visibleProperty().set(true);
         Stages.closeWindow(getScene().getWindow());
     }
 

@@ -3,7 +3,7 @@ package org.testd.ui.view.dynamic;
 import com.google.common.collect.ImmutableSet;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
 
 import java.util.Collection;
@@ -24,7 +24,7 @@ public class ColPropertyFactory {
     public ColProperty colPropertyWithListener(String colName, MyTableView owerTable) {
         ColProperty colProperty = new ColProperty(colName);
         colProperty.addDeleteListener(name -> {
-            List<ColFamilyProperty> sendColFamilies = owerTable.getColFamilies(JoinView.class,
+            List<ColFamilyVO> sendColFamilies = owerTable.getColFamilies(JoinView.class,
                     JoinView::isSend);
             sendColFamilies.forEach(colFamilyProperty -> colFamilyProperty.deleteCol(name));
         });

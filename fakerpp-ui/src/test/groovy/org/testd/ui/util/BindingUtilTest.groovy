@@ -4,6 +4,7 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
+import javafx.collections.ObservableMap
 import javafx.collections.ObservableSet
 import spock.lang.Specification
 
@@ -71,6 +72,30 @@ class BindingUtilTest extends Specification {
         map == ["HaNa":liNa, "linlin":linlin]
         list.remove(liNa)
         map == ["linlin":linlin]
+    }
+
+    def "bind map key value"() {
+        given:
+        Set<String> keySet = new HashSet<>()
+        Set<Integer> valueSet = new HashSet<>()
+        ObservableMap<String, Integer> omap = FXCollections.observableHashMap()
+
+        when:
+        BindingUtil.bindKeyValue(keySet, valueSet, omap)
+        omap.put("aaa", 10)
+        omap.put("bbb", 9)
+
+        then:
+        keySet == ["aaa", "bbb"] as Set
+        valueSet == [10, 9] as Set
+
+        and:
+        omap.put("aaa", 100)
+        omap.remove("bbb")
+
+        then:
+        keySet == ["aaa"] as Set
+        valueSet == [100] as Set
     }
 
 }

@@ -1,16 +1,19 @@
 package org.testd.ui.controller;
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.springframework.stereotype.Component;
 import org.testd.ui.model.DataSourceInfoProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
 public class MetaController {
 
-    private Map<String, DataSourceInfoProperty> propMap;
-    private ObservableList<DataSourceInfoProperty> dataSourceInfos;
+    private Map<String, DataSourceInfoProperty> propMap = new HashMap<>();
+    private ObservableList<DataSourceInfoProperty> dataSourceInfos =
+            FXCollections.observableArrayList();
 
     public void init(Map<String, DataSourceInfoProperty> propMap,
                      ObservableList<DataSourceInfoProperty> dataSourceInfos) {

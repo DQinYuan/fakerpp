@@ -1,34 +1,42 @@
 package org.testd.ui.util.binders;
 
+
 import javafx.beans.WeakListener;
 import javafx.collections.ListChangeListener;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.function.Function;
 
-public class ListContentBinder implements ListChangeListener, WeakListener {
-    private final WeakReference<List> listRef;
+import static java.util.stream.Collectors.toList;
 
-    public ListContentBinder(List list) {
-        this.listRef = new WeakReference<>(list);
+public class ListContentBinder<E, F> implements ListChangeListener<E>, WeakListener {
+    private final WeakReference<List<F>> mappedRef;
+    private final Function<? super E, ? extends F> mapper;
+
+    public ListContentBinder(List<F> mapped, Function<? super E, ? extends F> mapper) {
+        this.mappedRef = new WeakReference<List<F>>(mapped);
+        this.mapper = mapper;
     }
 
     @Override
-    public void onChanged(Change change) {
-        final List list = listRef.get();
-        if (list == null) {
+    public void onChanged(Change<? extends E> change) {
+        final List<F> mapped = mappedRef.get();
+        if (mapped == null) {
             change.getList().removeListener(this);
         } else {
             while (change.next()) {
                 if (change.wasPermutated()) {
-                    list.subList(change.getFrom(), change.getTo()).clear();
-                    list.addAll(change.getFrom(), change.getList().subList(change.getFrom(), change.getTo()));
+                    mapped.subList(change.getFrom(), change.getTo()).clear();
+                    mapped.addAll(change.getFrom(), change.getList().subList(change.getFrom(), change.getTo())
+                            .stream().map(o -> mapper.apply(o)).collect(toList()));
                 } else {
                     if (change.wasRemoved()) {
-                        list.subList(change.getFrom(), change.getFrom() + change.getRemovedSize()).clear();
+                        mapped.subList(change.getFrom(), change.getFrom() + change.getRemovedSize()).clear();
                     }
                     if (change.wasAdded()) {
-                        list.addAll(change.getFrom(), change.getAddedSubList());
+                        mapped.addAll(change.getFrom(), change.getAddedSubList()
+                                .stream().map(o -> mapper.apply(o)).collect(toList()));
                     }
                 }
             }
@@ -37,12 +45,12 @@ public class ListContentBinder implements ListChangeListener, WeakListener {
 
     @Override
     public boolean wasGarbageCollected() {
-        return listRef.get() == null;
+        return mappedRef.get() == null;
     }
 
     @Override
     public int hashCode() {
-        final List list = listRef.get();
+        final List<F> list = mappedRef.get();
         return (list == null) ? 0 : list.hashCode();
     }
 
@@ -52,15 +60,15 @@ public class ListContentBinder implements ListChangeListener, WeakListener {
             return true;
         }
 
-        final List list1 = listRef.get();
-        if (list1 == null) {
+        final List<F> mapped1 = mappedRef.get();
+        if (mapped1 == null) {
             return false;
         }
 
         if (obj instanceof ListContentBinder) {
-            final ListContentBinder other = (ListContentBinder) obj;
-            final List list2 = other.listRef.get();
-            return list1 == list2;
+            final ListContentBinder<?, ?> other = (ListContentBinder<?, ?>) obj;
+            final List<?> mapped2 = other.mappedRef.get();
+            return mapped1 == mapped2;
         }
         return false;
     }

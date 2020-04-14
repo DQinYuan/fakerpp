@@ -1,7 +1,7 @@
 package org.testd.fakerpp.core.engine.generator
 
+import org.apache.commons.lang3.ClassUtils
 import org.testd.fakerpp.core.engine.generator.builtin.DateGen
-import org.testd.fakerpp.core.engine.generator.builtin.DateRangeGen
 import org.testd.fakerpp.core.engine.generator.builtin.EnumGen
 import org.testd.fakerpp.core.engine.generator.builtin.IntGen
 import spock.lang.Shared
@@ -35,11 +35,14 @@ class GeneratorsTest extends Specification {
         given:
         def builtInGens = generators.builtInGenerators()
         def generator = builtInGens[tag].getGenerator("", attrs, options)
+        def pInfos = builtInGens[tag].paramInfos()
 
         expect:
         exp.each {
             k, v ->
                 assert generator.@"${k}" == v
+                assert pInfos[k] != null
+                assert ClassUtils.primitiveToWrapper(pInfos[k].type).isAssignableFrom(v.class)
         }
 
         where:

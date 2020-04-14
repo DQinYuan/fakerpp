@@ -1,6 +1,8 @@
 package org.testd.ui.model;
 
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 import org.testd.fakerpp.core.parser.ast.Table;
 import org.testd.ui.util.ListUtil;
@@ -48,12 +50,12 @@ public class TableProperty {
 
     @Getter
     public static class ColFamilyProperty {
-        private final List<String> cols;
-        private final List<GeneratorInfoProperty> generatorInfos;
+        private final ObservableList<String> cols;
+        private final ObservableList<GeneratorInfoProperty> generatorInfos;
 
         public ColFamilyProperty(List<String> cols, List<GeneratorInfoProperty> generatorInfos) {
-            this.cols = new ArrayList<>(cols);
-            this.generatorInfos = new ArrayList<>(generatorInfos);
+            this.cols = FXCollections.observableArrayList(cols);
+            this.generatorInfos = FXCollections.observableArrayList(generatorInfos);
         }
 
         private static ColFamilyProperty map(Table.ColFamily colFamily) {
@@ -70,6 +72,18 @@ public class TableProperty {
         private final Map<String, String> attributes;
         private final List<List<String>> options;
         private final IntegerProperty weight;
+
+        private static String DEFAULT_FIELD = "built-in";
+        private static String DEFAULT_GENERATOR = "str";
+
+        public static GeneratorInfoProperty defaultProperty() {
+            return new TableProperty.GeneratorInfoProperty(DEFAULT_FIELD,
+                    "",   // use global default lang
+                    DEFAULT_GENERATOR,
+                    new HashMap<>(),
+                    new ArrayList<>(),
+                    1);
+        }
 
         public GeneratorInfoProperty(String field, String lang, String generator,
                                      Map<String, String> attributes,

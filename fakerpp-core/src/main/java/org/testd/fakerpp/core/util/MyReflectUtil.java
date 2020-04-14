@@ -38,6 +38,11 @@ public class MyReflectUtil {
         return methods;
     }
 
+    /**
+     *
+     * @param clazz
+     * @return clazz's method name -> Methods
+     */
     public static Map<String, List<Method>> getMethodMap(Class clazz) {
         return methodMapCache.computeIfAbsent(
                 clazz.getName(), cacheKey -> {

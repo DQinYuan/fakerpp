@@ -17,7 +17,7 @@ import org.springframework.util.CollectionUtils;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
-import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.TableProperty;
@@ -28,9 +28,10 @@ import org.testd.ui.view.DrawBoardView;
 import org.testd.ui.view.form.TableMetaConfView;
 import org.testd.ui.vo.TableMetaVO;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -147,14 +148,15 @@ public class MyTableView extends BorderPane {
     }
 
     /**
-     *  get except viewType class not meet predicate
+     * get except viewType class not meet predicate
+     *
      * @param viewType
      * @param predicate
      * @param <T>
      * @return
      */
-    public <T extends ColFamilyViewInterface> List<ColFamilyProperty>
-        getColFamiliesExcept(Class<T> viewType, Predicate<T> predicate) {
+    public <T extends ColFamilyViewInterface> List<ColFamilyVO>
+    getColFamiliesExcept(Class<T> viewType, Predicate<T> predicate) {
         return colFamiliesInput.getMyChildren().stream()
                 .filter(c -> {
                     if (!c.getClass().equals(viewType)) {
@@ -163,30 +165,30 @@ public class MyTableView extends BorderPane {
 
                     return predicate.test(viewType.cast(c));
                 })
-                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .map(ColFamilyViewInterface::getColFamilyVO)
                 .collect(Collectors.toList());
     }
 
-    public List<ColFamilyProperty> getColFamilies() {
+    public List<ColFamilyVO> getColFamilies() {
         return colFamiliesInput.getMyChildren()
-                .stream().map(ColFamilyViewInterface::getColFamilyProperty)
+                .stream().map(ColFamilyViewInterface::getColFamilyVO)
                 .collect(Collectors.toList());
     }
 
-    public <T extends ColFamilyViewInterface> List<ColFamilyProperty>
-        getColFamilies(Class<T> viewType, Predicate<T> predicate) {
+    public <T extends ColFamilyViewInterface> List<ColFamilyVO>
+    getColFamilies(Class<T> viewType, Predicate<T> predicate) {
         return colFamiliesInput.getMyChildren().stream()
                 .filter(c -> c.getClass().equals(viewType))
                 .filter(c -> predicate.test(viewType.cast(c)))
-                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .map(ColFamilyViewInterface::getColFamilyVO)
                 .collect(Collectors.toList());
     }
 
 
-    public List<ColFamilyProperty> getColFamiliesExcept(ColFamilyViewInterface expect) {
+    public List<ColFamilyVO> getColFamiliesExcept(ColFamilyViewInterface expect) {
         return colFamiliesInput.getMyChildren().stream()
                 .filter(c -> c != expect)
-                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .map(ColFamilyViewInterface::getColFamilyVO)
                 .collect(Collectors.toList());
     }
 
@@ -195,48 +197,40 @@ public class MyTableView extends BorderPane {
      *
      * @return
      */
-    public List<ColFamilyProperty> getNormalColFamilies() {
+    public List<ColFamilyVO> getNormalColFamilies() {
         return colFamiliesInput.getMyChildren()
                 .stream().filter(vi -> vi instanceof ColFamilyView)
-                .map(ColFamilyViewInterface::getColFamilyProperty)
+                .map(ColFamilyViewInterface::getColFamilyVO)
                 .collect(Collectors.toList());
     }
 
-    public boolean containsAny(Collection<String> colNames) {
-        return getColFamilies().stream()
-                .map(ColFamilyProperty::colsProperty)
-                .flatMap(Set::stream)
-                .anyMatch(colNames::contains);
-    }
 
-    public boolean containsAnyExcept(Collection<String> colNames, ColFamilyViewInterface expect) {
-        return colFamiliesInput.getMyChildren().stream()
-                .filter(c -> c != expect)
-                .map(ColFamilyViewInterface::getColFamilyProperty)
-                .map(ColFamilyProperty::colsProperty)
-                .flatMap(Set::stream)
-                .anyMatch(colNames::contains);
-    }
 
     @FXML
     private void handleNewColFamily() {
-        ColFamilyProperty colFamilyProperty = new ColFamilyProperty();
+        TableProperty.ColFamilyProperty colFamilyProperty =
+                new TableProperty.ColFamilyProperty(new ArrayList<>(), new ArrayList<>());
+        ColFamilyVO colFamilyVO = new ColFamilyVO(colFamilyProperty);
 
         EditColFamilyView editColFamilyView = fxWeaver.loadControl(EditColFamilyView.class);
-        editColFamilyView.initFromMyTableView(this, colFamilyProperty);
+        editColFamilyView.initFromMyTableView(this, colFamilyVO);
 
         ColFamilyView colFamilyView = fxWeaver.loadControl(ColFamilyView.class);
-        colFamilyProperty.visibleProperty().addListener((observable, oldValue, newValue) -> {
+        colFamilyVO.visibleProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                colFamilyView.initFromTableAndColFamilyProperty(this, colFamilyProperty);
+                colFamilyView.initFromTableAndColFamilyProperty(this, colFamilyVO);
                 colFamiliesInput.getMyChildren().add(colFamilyView);
+                tableProperty.getColFamilies().add(colFamilyProperty);
             } else {
                 colFamiliesInput.getMyChildren().remove(colFamilyView);
+                tableProperty.getColFamilies().remove(colFamilyProperty);
             }
         });
-        colFamilyProperty.colsProperty().addListener((SetChangeListener<ColProperty>) c -> {
+
+        // auto invisible when col family is empty
+        colFamilyVO.colsProperty().addListener((SetChangeListener<ColProperty>) c -> {
             if (c.getSet().isEmpty()) {
-                colFamilyProperty.visibleProperty().set(false);
+                colFamilyVO.visibleProperty().set(false);
             }
         });
 

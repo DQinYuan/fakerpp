@@ -7,21 +7,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.engine.generator.Generator;
+import org.testd.fakerpp.core.engine.generator.GeneratorParamInfo;
 import org.testd.fakerpp.core.engine.generator.GeneratorSupplier;
-import org.testd.fakerpp.core.engine.generator.Generators;
 import org.testd.fakerpp.core.util.MhAndClass;
 import org.testd.fakerpp.core.util.MyReflectUtil;
 import org.testd.fakerpp.core.util.MyStringUtil;
 
 import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 @Slf4j
@@ -121,12 +117,29 @@ public class Fakers {
                 String generatorName = generatorsEn.getKey();
                 FakerInvoker.MethodInfo generatorMethodInfo = generatorsEn.getValue();
                 generatorBuilder.put(MyStringUtil.camelToDelimit(generatorName),
-                        (lang, attributes, options) -> new FakerGen(
-                                generatorMethodInfo.getMh().bindTo(newFakerField(fieldMh.getMh(), lang)),
-                                generatorParams(generatorMethodInfo, attributes)
-                        ));
-            }
+                        new GeneratorSupplier() {
+                            @Override
+                            public Generator getGenerator(String lang, Map<String, String> attributes,
+                                                          List<List<String>> options) {
+                                return new FakerGen(
+                                        generatorMethodInfo.getMh().bindTo(newFakerField(fieldMh.getMh(), lang)),
+                                        generatorParams(generatorMethodInfo, attributes)
+                                );
+                            }
 
+                            @Override
+                            public Map<String, GeneratorParamInfo> paramInfos() {
+                                ImmutableMap.Builder<String, GeneratorParamInfo> builder =
+                                        ImmutableMap.builder();
+                                generatorMethodInfo.getParams().forEach(
+                                        (name, info) -> builder.put(MyStringUtil.camelToDelimit(name),
+                                                new GeneratorParamInfo(MyStringUtil.camelToDelimit(name),
+                                                        info.getParamClass(), null))
+                                );
+                                return builder.build();
+                            }
+                        });
+            }
 
             fieldBuilder.put(MyStringUtil.camelToDelimit(fieldName),
                     generatorBuilder.build());

@@ -4,6 +4,7 @@ import javafx.beans.WeakListener;
 import javafx.collections.ListChangeListener;
 
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -55,8 +56,7 @@ public class SetListContentBinder<E, F> implements ListChangeListener<E>, WeakLi
 
     @Override
     public int hashCode() {
-        final Set<F> list = setRef.get();
-        return (list == null) ? 0 : list.hashCode();
+        return Objects.hash(setRef.get());
     }
 
     @Override

@@ -21,6 +21,8 @@ class MyTableViewTest extends ApplicationSpec {
 
     MyTableView myTableView
 
+    Stage testStage
+
     @Override
     void init() throws Exception {
         FxToolkit.registerStage { new Stage() }
@@ -28,6 +30,7 @@ class MyTableViewTest extends ApplicationSpec {
 
     @Override
     void start(Stage stage) throws Exception {
+        this.testStage = stage
         myTableView = fxWeaver.loadControl(MyTableView.class)
         myTableView.initTableProperty(new TableProperty("MyTableViewTest"))
         stage.setScene(new Scene(myTableView, 600, 400))
@@ -36,7 +39,7 @@ class MyTableViewTest extends ApplicationSpec {
 
     @Override
     void stop() throws Exception {
-        FxToolkit.hideStage()
+        FxToolkit.cleanupStages()
     }
 
     def "add new col family"() {
@@ -51,6 +54,10 @@ ccc
         myTableView.getColFamilies().size() == 1
         myTableView.getColFamilies()[0].colsProperty()*.getColName().toSet() ==
                 ["aaa", "bbb", "ccc"] as Set
+        // test bind property
+        myTableView.tableProperty().colFamilies.size() == 1
+        myTableView.tableProperty().colFamilies[0].getCols().toSet() ==
+                ["aaa", "bbb", "ccc"] as Set
     }
 
     def "open new col family dialog but not add"() {
@@ -60,6 +67,7 @@ ccc
 
         then:
         myTableView.getColFamilies().size() == 0
+        myTableView.tableProperty().colFamilies.size() == 0
     }
 
     def "col families move"() {
@@ -88,6 +96,10 @@ ee
         myTableView.colFamilies.size() == 1
         myTableView.colFamilies[0].colsProperty()*.getColName().toSet() ==
                 ["aaa", "bbb", "ddd", "ee", "lala"] as Set
+
+        myTableView.tableProperty().getColFamilies().size() == 1
+        myTableView.tableProperty().getColFamilies()[0].cols.toSet() ==
+                ["aaa", "bbb", "ddd", "ee", "lala"] as Set
     }
 
     def "duplicate col with other col families will pop up error dialog"() {
@@ -104,7 +116,10 @@ aaa
         then:
         myTableView.colFamilies.size() == 1
         listTargetWindows().size() == 3
-        interact({((Stage)listTargetWindows()[2]).close()})
+
+        myTableView.tableProperty().getColFamilies().size() == 1
+
+        interact({ ((Stage) listTargetWindows()[2]).close() })
     }
 
     def "duplicate col with self will reserve only one"() {

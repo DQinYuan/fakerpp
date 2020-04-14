@@ -10,15 +10,11 @@ import org.testd.fakerpp.core.engine.generator.faker.Fakers;
 import org.testd.fakerpp.core.util.MhAndClass;
 import org.testd.fakerpp.core.util.MyReflectUtil;
 import org.testd.fakerpp.core.util.MyStringUtil;
-import org.testd.fakerpp.core.util.MyReflectUtil;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Component
@@ -40,7 +36,7 @@ public class Generators {
     }
 
     private void setBuiltInGeneratorAttr(Generator generator, Map<String, String> attrs,
-                                        List<List<String>> options) throws ERMLException {
+                                         List<List<String>> options) throws ERMLException {
         // attrs
         for (Map.Entry<String, String> entry : attrs.entrySet()) {
             MhAndClass gField = getFieldSetter(generator.getClass(), entry.getKey());
@@ -71,7 +67,7 @@ public class Generators {
 
 
         try {
-            getFieldSetter(generator.getClass(),"options")
+            getFieldSetter(generator.getClass(), "options")
                     .getMh().invokeExact(generator, options);
         } catch (Throwable ignore) {
         }
@@ -83,20 +79,29 @@ public class Generators {
                 .subtypes("org.testd.fakerpp.core.engine.generator.builtin", Generator.class)
                 .filter(c -> c.getSimpleName().endsWith("Gen"))
                 .collect(ImmutableMap.toImmutableMap((Class<? extends Generator> c) -> {
-                    String sName = c.getSimpleName();
-                    return MyStringUtil
-                            .camelToDelimit(sName.substring(0, sName.length() - 3));
-                }, c -> (GeneratorSupplier) (String lang, Map<String, String> attributes, List<List<String>> options) -> {
-                    Generator generator = null;
-                    try {
-                        generator = (Generator) MyReflectUtil
-                                .getNoArgConstructor(c, Generator.class).invokeExact();
-                        setBuiltInGeneratorAttr(generator, attributes, options);
-                        return generator;
-                    } catch (Throwable throwable) {
-                        throw new RuntimeException(throwable);
-                    }
-                }));
+                            String sName = c.getSimpleName();
+                            return MyStringUtil
+                                    .camelToDelimit(sName.substring(0, sName.length() - 3));
+                        },
+                        c -> new GeneratorSupplier() {
+                            @Override
+                            public Generator getGenerator(String lang, Map<String, String> attributes, List<List<String>> options) {
+                                Generator generator = null;
+                                try {
+                                    generator = (Generator) MyReflectUtil
+                                            .getNoArgConstructor(c, Generator.class).invokeExact();
+                                    setBuiltInGeneratorAttr(generator, attributes, options);
+                                    return generator;
+                                } catch (Throwable throwable) {
+                                    throw new RuntimeException(throwable);
+                                }
+                            }
+
+                            @Override
+                            public Map<String, GeneratorParamInfo> paramInfos() {
+                                return GeneratorParamInfo.fromClass(c);
+                            }
+                        }));
     }
 
     @Cacheable("generators")

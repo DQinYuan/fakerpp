@@ -7,6 +7,11 @@ import javafx.scene.control.TextField
 import javafx.stage.Stage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.ComponentScan
+import org.springframework.context.annotation.FilterType
+import org.springframework.stereotype.Component
+import org.springframework.test.context.TestPropertySource
 import org.testd.ui.Tools
 import org.testd.ui.controller.DrawBoardController
 import org.testd.ui.fxweaver.core.FxWeaver
@@ -16,8 +21,16 @@ import org.testd.ui.view.dynamic.MyTableView
 import org.testfx.api.FxToolkit
 import org.testfx.framework.spock.ApplicationSpec
 
-@SpringBootTest
+@SpringBootTest(classes = DrawBoardViewTestConfig.class)
 class DrawBoardViewTest extends ApplicationSpec {
+
+    @TestConfiguration
+    @ComponentScan(excludeFilters = @ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            value = [MainWindowView.class, MetaView.class]) )
+    @Component
+    static class DrawBoardViewTestConfig {
+    }
 
     @Autowired
     FxWeaver fxWeaver

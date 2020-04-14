@@ -39,6 +39,16 @@ public class DataSourceInfoProperty {
         this.passwd = new SimpleStringProperty(passwd);
     }
 
+    public void set(DataSourceInfo newDataSourceInfo) {
+        name.set(newDataSourceInfo.getName());
+        type.set(newDataSourceInfo.getType());
+        storer.set(newDataSourceInfo.getStorer());
+        batchSize.set(newDataSourceInfo.getBatchSize());
+        url.set(newDataSourceInfo.getUrl());
+        user.set(newDataSourceInfo.getUser());
+        passwd.set(newDataSourceInfo.getPasswd());
+    }
+
     @Override
     public String toString() {
         return "DataSourceInfoProperty{" +

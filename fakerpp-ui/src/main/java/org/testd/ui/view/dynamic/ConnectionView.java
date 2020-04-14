@@ -3,6 +3,8 @@ package org.testd.ui.view.dynamic;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -17,10 +19,12 @@ import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
-import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
+import org.testd.ui.util.BindingUtil;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,12 +45,20 @@ public class ConnectionView {
     private Runnable listenerDeleter = () ->{};
 
     public void register(ConnectionProperty connectionProperty) {
-        joinSendView = fxWeaver.loadControl(JoinView.class);
-        joinSendView.init(connectionProperty.sendSet());
-        joinRecvView = fxWeaver.loadControl(JoinView.class);
-        joinRecvView.init(connectionProperty.recvSet());
 
-        connectionProperty.sendSet().addListener((SetChangeListener<ColProperty>) change -> {
+        // bind send and receive set
+        ObservableSet<ColProperty> sendSet = FXCollections
+                .observableSet(new LinkedHashSet<>());
+        ObservableSet<ColProperty> recvSet = FXCollections
+                .observableSet(new LinkedHashSet<>());
+        BindingUtil.bindKeyValue(sendSet, recvSet, connectionProperty.sendRecvMap());
+
+        joinSendView = fxWeaver.loadControl(JoinView.class);
+        joinSendView.init(sendSet);
+        joinRecvView = fxWeaver.loadControl(JoinView.class);
+        joinRecvView.init(recvSet);
+
+        sendSet.addListener((SetChangeListener<ColProperty>) change -> {
             if (change.getSet().isEmpty()) {
                 connectionProperty.visibleProperty().set(false);
             }
@@ -73,7 +85,7 @@ public class ConnectionView {
                 tableView -> {
                     Set<String> checkCols =
                             tableView.getColFamiliesExcept(joinRecvView).stream()
-                            .map(ColFamilyProperty::colsStr).flatMap(Set::stream)
+                            .map(ColFamilyVO::colsStr).flatMap(Set::stream)
                             .collect(Collectors.toSet());
                     return col -> !checkCols.contains(col);
                 }

@@ -1,36 +1,50 @@
-package org.testd.ui.model;
+package org.testd.ui.vo;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.collections.ObservableSet;
+import org.testd.ui.model.ColProperty;
+import org.testd.ui.model.TableProperty;
+import org.testd.ui.util.BindingUtil;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class ColFamilyProperty {
+public class ColFamilyVO {
 
     private final ObservableSet<ColProperty> cols;
 
-    private final StringProperty field;
-    private final StringProperty generator;
+    private final ObservableList<TableProperty.GeneratorInfoProperty> generatorInfos;
 
     private final BooleanProperty visible = new SimpleBooleanProperty();
 
-    public ColFamilyProperty() {
-        cols = FXCollections.observableSet(new LinkedHashSet<>());
-        field = new SimpleStringProperty();
-        generator = new SimpleStringProperty();
+    /**
+     * virtual colFamilyVo not related with a colFamilyProperty
+     * @param cols
+     */
+    public ColFamilyVO(ObservableSet<ColProperty> cols) {
+        this.cols = cols;
+        this.generatorInfos = FXCollections.observableArrayList();
     }
 
-    public ColFamilyProperty(ObservableSet<ColProperty> cols) {
-        this.cols = cols;
-        field = new SimpleStringProperty();
-        generator = new SimpleStringProperty();
+    public ColFamilyVO(TableProperty.ColFamilyProperty colFamilyProperty) {
+        cols = FXCollections.observableSet(new LinkedHashSet<>());
+        BindingUtil.mapContent(colFamilyProperty.getCols(),
+                cols, ColProperty::getColName);
+        if (colFamilyProperty.getGeneratorInfos().size() == 0) {
+            // add default generator
+            colFamilyProperty.getGeneratorInfos().add(TableProperty.GeneratorInfoProperty.defaultProperty());
+        }
+
+        generatorInfos = colFamilyProperty.getGeneratorInfos();
     }
 
     public Set<String> colsStr() {
@@ -41,12 +55,8 @@ public class ColFamilyProperty {
         return cols;
     }
 
-    public StringProperty fieldProperty() {
-        return field;
-    }
-
-    public StringProperty generatorProperty() {
-        return generator;
+    public ObservableList<TableProperty.GeneratorInfoProperty> getGeneratorInfos() {
+        return generatorInfos;
     }
 
     public void deleteCols(Collection<String> colNames) {

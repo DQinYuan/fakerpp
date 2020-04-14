@@ -72,8 +72,11 @@ abstract class Libs extends Script {
     def getMethods(CtClass cc, Class c) {
         return MyReflectUtil.getSortedDeclaredMethods(c)
                 .toUnique({ it.name })
-                .findAll { m -> !Modifier.isStatic(m.getModifiers()) && !Modifier.isPrivate(m.getModifiers()) }
-                .collect { m -> methodInfo(m, cc) }
+                .findAll { m ->
+            !Modifier.isStatic(m.getModifiers()) &&
+                    !Modifier.isPrivate(m.getModifiers())
+        }
+        .collect { m -> methodInfo(m, cc) }
     }
 
     def camelToDelimit(String str) {
@@ -150,7 +153,19 @@ abstract class Libs extends Script {
         }
     }
 
-    def method2Generator(String methodName, List<Triplet<String, Class, Object>> paramInfos, boolean supportList = false) {
+    /**
+     *
+     * @param camelName
+     * @param paramInfos
+     *            Triplet:
+     *                value0: param name
+     *                value1: param class
+     *                value2: param default value
+     * @param supportList
+     * @return a list with single Generator object or with no element
+     */
+    def toGenerator(String camelName, List<Triplet<String, Class, Object>> paramInfos,
+                    boolean supportList = false) {
         List<ParamInfo> infoObjs = []
         for (Triplet<String, Class, Object> entry : paramInfos) {
             def pname = entry.value0
@@ -166,7 +181,7 @@ abstract class Libs extends Script {
                     type: typeMap[ptype], defaultValue: entry.value2)
         }
 
-        return [new Generator(name: camelToDelimit(methodName), paramInfos: infoObjs)]
+        return [new Generator(name: camelToDelimit(camelName), paramInfos: infoObjs)]
     }
 
     def fakerMethod2Field(ClassPool cp, Method method) {
@@ -179,12 +194,18 @@ abstract class Libs extends Script {
                 .collect { String mName, CtClass cc, Class c ->
             new FakerField(name: camelToDelimit(mName),
                     gens: getMethods(cc, c)
-                            .collectMany { name, paramInfo -> method2Generator(name, paramInfo) })
+                            .collectMany { name, paramInfo -> toGenerator(name, paramInfo) })
         }
         .findAll { !it.gens.empty }
     }
 
     def class2Generator(Class c) {
+        /*
+           Triplet:
+               value0: param name
+               value1: param class
+               value2: param default value
+         */
         List<Triplet<String, Class, Object>> attrInfo = c.getDeclaredFields()
                 .findAll { Modifier.isPublic(it.getModifiers()) }
                 .collect {
@@ -197,7 +218,7 @@ abstract class Libs extends Script {
         }
 
         def simpleName = c.simpleName
-        return method2Generator(simpleName.substring(0, simpleName.length() - 3),
+        return toGenerator(simpleName.substring(0, simpleName.length() - 3),
                 attrInfo, true)
     }
 
@@ -205,7 +226,8 @@ abstract class Libs extends Script {
         return new FakerField(name: "built-in",
                 gens: classesFromPkg(cp, "org.testd.fakerpp.core.engine.generator.builtin",
                         { Class c ->
-                            c.getInterfaces().contains(org.testd.fakerpp.core.engine.generator.Generator.class) &&
+                            c.getInterfaces().
+                                    contains(org.testd.fakerpp.core.engine.generator.Generator.class) &&
                                     c.simpleName.endsWith("Gen")
                         }
                 ).collectMany { ignore, c -> class2Generator(c) }

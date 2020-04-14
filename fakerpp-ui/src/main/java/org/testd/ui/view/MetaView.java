@@ -1,5 +1,6 @@
 package org.testd.ui.view;
 
+import com.google.common.annotations.VisibleForTesting;
 import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -55,20 +56,9 @@ public class MetaView {
     @FXML
     private void initialize() {
         // init langs
-        ObservableList items = FXCollections.observableArrayList();
-        DefaultsConfig.SupportedLocales localesConfig = defaultsConfig.getLocalesInfo();
-        List<String> locales = localesConfig.getSupportedLocales();
-
-        for (int i = 0; i < locales.size(); i++) {
-            if (i == localesConfig.getSeparateBelow()) {
-                items.add(new Separator());
-            }
-            items.add(locales.get(i));
-        }
-
-        langs.setItems(items);
+        langs.setItems(defaultsConfig.getLocalesInfo().getLocaleItems());
         langs.getSelectionModel()
-                .select(localesConfig.getDefaultLocale());
+                .select(defaultsConfig.getLocalesInfo().getDefaultLocale());
 
         // init dataSourceTable
         dsNameCol.setCellValueFactory(cellData -> cellData.getValue().getName());
@@ -108,7 +98,8 @@ public class MetaView {
 
     }
 
-    private void handleDataSourceDelete(DataSourceInfoProperty dataSourceInfoProperty) {
+    @VisibleForTesting
+    protected void handleDataSourceDelete(DataSourceInfoProperty dataSourceInfoProperty) {
         Optional<TableProperty> useTableView = drawBoardController.dsInUse(dataSourceInfoProperty);
         if (useTableView.isPresent()) {
             FxDialogs.showError("Data source delete error",
@@ -119,6 +110,11 @@ public class MetaView {
             return;
         }
         dataSourceTable.getItems().remove(dataSourceInfoProperty);
+    }
+
+    @VisibleForTesting
+    protected void appendDataSource(DataSourceInfoProperty dataSourceInfoProperty) {
+        dataSourceTable.getItems().add(dataSourceInfoProperty);
     }
 
     @FXML
@@ -132,7 +128,7 @@ public class MetaView {
         );
         EditDataSourceView editDataSourceView = fxWeaver.loadControl(EditDataSourceView.class);
         editDataSourceView.init(dataSourceInfoProperty, () ->
-                dataSourceTable.getItems().add(dataSourceInfoProperty));
+                appendDataSource(dataSourceInfoProperty));
         primaryStageHolder.newSceneInChild(editDataSourceView);
     }
 

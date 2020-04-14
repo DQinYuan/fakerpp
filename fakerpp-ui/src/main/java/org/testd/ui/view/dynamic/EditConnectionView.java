@@ -2,7 +2,6 @@ package org.testd.ui.view.dynamic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Streams;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -17,7 +16,7 @@ import org.springframework.util.CollectionUtils;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
-import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.JoinType;
@@ -85,25 +84,23 @@ public class EditConnectionView extends VBox {
                 this::selectByJoinType);
 
         // Col families
-        List<ColFamilyProperty> selectableColFamilies = sourceTable
+        List<ColFamilyVO> selectableColFamilies = sourceTable
                 .getColFamiliesExcept(JoinView.class, joinView -> !joinView.isSend());
 
-        Streams.forEachPair(connectionProperty.sendSet().stream(),
-                connectionProperty.recvSet().stream(),
-                (s, r) -> {
-                    ColFamilyMappingView colFamilyMappingView =
-                            fxWeaver.loadControl(ColFamilyMappingView.class);
-                    colFamilyMappingView.initFromOriginAndMappingCol(s.getColName(),
-                            r.getColName());
-                    colFamilyMappingView.select();
-                    colFamiliesSelectBoxes.getChildren().add(colFamilyMappingView);
-                });
+        connectionProperty.sendRecvMap().forEach((s, r) -> {
+            ColFamilyMappingView colFamilyMappingView =
+                    fxWeaver.loadControl(ColFamilyMappingView.class);
+            colFamilyMappingView.initFromOriginAndMappingCol(s.getColName(),
+                    r.getColName());
+            colFamilyMappingView.select();
+            colFamiliesSelectBoxes.getChildren().add(colFamilyMappingView);
+        });
 
         selectableColFamilies.stream()
-                .map(ColFamilyProperty::colsProperty)
+                .map(ColFamilyVO::colsProperty)
                 .flatMap(Set::stream)
                 .filter(col -> !connectionProperty
-                        .sendSet().contains(col))
+                        .sendRecvMap().containsKey(col))
                 .map(col -> {
                     ColFamilyMappingView colFamilyMappingView =
                             fxWeaver.loadControl(ColFamilyMappingView.class);
@@ -185,21 +182,18 @@ public class EditConnectionView extends VBox {
         connectionProperty.targetProperty().set(targetTableView);
         connectionProperty.joinTypeProperty().set(getJoinType());
 
-        Set<ColProperty> sendColProperties = new LinkedHashSet<>();
-        Set<ColProperty> recvColProperties = new LinkedHashSet<>();
+        Map<ColProperty, ColProperty> newSendRecv = new LinkedHashMap<>();
         for (Map.Entry<String, String> sendRecvEntry : resColMap.entrySet()) {
             ColProperty sendProperty = new ColProperty(sendRecvEntry.getKey());
             ColProperty recvProperty = colPropertyFactory.colPropertyWithListener(sendRecvEntry.getValue(),
                     targetTableView);
             // when send col deleted, corresponding recv col must be deleted at same time
             sendProperty.addDeleteListener(colName ->
-                connectionProperty.recvSet().remove(recvProperty));
-            sendColProperties.add(sendProperty);
-            recvColProperties.add(recvProperty);
+                connectionProperty.sendRecvMap().remove(sendProperty));
+            newSendRecv.put(sendProperty, recvProperty);
         }
 
-        connectionProperty.replaceSendSet(sendColProperties);
-        connectionProperty.replaceRecvSet(recvColProperties);
+        connectionProperty.replaceSendRecv(newSendRecv);
 
         if (!connectionProperty.visibleProperty().get()) {
             connectionProperty.visibleProperty().set(true);

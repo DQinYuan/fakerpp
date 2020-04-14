@@ -2,14 +2,12 @@ package org.testd.ui.util;
 
 import javafx.beans.WeakListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.Property;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.ObservableSet;
-import org.testd.ui.util.binders.ListContentBinder;
-import org.testd.ui.util.binders.ListSetContentBinder;
-import org.testd.ui.util.binders.MapListContentBinder;
-import org.testd.ui.util.binders.SetListContentBinder;
+import javafx.beans.value.ObservableStringValue;
+import javafx.collections.*;
+import org.apache.commons.lang3.StringUtils;
+import org.testd.ui.util.binders.*;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -23,6 +21,70 @@ import static java.util.stream.Collectors.toMap;
 
 public class BindingUtil {
 
+    /**
+     * @param op
+     * @param predicate
+     * @return a BooleanBinding bind with predicate about op
+     */
+    public static BooleanBinding predicate(final ObservableStringValue op,
+                                           final Predicate<String> predicate) {
+        if (op == null) {
+            throw new NullPointerException("Operand cannot be null");
+        }
+
+        return new BooleanBinding() {
+            {
+                super.bind(op);
+            }
+
+            @Override
+            public void dispose() {
+                super.unbind(op);
+            }
+
+            @Override
+            protected boolean computeValue() {
+                return predicate.test(op.get());
+            }
+
+            @Override
+            public ObservableList<?> getDependencies() {
+                return FXCollections.singletonObservableList(op);
+            }
+        };
+    }
+
+    /**
+     * @param op
+     * @return a BooleanBinding with op is numberic
+     */
+    public static BooleanBinding isNumberic(final ObservableStringValue op) {
+        if (op == null) {
+            throw new NullPointerException("Operand cannot be null");
+        }
+
+        return new BooleanBinding() {
+            {
+                super.bind(op);
+            }
+
+            @Override
+            public void dispose() {
+                super.unbind(op);
+            }
+
+            @Override
+            protected boolean computeValue() {
+                return StringUtils.isNumeric(op.get());
+            }
+
+            @Override
+            public ObservableList<?> getDependencies() {
+                return FXCollections.singletonObservableList(op);
+            }
+        };
+    }
+
     public static <T> void bindWithSourceInit(Property<T> bind, Property<T> source) {
         source.setValue(bind.getValue());
         bind.bind(source);
@@ -33,10 +95,27 @@ public class BindingUtil {
         Bindings.bindContent(bind, source);
     }
 
+    public static <K, V> void bindKeyValue(Set<K> bindKey,
+                                           Set<V> bindVaue
+            , ObservableMap<K, V> source) {
+        final KeyValueSetBinder<K, V> keyValueSetBinder =
+                new KeyValueSetBinder<>(bindKey, bindVaue);
+
+        bindKey.clear();
+        bindKey.addAll(source.keySet());
+
+        bindVaue.clear();
+        bindVaue.addAll(source.values());
+
+        source.removeListener(keyValueSetBinder);
+        source.addListener(keyValueSetBinder);
+    }
+
+
     @SuppressWarnings("unchecked")
     public static void bindContentTypeUnsafe(List bind, ObservableList source) {
-        final ListContentBinder contentBinding =
-                new ListContentBinder(bind);
+        final ListContentUnsafeBinder contentBinding =
+                new ListContentUnsafeBinder(bind);
         if (bind instanceof ObservableList) {
             ((ObservableList) bind).setAll(source);
         } else {
@@ -50,13 +129,13 @@ public class BindingUtil {
     public static <E, FK, FV> void mapContent(Map<FK, FV> mapped, ObservableList<E> source,
                                               Function<E, Property<FK>> keyMapper,
                                               Function<E, FV> valueMapper) {
-        mapContentWithFilter(mapped, source, keyMapper, valueMapper, s->true);
+        mapContentWithFilter(mapped, source, keyMapper, valueMapper, s -> true);
     }
 
     public static <E, FK, FV> void mapContentWithFilter(Map<FK, FV> mapped, ObservableList<E> source,
-                                                   Function<E, Property<FK>> keyMapper,
-                                                   Function<E, FV> valueMapper,
-                                                   Predicate<E> filter) {
+                                                        Function<E, Property<FK>> keyMapper,
+                                                        Function<E, FV> valueMapper,
+                                                        Predicate<E> filter) {
         MapListContentBinder<E, FK, FV> contentBinder =
                 new MapListContentBinder<>(mapped, keyMapper, valueMapper, filter);
         mapped.clear();
@@ -100,75 +179,11 @@ public class BindingUtil {
 
     public static <E, F> void mapContent(ObservableList<F> mapped, ObservableList<E> source,
                                          Function<? super E, ? extends F> mapper) {
-        final ListContentMapping<E, F> contentMapping = new ListContentMapping<E, F>(mapped, mapper);
+        final ListContentBinder<E, F> contentMapping = new ListContentBinder<E, F>(mapped, mapper);
         mapped.setAll(source.stream().map(mapper::apply).collect(toList()));
         source.removeListener(contentMapping);
         source.addListener(contentMapping);
     }
 
 
-
-    private static class ListContentMapping<E, F> implements ListChangeListener<E>, WeakListener {
-        private final WeakReference<List<F>> mappedRef;
-        private final Function<? super E, ? extends F> mapper;
-
-        public ListContentMapping(List<F> mapped, Function<? super E, ? extends F> mapper) {
-            this.mappedRef = new WeakReference<List<F>>(mapped);
-            this.mapper = mapper;
-        }
-
-        @Override
-        public void onChanged(Change<? extends E> change) {
-            final List<F> mapped = mappedRef.get();
-            if (mapped == null) {
-                change.getList().removeListener(this);
-            } else {
-                while (change.next()) {
-                    if (change.wasPermutated()) {
-                        mapped.subList(change.getFrom(), change.getTo()).clear();
-                        mapped.addAll(change.getFrom(), change.getList().subList(change.getFrom(), change.getTo())
-                                .stream().map(o -> mapper.apply(o)).collect(toList()));
-                    } else {
-                        if (change.wasRemoved()) {
-                            mapped.subList(change.getFrom(), change.getFrom() + change.getRemovedSize()).clear();
-                        }
-                        if (change.wasAdded()) {
-                            mapped.addAll(change.getFrom(), change.getAddedSubList()
-                                    .stream().map(o -> mapper.apply(o)).collect(toList()));
-                        }
-                    }
-                }
-            }
-        }
-
-        @Override
-        public boolean wasGarbageCollected() {
-            return mappedRef.get() == null;
-        }
-
-        @Override
-        public int hashCode() {
-            final List<F> list = mappedRef.get();
-            return (list == null) ? 0 : list.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-
-            final List<F> mapped1 = mappedRef.get();
-            if (mapped1 == null) {
-                return false;
-            }
-
-            if (obj instanceof ListContentMapping) {
-                final ListContentMapping<?, ?> other = (ListContentMapping<?, ?>) obj;
-                final List<?> mapped2 = other.mappedRef.get();
-                return mapped1 == mapped2;
-            }
-            return false;
-        }
-    }
 }

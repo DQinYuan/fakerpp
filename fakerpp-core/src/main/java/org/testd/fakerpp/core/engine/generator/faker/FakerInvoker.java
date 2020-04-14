@@ -53,6 +53,7 @@ public class FakerInvoker {
 
         ImmutableMap.Builder<String, MethodInfo> fieldMethodMapBuilder = new ImmutableMap.Builder<>();
         MyReflectUtil.getMethodMap(fieldFakerClazz).forEach((name, methods) -> {
+            // select one method from overload methods
             if (methods != null && methods.size() > 0) {
                 methods.stream()
                         .filter(m -> !Modifier.isStatic(m.getModifiers()) && !Modifier.isPrivate(m.getModifiers()))

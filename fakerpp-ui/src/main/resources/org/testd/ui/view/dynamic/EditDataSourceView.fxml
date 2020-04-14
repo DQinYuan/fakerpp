@@ -65,7 +65,7 @@
       <HBox layoutX="59.0" layoutY="343.0" spacing="10.0">
          <children>
             <Button fx:id="okButton" mnemonicParsing="false" text="Complete" onAction="#handleComplete"/>
-            <Button mnemonicParsing="false" text="Test Connection" />
+            <Button mnemonicParsing="false" text="Test Connection" onAction="#handleTestConnection"/>
          </children>
       </HBox>
    </children>

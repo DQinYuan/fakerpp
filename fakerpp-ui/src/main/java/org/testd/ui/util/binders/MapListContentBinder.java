@@ -6,6 +6,7 @@ import javafx.collections.ListChangeListener;
 
 import java.lang.ref.WeakReference;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -69,8 +70,7 @@ public class MapListContentBinder<E, FK, FV> implements ListChangeListener<E>, W
 
     @Override
     public int hashCode() {
-        final Map<FK, FV> map = mapRef.get();
-        return (map == null) ? 0 : map.hashCode();
+        return Objects.hash(mapRef.get());
     }
 
     @Override

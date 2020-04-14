@@ -1,5 +1,6 @@
 package org.testd.ui.view.dynamic;
 
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -9,14 +10,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+import org.testd.fakerpp.core.ERMLException;
+import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
 import org.testd.fakerpp.core.store.storers.Storer;
 import org.testd.fakerpp.core.store.storers.Storers;
 import org.testd.ui.DefaultsConfig;
 import org.testd.ui.controller.MetaController;
 import org.testd.ui.fxweaver.core.FxmlView;
 import org.testd.ui.model.DataSourceInfoProperty;
+import org.testd.ui.util.BindingUtil;
+import org.testd.ui.util.ButtonAbler;
+import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.Stages;
 
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.function.Supplier;
 
@@ -66,29 +73,28 @@ public class EditDataSourceView extends AnchorPane {
 
     @FXML
     private void initialize() {
+
+        ButtonAbler buttonAbler = new ButtonAbler(okButton);
+
         // init batch size input
-        batchSizeInput.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (StringUtils.isNumeric(newValue)) {
-                batchSizeErrorLabel.setText("");
-                okButton.setDisable(false);
-            } else {
-                batchSizeErrorLabel.setText("must be number");
-                okButton.setDisable(true);
-            }
-        });
+        BooleanBinding batchSizePredicate = BindingUtil.isNumberic(batchSizeInput.textProperty());
+        buttonAbler.addPredicate(batchSizePredicate);
+        batchSizePredicate.addListener((observable, oldValue, newValue) ->
+                batchSizeErrorLabel.setText(newValue ? "" : "must be number"));
 
         // init name input
-        nameInput.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (StringUtils.isEmpty(newValue)) {
+        BooleanBinding namePredicate = BindingUtil.predicate(nameInput.textProperty(),
+                newName ->
+                        !StringUtils.isEmpty(newName) &&
+                                !metaController.dsNameExists(newName, relatedProperty));
+        buttonAbler.addPredicate(namePredicate);
+        namePredicate.addListener((observable, oldValue, newValue) -> {
+            if (StringUtils.isEmpty(nameInput.getText())) {
                 nameErrorLabel.setText("required");
-                okButton.setDisable(true);
-            } else if (metaController.dsNameExists(newValue, relatedProperty)) {
-                nameErrorLabel.setText("duplicated");
-                okButton.setDisable(true);
-            } else {
-                nameErrorLabel.setText("");
-                okButton.setDisable(false);
+                return;
             }
+
+            nameErrorLabel.setText(newValue ? "" : "duplicated");
         });
 
         // init type and storer input
@@ -104,6 +110,9 @@ public class EditDataSourceView extends AnchorPane {
             storerInput.setItems(FXCollections.observableArrayList(storers.get(newValue).keySet()));
             storerDefaultSelect();
         });
+
+        // build button abler
+        buttonAbler.build();
     }
 
     public void init(DataSourceInfoProperty dataSourceInfoProperty, Runnable okAction) {
@@ -111,9 +120,12 @@ public class EditDataSourceView extends AnchorPane {
         this.okAction = okAction;
 
         nameInput.setText(dataSourceInfoProperty.getName().get());
+
         typeInput.getSelectionModel().select(dataSourceInfoProperty.getType().get());
         storerInput.getSelectionModel().select(dataSourceInfoProperty.getStorer().get());
+
         batchSizeInput.setText(String.valueOf(dataSourceInfoProperty.getBatchSize().get()));
+
         urlInput.setText(dataSourceInfoProperty.getUrl().get());
         userInput.setText(dataSourceInfoProperty.getUser().get());
         passwdInput.setText(dataSourceInfoProperty.getPasswd().get());
@@ -132,18 +144,62 @@ public class EditDataSourceView extends AnchorPane {
         }
     }
 
+    private DataSourceInfo currentDataSourceInfo() {
+        return new DataSourceInfo(
+                nameInput.getText(),
+                typeInput.getValue(),
+                storerInput.getValue(),
+                Integer.parseInt(batchSizeInput.getText()),
+                urlInput.getText(),
+                userInput.getText(),
+                passwdInput.getText()
+        );
+    }
+
     @FXML
     private void handleComplete() {
         // check name unique
-        relatedProperty.getName().set(nameInput.getText());
-        relatedProperty.getType().set(typeInput.getValue());
-        relatedProperty.getStorer().set(storerInput.getValue());
-        relatedProperty.getBatchSize().set(Integer.parseInt(batchSizeInput.getText()));
-        relatedProperty.getUrl().set(urlInput.getText());
-        relatedProperty.getUser().set(userInput.getText());
-        relatedProperty.getPasswd().set(passwdInput.getText());
+        relatedProperty.set(currentDataSourceInfo());
         okAction.run();
         Stages.closeWindow(getScene().getWindow());
+    }
+
+    @FXML
+    private void handleTestConnection() {
+        String selectedType = typeInput.getValue();
+        String selectedStorer = storerInput.getValue();
+        if (StringUtils.isEmpty(selectedType) || StringUtils.isEmpty(selectedStorer)) {
+            FxDialogs.showError("Test Connection error",
+                    "Type or Storer is empty",
+                    "Type or Storer can not be empty");
+            return;
+        }
+
+        Supplier<Storer> storerSupplier = storers.storers().get(selectedType)
+                .get(selectedStorer);
+        if (selectedStorer == null) {
+            FxDialogs.showError("Test Connection error",
+                    "Storer not exist",
+                    String.format("type: %s, storer: %s, not exist",
+                            selectedType, selectedStorer));
+            return;
+        }
+
+        Storer storer = storerSupplier.get();
+        DataSourceInfo dataSourceInfo = currentDataSourceInfo();
+        try {
+            storer.init(dataSourceInfo);
+        } catch (Exception e) {
+            FxDialogs.showWarning("Test connection warning",
+                    "Connect error",
+                    String.format("can not connect to data source %s",
+                            dataSourceInfo.getUrl()));
+            return;
+        }
+
+        FxDialogs.showInformation("Test connection successfully",
+                "Connection OK",
+                "");
     }
 
 }

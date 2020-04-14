@@ -6,6 +6,7 @@ import org.testd.ui.util.Equaler;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -52,8 +53,7 @@ public class ListSetContentBinder<E, F> implements SetChangeListener<E>, WeakLis
 
     @Override
     public int hashCode() {
-        final List<F> list = mappedRef.get();
-        return (list == null) ? 0 : list.hashCode();
+        return Objects.hash(mappedRef.get());
     }
 
     @Override

@@ -1,9 +1,6 @@
 package org.testd.ui.view.dynamic;
 
-import groovy.util.ObservableList;
-import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableSet;
-import javafx.collections.SetChangeListener;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -14,15 +11,12 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.testd.ui.fxweaver.core.FxmlView;
-import org.testd.ui.model.ColFamilyProperty;
+import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.JoinType;
 import org.testd.ui.util.BindingUtil;
 import org.testd.ui.util.Equaler;
 import org.testd.ui.util.TypeUtil;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @FxmlView
@@ -40,7 +34,7 @@ public class JoinView extends BorderPane implements ColFamilyViewInterface {
     private ColFamilyInputMenu partInCols;
 
     private String effectStyle;
-    private ColFamilyProperty colFamilyProperty;
+    private ColFamilyVO colFamilyVO;
     private boolean send;
 
     @FXML
@@ -52,12 +46,12 @@ public class JoinView extends BorderPane implements ColFamilyViewInterface {
     }
 
     public void init(ObservableSet<ColProperty> colsSet) {
-        this.colFamilyProperty = new ColFamilyProperty(colsSet);
+        this.colFamilyVO = new ColFamilyVO(colsSet);
 
         // bind ui and property
         BindingUtil.mapContent(
                 TypeUtil.saftCast(partInCols.getChildren(), Label.class),
-                colFamilyProperty.colsProperty(),
+                colFamilyVO.colsProperty(),
                 col -> new Label(col.getColName()),
                 Equaler.withExtrator(Label::getText));
     }
@@ -88,8 +82,8 @@ public class JoinView extends BorderPane implements ColFamilyViewInterface {
     }
 
     @Override
-    public ColFamilyProperty getColFamilyProperty() {
-        return colFamilyProperty;
+    public ColFamilyVO getColFamilyVO() {
+        return colFamilyVO;
     }
 
     public void addMenuHandler(EventHandler<ActionEvent> editHandler,
