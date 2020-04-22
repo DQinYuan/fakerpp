@@ -1,11 +1,14 @@
 package org.testd.fakerpp.core.engine.generator;
 
 import com.google.common.collect.ImmutableMap;
+import javassist.ClassPool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ClassUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
-import org.testd.fakerpp.core.ERMLException;
+import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultNumber;
+import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultString;
 import org.testd.fakerpp.core.engine.generator.faker.Fakers;
 import org.testd.fakerpp.core.util.MhAndClass;
 import org.testd.fakerpp.core.util.MyReflectUtil;
@@ -13,8 +16,11 @@ import org.testd.fakerpp.core.util.MyStringUtil;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Component
@@ -23,7 +29,7 @@ public class Generators {
 
     private final Fakers fakers;
 
-    public MhAndClass getFieldSetter(Class clazz, String field) throws ERMLException {
+    public MhAndClass getFieldSetter(Class clazz, String field) {
         try {
             Class fType = clazz.getDeclaredField(field).getType();
             MethodHandle setter = MethodHandles.lookup().findSetter(clazz, field, fType);
@@ -31,52 +37,19 @@ public class Generators {
                     setter.asType(setter.type().changeParameterType(0, Generator.class)),
                     fType);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new ERMLException(String.format("attr %s not exist", field));
+            throw new RuntimeException(String.format("attr %s not exist", field));
         }
     }
 
-    private void setBuiltInGeneratorAttr(Generator generator, Map<String, String> attrs,
-                                         List<List<String>> options) throws ERMLException {
-        // attrs
-        for (Map.Entry<String, String> entry : attrs.entrySet()) {
-            MhAndClass gField = getFieldSetter(generator.getClass(), entry.getKey());
-            String attrValue = entry.getValue();
-            if (int.class.equals(gField.getClazz())) {
-                try {
-                    gField.getMh().invokeExact(generator, Integer.parseInt(attrValue));
-                } catch (Throwable ignore) {
-                    ignore.printStackTrace();
-                }
-            } else if (long.class.equals(gField.getClazz())) {
-                try {
-                    gField.getMh().invokeExact(generator, Long.parseLong(attrValue));
-                } catch (Throwable ignore) {
-                    ignore.printStackTrace();
-                }
-            } else if (String.class.equals(gField.getClazz())) {
-                try {
-                    gField.getMh().invokeExact(generator, attrValue);
-                } catch (Throwable ignore) {
-                    ignore.printStackTrace();
-                }
-            } else {
-                log.warn("attribute {}'s type error, it is {}",
-                        entry.getKey(), gField.getClazz().getName());
-            }
-        }
+    private static final String builtInGeneratorBasePkg =
+            "org.testd.fakerpp.core.engine.generator.builtin";
 
-
-        try {
-            getFieldSetter(generator.getClass(), "options")
-                    .getMh().invokeExact(generator, options);
-        } catch (Throwable ignore) {
-        }
-    }
+    private static final String optionsField = "options";
 
     @Cacheable("builtInGenerators")
     public Map<String, GeneratorSupplier> builtInGenerators() {
         return MyReflectUtil
-                .subtypes("org.testd.fakerpp.core.engine.generator.builtin", Generator.class)
+                .subtypes(builtInGeneratorBasePkg, Generator.class)
                 .filter(c -> c.getSimpleName().endsWith("Gen"))
                 .collect(ImmutableMap.toImmutableMap((Class<? extends Generator> c) -> {
                             String sName = c.getSimpleName();
@@ -85,31 +58,110 @@ public class Generators {
                         },
                         c -> new GeneratorSupplier() {
                             @Override
-                            public Generator getGenerator(String lang, Map<String, String> attributes, List<List<String>> options) {
-                                Generator generator = null;
+                            public Generator generator(String lang) {
                                 try {
-                                    generator = (Generator) MyReflectUtil
+                                    return (Generator) MyReflectUtil
                                             .getNoArgConstructor(c, Generator.class).invokeExact();
-                                    setBuiltInGeneratorAttr(generator, attributes, options);
-                                    return generator;
                                 } catch (Throwable throwable) {
                                     throw new RuntimeException(throwable);
                                 }
                             }
 
+                            Map<String, ParamInfo> paramInfos
+                                    = paramInfoFromClass(c);
+
                             @Override
-                            public Map<String, GeneratorParamInfo> paramInfos() {
-                                return GeneratorParamInfo.fromClass(c);
+                            public Map<String, ParamInfo> paramInfos() {
+                                return paramInfos;
+                            }
+
+                            @Override
+                            public Optional<ParamSetter<List<List<String>>>> optionSetter() {
+                                Field options;
+                                try {
+                                    options = c.getField(optionsField);
+                                } catch (NoSuchFieldException e) {
+                                    return Optional.empty();
+                                }
+                                if (options.getType() != List.class) {
+                                    return Optional.empty();
+                                }
+
+                                return Optional.of(
+                                        (generator, value) -> {
+                                            MhAndClass paramSetter = getFieldSetter(c, optionsField);
+                                            try {
+                                                paramSetter.getMh().invoke(generator, value);
+                                            } catch (Throwable e) {
+                                                throw new RuntimeException(e);
+                                            }
+                                        }
+                                );
                             }
                         }));
     }
 
+    private Map<String, GeneratorSupplier.ParamInfo> paramInfoFromClass(Class<?> c) {
+        ImmutableMap.Builder<String, GeneratorSupplier.ParamInfo> builder =
+                ImmutableMap.builder();
+        Field[] sortedFields = MyReflectUtil.getSortedDeclaredFields(c);
+        for (Field f : sortedFields) {
+            if (!Modifier.isPublic(f.getModifiers()) ||
+                    !LogicTypes.has(f.getType())) {
+                continue;
+            }
+
+            String paramName = MyStringUtil.camelToDelimit(f.getName());
+
+            // get default value
+            Object defaultValue;
+            DefaultString ds = null;
+            DefaultNumber dn = null;
+            if (f.isAnnotationPresent(DefaultString.class)) {
+                ds = f.getAnnotation(DefaultString.class);
+            }
+            if (f.isAnnotationPresent(DefaultNumber.class)) {
+                dn = f.getAnnotation(DefaultNumber.class);
+            }
+            if ((ds == null && dn == null) || (ds != null && dn != null)) {
+                defaultValue = null;
+            } else {
+                defaultValue = ds != null ? ds.value() : dn.value();
+            }
+
+            MhAndClass paramSetter = getFieldSetter(c, f.getName());
+
+            builder.put(paramName,
+                    new GeneratorSupplier.ParamInfo(paramName, f.getType(),
+                            defaultValue) {
+                        @Override
+                        public void setValue(Generator generator,
+                                             String value) {
+                            try {
+                                paramSetter.getMh().invoke(generator,
+                                        this.logicType.cast(value)
+                                );
+                            } catch (Throwable e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    });
+        }
+
+        return builder.build();
+    }
+
     @Cacheable("generators")
     public Map<String, Map<String, GeneratorSupplier>> generators() {
+        return generators(ClassPool.getDefault());
+    }
+
+
+    public Map<String, Map<String, GeneratorSupplier>> generators(ClassPool cp) {
         ImmutableMap.Builder<String, Map<String, GeneratorSupplier>>
                 builder = ImmutableMap.builder();
         builder.put("built-in", builtInGenerators());
-        builder.putAll(fakers.fakerGenerators());
+        builder.putAll(fakers.fakerGenerators(cp));
         return builder.build();
     }
 

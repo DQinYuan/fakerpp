@@ -13,6 +13,7 @@ import org.reflections.Reflections;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +37,12 @@ public class MyReflectUtil {
         Method[] methods = clazz.getDeclaredMethods();
         Arrays.sort(methods, Comparator.comparing(Method::toString));
         return methods;
+    }
+
+    public static Field[] getSortedDeclaredFields(Class clazz) {
+        Field[] fields = clazz.getDeclaredFields();
+        Arrays.sort(fields, Comparator.comparing(Field::getName));
+        return fields;
     }
 
     /**
@@ -70,8 +77,7 @@ public class MyReflectUtil {
      * @param m
      * @return
      */
-    public static Map<String, ParamInfo> getMethodParam(Method m) {
-        ClassPool pool = ClassPool.getDefault();
+    public static Map<String, ParamInfo> getMethodParam(Method m, ClassPool pool) {
         CtClass ctClass = null;
         try {
             ctClass = pool.get(m.getDeclaringClass().getName());
@@ -97,10 +103,9 @@ public class MyReflectUtil {
             }
 
             return res.build();
-        } catch (NotFoundException ignore) {
+        } catch (NotFoundException e) {
+            throw new RuntimeException(e);
         }
-
-        return null;
     }
 
     public static MethodHandle getNoArgConstructor(String qualifiedName,

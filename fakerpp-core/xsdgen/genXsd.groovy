@@ -10,7 +10,6 @@ import java.nio.file.Paths
 @BaseScript
 Libs libs
 
-
 String basedir =  getProperty("basedir")
 
 def jarPath = Files.list(Paths.get(basedir, "xsdgen"))

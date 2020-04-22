@@ -1,6 +1,7 @@
 package org.testd.fakerpp.core.util
 
 import com.github.javafaker.Animal
+import javassist.ClassPool
 import spock.lang.Specification
 import com.github.javafaker.Number
 
@@ -28,7 +29,7 @@ class MyReflectUtilTest extends Specification {
                 long.class, long.class)
 
         when:
-        def methodParams = MyReflectUtil.getMethodParam(method)
+        def methodParams = MyReflectUtil.getMethodParam(method, ClassPool.getDefault())
 
         then:
         methodParams.keySet() == ["maxNumberOfDecimals", "min", "max"].toSet()

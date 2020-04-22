@@ -5,14 +5,13 @@ import com.google.common.collect.ImmutableMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.engine.domain.ColExec;
 import org.testd.fakerpp.core.engine.domain.ColFamilyExec;
 import org.testd.fakerpp.core.engine.domain.TableExec;
 import org.testd.fakerpp.core.engine.generator.ComposeGen;
-import org.testd.fakerpp.core.engine.generator.faker.Fakers;
+import org.testd.fakerpp.core.engine.generator.GeneratorSupplier;
 import org.testd.fakerpp.core.engine.generator.Generator;
 import org.testd.fakerpp.core.engine.generator.Generators;
 import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
@@ -20,12 +19,8 @@ import org.testd.fakerpp.core.parser.ast.ERML;
 import org.testd.fakerpp.core.parser.ast.Table;
 import org.testd.fakerpp.core.store.ERMLStore;
 import org.testd.fakerpp.core.util.WeightedRandom;
-import org.testd.fakerpp.core.engine.generator.faker.Fakers;
 
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.testd.fakerpp.core.util.ExceptionFunction.sneakyFunction;
 
 @Component
 @RequiredArgsConstructor
@@ -143,10 +138,10 @@ public class ERMLEngine {
     }
 
     private Generator getGeneratorByInfo(Table.GeneratorInfo gi, String defaultLang) throws ERMLException {
-        return generators.generators()
+        GeneratorSupplier generatorSupplier = generators.generators()
                 .get(gi.getField())
-                .get(gi.getGenerator())
-                .getGenerator("default".equals(gi.getLang()) ? defaultLang : gi.getLang(),
-                        gi.getAttributes(), gi.getOptions());
+                .get(gi.getGenerator());
+        return generatorSupplier.getInitedGenerator("default".equals(gi.getLang()) ?
+                        defaultLang : gi.getLang(), gi.getAttributes(), gi.getOptions());
     }
 }

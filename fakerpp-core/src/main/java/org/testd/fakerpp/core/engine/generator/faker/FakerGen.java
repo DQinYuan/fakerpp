@@ -1,19 +1,24 @@
 package org.testd.fakerpp.core.engine.generator.faker;
 
-import lombok.RequiredArgsConstructor;
 import org.testd.fakerpp.core.ERMLException;
-import org.testd.fakerpp.core.engine.generator.Generator;
 import org.testd.fakerpp.core.engine.generator.Generator;
 
 import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
-@RequiredArgsConstructor
 public class FakerGen implements Generator {
 
     private final MethodHandle fakerFunction;
     private final Object[] params;
+    private final Map<String, Integer> paramOrder;
+
+    public FakerGen(MethodHandle fakerFunction, Map<String, Integer> paramOrder) {
+        this.params = new Object[paramOrder.size()];
+        this.fakerFunction = fakerFunction;
+        this.paramOrder = paramOrder;
+    }
 
     @Override
     public void init(int colNum) {
@@ -33,6 +38,10 @@ public class FakerGen implements Generator {
     @Override
     public long dataNum() {
         return 0;
+    }
+
+    public void setParam(String paramName, Object value) {
+        params[paramOrder.get(paramName)] = value;
     }
 
 }

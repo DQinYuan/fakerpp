@@ -1,11 +1,15 @@
 package org.testd.fakerpp.core.engine.generator.faker;
 
 import com.google.common.collect.ImmutableMap;
+import javassist.ClassPool;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ClassUtils;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+import org.testd.fakerpp.core.engine.generator.GeneratorSupplier;
+import org.testd.fakerpp.core.engine.generator.LogicTypes;
 import org.testd.fakerpp.core.util.MhAndClass;
 import org.testd.fakerpp.core.util.MyReflectUtil;
 
@@ -13,7 +17,6 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
 import java.util.Map;
 
 @Slf4j
@@ -40,16 +43,19 @@ public class FakerInvoker {
         return fieldMap.build();
     }
 
-    private boolean filterCollectionParamMethod(MethodInfo methodInfo) {
-        for (MyReflectUtil.ParamInfo paramInfo : methodInfo.getParams().values()) {
-            if (Collection.class.isAssignableFrom(paramInfo.getParamClass())) {
-                return false;
-            }
-        }
-        return true;
+    private boolean paramPredicate(MethodInfo methodInfo) {
+        return methodInfo.getParams().values().stream()
+                .allMatch(paramInfo ->
+                                LogicTypes.has(paramInfo.getParamClass())
+                        );
     }
 
-    public Map<String, MethodInfo> fieldMethodMap(Class<?> fieldFakerClazz) {
+    /**
+     *
+     * @param fieldFakerClazz
+     * @return origin method param name -> MethodInfo  (only select one method if there are many overload methods)
+     */
+    public Map<String, MethodInfo> fieldMethodMap(Class<?> fieldFakerClazz, ClassPool cp) {
 
         ImmutableMap.Builder<String, MethodInfo> fieldMethodMapBuilder = new ImmutableMap.Builder<>();
         MyReflectUtil.getMethodMap(fieldFakerClazz).forEach((name, methods) -> {
@@ -57,8 +63,8 @@ public class FakerInvoker {
             if (methods != null && methods.size() > 0) {
                 methods.stream()
                         .filter(m -> !Modifier.isStatic(m.getModifiers()) && !Modifier.isPrivate(m.getModifiers()))
-                        .map(this::methodInfoFromMethod)
-                        .filter(this::filterCollectionParamMethod)
+                        .map(m -> methodInfoFromMethod(m, cp))
+                        .filter(this::paramPredicate)
                         .findFirst()
                 .map(info -> fieldMethodMapBuilder.put(name, info));
             }
@@ -74,8 +80,8 @@ public class FakerInvoker {
         private final Map<String, MyReflectUtil.ParamInfo> params;
     }
 
-    private MethodInfo methodInfoFromMethod(Method method) {
-        Map<String, MyReflectUtil.ParamInfo> methodParam = MyReflectUtil.getMethodParam(method);
+    private MethodInfo methodInfoFromMethod(Method method, ClassPool cp) {
+        Map<String, MyReflectUtil.ParamInfo> methodParam = MyReflectUtil.getMethodParam(method, cp);
 
         MethodHandle mh = null;
         try {

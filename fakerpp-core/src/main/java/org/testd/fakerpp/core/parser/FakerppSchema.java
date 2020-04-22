@@ -15,7 +15,7 @@ public class FakerppSchema {
 
     private FakerppSchema() {}
 
-    private static class SchemaHolder{   //利用了JVM对内部类的延迟加载
+    private static class SchemaHolder{
         private static Schema shchemaInstance = getScheme();
 
         private static Schema getScheme() {

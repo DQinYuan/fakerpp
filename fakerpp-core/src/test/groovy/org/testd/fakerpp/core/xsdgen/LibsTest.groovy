@@ -1,6 +1,7 @@
 package org.testd.fakerpp.core.xsdgen
 
-import javassist.ClassPool
+
+import org.testd.fakerpp.core.engine.generator.LogicType
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -14,46 +15,21 @@ class LibsTest extends Specification {
         }
     }
 
-    def "test fieldsInFakerJar"() {
-        expect:
-        def fields = libs.fieldsInFakerJar(ClassPool.getDefault())
-        assert fields.find { it.name == "space" }.gens.find { it.name.startsWith("nasa") }.name == "nasa-space-craft"
-        assert fields.find { it.name == "number" }.gens.find { it.name == "number-between" }.paramInfos ==
-                [new Libs.ParamInfo(name: "min", type: Libs.SupportParamType.INT, defaultValue: null),
-                 new Libs.ParamInfo(name: "max", type: Libs.SupportParamType.INT, defaultValue: null)]
-        assert fields.find { it.name == "phone-number" }.name == "phone-number"
-        assert fields.find {it.name == "options"} == null
-        assert fields.find {it.name == "number"}.gens.find {it.name == "random-double"}
-            .paramInfos.contains(
-                new Libs.ParamInfo(name:  "max-number-of-decimals", type: Libs.SupportParamType.INT, defaultValue: null))
-    }
-
-    def "test buildInField"() {
-        expect:
-        def field = libs.buildInField(ClassPool.getDefault())
-        assert field.gens.find { it.name == "const" }.paramInfos ==
-                [new Libs.ParamInfo(name: "options", type: Libs.SupportParamType.LIST, defaultValue: null)]
-        assert field.gens.find { it.name == "int" }.paramInfos.contains(new Libs.ParamInfo(name: "min",
-                type: Libs.SupportParamType.INT, defaultValue: 0))
-        assert field.gens.find { it.name == "date" }.paramInfos.contains(new Libs.ParamInfo(name: "end",
-                type: Libs.SupportParamType.STRING, defaultValue: "now"))
-    }
-
     def "test formatField"(Libs.FakerField ff, String expect) {
         expect:
         libs.formatField(ff) == expect
 
         where:
-        ff | expect
+        ff                                                                                                  | expect
         new Libs.FakerField(name: "built-in",
                 gens: [new Libs.Generator(name: "const",
-                        paramInfos: [new Libs.ParamInfo(name: "options",
-                                type: Libs.SupportParamType.LIST, defaultValue: null)]),
+                        paramInfos: [],
+                        hasOption: true),
                        new Libs.Generator(name: "int",
-                               paramInfos:[new Libs.ParamInfo(name: "min",
-                                       type: Libs.SupportParamType.INT, defaultValue: 0),
-                                           new Libs.ParamInfo(name: "max",
-                                                   type: Libs.SupportParamType.INT, defaultValue: 100)])]) | """<xs:complexType name="built-inType"><!-- built-in generators -->
+                               paramInfos: [new Libs.ParamInfo(name: "min",
+                                       type: LogicType.IntType.getInstance(), defaultValue: 0),
+                                            new Libs.ParamInfo(name: "max",
+                                                    type: LogicType.IntType.getInstance(), defaultValue: 100)])]) | """<xs:complexType name="built-inType"><!-- built-in generators -->
   <xs:choice>
     <xs:element name="const"><!-- const generator -->
       <xs:complexType>
@@ -80,7 +56,7 @@ class LibsTest extends Specification {
 </xs:complexType>"""
         new Libs.FakerField(name: "name",
                 gens: [new Libs.Generator(name: "full-name",
-                            paramInfos: [])]) | """<xs:complexType name="nameType"><!-- name generators -->
+                        paramInfos: [])])                                                                   | """<xs:complexType name="nameType"><!-- name generators -->
   <xs:complexContent>
     <xs:extension base="baseFakerFieldType">
       <xs:choice>

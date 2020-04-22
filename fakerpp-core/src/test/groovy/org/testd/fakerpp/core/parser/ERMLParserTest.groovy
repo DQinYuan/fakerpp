@@ -1,7 +1,6 @@
 package org.testd.fakerpp.core.parser
 
 import org.testd.fakerpp.core.parser.ast.ERML
-import org.testd.fakerpp.core.parser.ast.ERML
 import spock.lang.Specification
 
 import java.nio.file.Paths

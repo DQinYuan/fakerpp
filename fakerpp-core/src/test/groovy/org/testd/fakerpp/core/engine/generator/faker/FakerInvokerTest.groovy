@@ -3,6 +3,7 @@ package org.testd.fakerpp.core.engine.generator.faker
 import com.github.javafaker.Animal
 import com.github.javafaker.Faker
 import com.github.javafaker.HarryPotter
+import javassist.ClassPool
 import spock.lang.Shared
 import spock.lang.Specification
 import com.github.javafaker.Number
@@ -30,7 +31,7 @@ class FakerInvokerTest extends Specification {
         def gName = "randomDouble"
 
         when:
-        def methodInfo = fakerInvoker.fieldMethodMap(clazz)[gName]
+        def methodInfo = fakerInvoker.fieldMethodMap(clazz, ClassPool.getDefault())[gName]
         def obj = new Faker().number()
 
         then:

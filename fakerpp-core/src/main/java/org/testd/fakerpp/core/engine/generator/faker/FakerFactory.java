@@ -13,12 +13,12 @@ import java.util.Map;
 public class FakerFactory {
 
     private ThreadLocal<Map<String, Faker>> threadLocalFakers =
-            ThreadLocal.withInitial(() -> new HashMap<>());
+            ThreadLocal.withInitial(HashMap::new);
 
     public Faker getLangFaker(String lang) {
         Map<String, Faker> threadLocalCache = threadLocalFakers.get();
         return threadLocalCache.computeIfAbsent(lang,
-                l -> SeedableThreadLocalRandom.newFaker(l));
+                SeedableThreadLocalRandom::newFaker);
     }
 
 }
