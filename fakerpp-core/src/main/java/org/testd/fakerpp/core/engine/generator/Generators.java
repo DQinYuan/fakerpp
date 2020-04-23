@@ -9,15 +9,19 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultNumber;
 import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultString;
+import org.testd.fakerpp.core.engine.generator.builtin.base.EnumValues;
+import org.testd.fakerpp.core.engine.generator.builtin.base.MultiLine;
 import org.testd.fakerpp.core.engine.generator.faker.Fakers;
 import org.testd.fakerpp.core.util.MhAndClass;
 import org.testd.fakerpp.core.util.MyReflectUtil;
 import org.testd.fakerpp.core.util.MyStringUtil;
 
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -114,26 +118,13 @@ public class Generators {
             String paramName = MyStringUtil.camelToDelimit(f.getName());
 
             // get default value
-            Object defaultValue;
-            DefaultString ds = null;
-            DefaultNumber dn = null;
-            if (f.isAnnotationPresent(DefaultString.class)) {
-                ds = f.getAnnotation(DefaultString.class);
-            }
-            if (f.isAnnotationPresent(DefaultNumber.class)) {
-                dn = f.getAnnotation(DefaultNumber.class);
-            }
-            if ((ds == null && dn == null) || (ds != null && dn != null)) {
-                defaultValue = null;
-            } else {
-                defaultValue = ds != null ? ds.value() : dn.value();
-            }
+            Object defaultValue = getDefaultValue(f);
 
             MhAndClass paramSetter = getFieldSetter(c, f.getName());
 
             builder.put(paramName,
                     new GeneratorSupplier.ParamInfo(paramName, f.getType(),
-                            defaultValue) {
+                            defaultValue, f.isAnnotationPresent(MultiLine.class)) {
                         @Override
                         public void setValue(Generator generator,
                                              String value) {
@@ -149,6 +140,19 @@ public class Generators {
         }
 
         return builder.build();
+    }
+
+    private Object getDefaultValue(Field f) {
+        if (f.isAnnotationPresent(DefaultString.class)) {
+            return f.getAnnotation(DefaultString.class).value();
+        }
+        if (f.isAnnotationPresent(DefaultNumber.class)) {
+            return f.getAnnotation(DefaultNumber.class).value();
+        }
+        if (f.isAnnotationPresent(EnumValues.class)) {
+            return f.getAnnotation(EnumValues.class).value();
+        }
+        return null;
     }
 
     @Cacheable("generators")

@@ -1,6 +1,8 @@
 package org.testd.fakerpp.core.engine.generator;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import org.testd.fakerpp.core.ERMLException;
 
 import java.util.List;
@@ -20,47 +22,32 @@ public interface GeneratorSupplier {
     }
 
     @Getter
+    @EqualsAndHashCode
+    @ToString
     abstract class ParamInfo implements ParamSetter<String> {
         protected final String name;
         protected final Class<?> relType;
         protected final LogicType logicType;
+        /**
+         * three perhaps values:
+         *  1. String: str type default value
+         *  2. Long: number type default value
+         *  3. String[]: enum value, `defaultValue[0]` is default selected
+         */
         protected final Object defaultValue;
+        protected final boolean multiLine;
 
-        protected ParamInfo(String name, Class<?> relType, Object defaultValue) {
+        protected ParamInfo(String name, Class<?> relType,
+                            Object defaultValue, boolean multiLine) {
             this.name = name;
             this.relType = relType;
             this.logicType = LogicTypes.get(relType);
             this.defaultValue = defaultValue;
+            this.multiLine = multiLine;
         }
 
 
         public abstract void setValue(Generator generator, String value);
-
-        @Override
-        public String toString() {
-            return "ParamInfo{" +
-                    "name='" + name + '\'' +
-                    ", relType=" + relType +
-                    ", logicType=" + logicType +
-                    ", defaultValue=" + defaultValue +
-                    '}';
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof ParamInfo)) return false;
-            ParamInfo paramInfo = (ParamInfo) o;
-            return Objects.equals(getName(), paramInfo.getName()) &&
-                    Objects.equals(getRelType(), paramInfo.getRelType()) &&
-                    Objects.equals(getLogicType(), paramInfo.getLogicType()) &&
-                    Objects.equals(getDefaultValue(), paramInfo.getDefaultValue());
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(getName(), getRelType(), getLogicType(), getDefaultValue());
-        }
     }
 
     Generator generator(String lang);

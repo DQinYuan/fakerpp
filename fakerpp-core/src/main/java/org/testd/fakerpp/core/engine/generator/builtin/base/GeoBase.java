@@ -17,6 +17,9 @@ public class GeoBase {
 
     private final String formatter;
 
+    /**
+     * input format, only support `wkt` and `geojson` now
+     */
     private final String input;
 
     public String format(Double lat, Double lng) {

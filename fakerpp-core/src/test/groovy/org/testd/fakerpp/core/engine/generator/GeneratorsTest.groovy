@@ -32,7 +32,7 @@ class GeneratorsTest extends Specification {
     }
 
     def mockParamInfo(String name, Class<?> relType, Object defaultValue) {
-        return new GeneratorSupplier.ParamInfo(name, relType, defaultValue) {
+        return new GeneratorSupplier.ParamInfo(name, relType, defaultValue, false) {
             @Override
             void setValue(Generator generator, String value) {
             }

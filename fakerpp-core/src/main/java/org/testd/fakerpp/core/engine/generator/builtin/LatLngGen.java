@@ -18,15 +18,12 @@ public class LatLngGen implements Generator {
     @DefaultString("${Lat} ${Lng}")
     public String formatter = "${Lat} ${Lng}";
 
-    @DefaultString("geojson")
-    public String input = "geojson";
-
     private GeoBase geoBase;
     private int colNum;
 
     @Override
     public void init(int colNum) throws ERMLException {
-        geoBase = new GeoBase(formatter, input);
+        geoBase = new GeoBase(formatter, "geojson");
         this.colNum = colNum;
     }
 

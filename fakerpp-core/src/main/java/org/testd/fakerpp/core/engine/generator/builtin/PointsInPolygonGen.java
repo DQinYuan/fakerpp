@@ -9,12 +9,12 @@ import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.engine.generator.Generator;
 import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultString;
 import org.testd.fakerpp.core.engine.generator.builtin.base.GeoBase;
+import org.testd.fakerpp.core.engine.generator.builtin.base.MultiLine;
+import org.testd.fakerpp.core.engine.generator.builtin.base.EnumValues;
 import org.testd.fakerpp.core.util.SeedableThreadLocalRandom;
 import org.testd.fakerpp.core.util.earclipping.Point;
 import org.testd.fakerpp.core.util.earclipping.Polygon;
 import org.testd.fakerpp.core.util.earclipping.PolygonTriangulator;
-import org.testd.fakerpp.core.util.earclipping.Triangle;
-import org.testd.fakerpp.core.util.earclipping.Point;
 import org.testd.fakerpp.core.util.earclipping.Triangle;
 
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * <p>
  * 围栏以顺时针或者逆时针给出,无论是geojson格式还wkt格式,多边形围栏必须首尾相接(即第一个点和最后一个点相同)
  * <p>
- * 耳切法参考资料：https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+ * ear clipping：https://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
  * <p>
  * 算法： 先使用耳切法将多边形划分成数个三角形， 之后每次随机选取一个三角形，在选择的三角形中随机生成一个点 三角形中随机点生成的算法来源线性代数：
  * <p>
@@ -40,9 +40,10 @@ public class PointsInPolygonGen implements Generator {
     @DefaultString("${Lat} ${Lng}")
     public String formatter = "${Lat} ${Lng}";
 
-    @DefaultString("geojson")
+    @EnumValues({"geojson", "wkt"})
     public String input = "geojson";
 
+    @MultiLine
     public String polygon;
 
     private GeoBase geoBase;

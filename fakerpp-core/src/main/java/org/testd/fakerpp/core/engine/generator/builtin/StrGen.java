@@ -1,6 +1,7 @@
 package org.testd.fakerpp.core.engine.generator.builtin;
 
 import org.testd.fakerpp.core.engine.generator.Generator;
+import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultNumber;
 import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultString;
 import org.testd.fakerpp.core.util.SeedableThreadLocalRandom;
 import org.testd.fakerpp.core.engine.generator.Generator;
@@ -16,7 +17,8 @@ public class StrGen implements Generator {
     public String prefix = "";
     @DefaultString("")
     public String suffix = "";
-    public int    len;
+    @DefaultNumber(10)
+    public int    len = 10;
 
     @Override
     public void init(int colNum){

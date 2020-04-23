@@ -136,7 +136,7 @@ public class Fakers {
                             private final Map<String, ParamInfo> paramInfos = MyMapUtil.crossMap(generatorMethodInfo.getParams(),
                                     (name, paramInfo) -> MyStringUtil.camelToDelimit(name),
                                     (name, paramInfo) -> new ParamInfo(MyStringUtil.camelToDelimit(name), paramInfo.getParamClass(),
-                                            null) {
+                                            null, false) {
                                         @Override
                                         public void setValue(Generator generator,
                                                              String value){
