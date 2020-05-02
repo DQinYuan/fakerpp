@@ -72,8 +72,8 @@ class TableMetaConfViewTest extends ApplicationSpec {
             tableMetaVO = new TableMetaVO(name, ds, num)
             testStage.setScene(new Scene(tableMetaConfView.getView(
                     tableMetaVO,
-                    { true }
-            ), 800, 600))
+                    { true }, {}),
+                    800, 600))
 
             testStage.show()
         })
@@ -88,7 +88,7 @@ class TableMetaConfViewTest extends ApplicationSpec {
             tableMetaVO = new TableMetaVO(name, ds, num)
             testStage.setScene(new Scene(tableMetaConfView.getView(
                     tableMetaVO,
-                    { true }
+                    { true }, {}
             ), 800, 600))
 
             testStage.show()

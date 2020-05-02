@@ -1,30 +1,30 @@
-package org.testd.ui.model;
+package org.testd.ui.vo;
 
 import com.google.common.collect.Sets;
 import javafx.beans.property.*;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import javafx.collections.ObservableSet;
+import org.testd.ui.model.ColProperty;
+import org.testd.ui.model.JoinType;
+import org.testd.ui.model.TableProperty;
 import org.testd.ui.util.BindingUtil;
-import org.testd.ui.view.dynamic.ColFamilyView;
 import org.testd.ui.view.dynamic.MyTableView;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class ConnectionProperty {
+public class ConnectionVO {
 
+    private final TableProperty.JoinProperty relatedJoinProperty;
     private final ObjectProperty<MyTableView> source;
     private Function<MyTableView, Predicate<String>> recvChecker = t -> s -> true;
 
-    private final ObjectProperty<MyTableView> target = new SimpleObjectProperty<>();
+    private final ObjectProperty<MyTableView> target;
 
-    private final ObjectProperty<JoinType> joinType = new SimpleObjectProperty<>(JoinType.LEFT);
+    private final ObjectProperty<JoinType> joinType;
 
     private final BooleanProperty random;
 
@@ -35,27 +35,50 @@ public class ConnectionProperty {
     private final ObservableMap<ColProperty, ColProperty> sendRecv = FXCollections
             .observableMap(new LinkedHashMap<>());
 
-    public ConnectionProperty(MyTableView source, TableProperty.JoinProperty joinProperty) {
+    public ConnectionVO(MyTableView source,
+                        MyTableView defaultTarget,
+                        TableProperty.JoinProperty joinProperty,
+                        JoinType joinType) {
+        this.joinType = new SimpleObjectProperty<>(joinType);
+        this.relatedJoinProperty = joinProperty;
         this.source = new SimpleObjectProperty<>(source);
+        this.target = new SimpleObjectProperty<>(defaultTarget);
         this.random = joinProperty.getRandom();
-        this.target.addListener((observable, oldValue, newValue) -> {
-            if (newValue != null) {
-                joinProperty.getDepend().set(newValue.getName());
-            }
-        });
         sendRecv.putAll(
                 joinProperty.getMap().entrySet().stream()
-                .collect(Collectors.toMap(
-                        en -> new ColProperty(en.getKey()),
-                        en -> new ColProperty(en.getValue())
-                ))
+                        .collect(Collectors.toMap(
+                                en -> new ColProperty(en.getKey()),
+                                en -> new ColProperty(en.getValue())
+                        ))
         );
         BindingUtil.mapContentWithoutInit(joinProperty.getMap(),
                 sendRecv,
                 ColProperty::getColName,
                 ColProperty::getColName);
+
+        this.joinType.addListener((observable, oldValue, newValue) -> {
+            if (visible.get()) {
+                joinDelete();
+                joinAdd();
+            }
+        });
     }
 
+    public void joinAdd() {
+        TableProperty.JoinsProperty targetTableJoinsProp =
+                targetProperty().get().tableProperty().getJoins();
+        this.joinType.get().handle(
+                () -> targetTableJoinsProp.getLeftJoins().add(relatedJoinProperty),
+                () -> targetTableJoinsProp.getRightJoins().add(relatedJoinProperty)
+        );
+    }
+
+    public void joinDelete() {
+        TableProperty.JoinsProperty targetTableJoinsProp =
+                targetProperty().get().tableProperty().getJoins();
+        targetTableJoinsProp.getLeftJoins().remove(relatedJoinProperty);
+        targetTableJoinsProp.getRightJoins().remove(relatedJoinProperty);
+    }
 
     public ObjectProperty<MyTableView> sourceProperty() {
         return source;

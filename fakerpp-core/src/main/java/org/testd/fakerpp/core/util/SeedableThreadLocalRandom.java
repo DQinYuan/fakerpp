@@ -15,6 +15,10 @@ public class SeedableThreadLocalRandom {
         threadLocal.get().setSeed(seed);
     }
 
+    public static Boolean nextBoolean() {
+        return threadLocal.get().nextBoolean();
+    }
+
     public static long nextLong(long bound) {
         Random random = threadLocal.get();
         long r = next63bit(random);

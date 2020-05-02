@@ -21,6 +21,13 @@ public class ColPropertyFactory {
                 .collect(ImmutableSet.toImmutableSet());
     }
 
+    /**
+     * create col property with delete listener,
+     * which will delete corresponding col in JoinSend view
+     * @param colName
+     * @param owerTable
+     * @return
+     */
     public ColProperty colPropertyWithListener(String colName, MyTableView owerTable) {
         ColProperty colProperty = new ColProperty(colName);
         colProperty.addDeleteListener(name -> {

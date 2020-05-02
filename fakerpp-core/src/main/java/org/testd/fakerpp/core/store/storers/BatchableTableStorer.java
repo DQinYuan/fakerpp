@@ -29,7 +29,9 @@ public abstract class BatchableTableStorer implements TableStorer {
 
     @Override
     public void flush() throws ERMLException {
-        commit();
+        if (batch.size() != 0) {
+            commit();
+        }
     }
 
     @Override

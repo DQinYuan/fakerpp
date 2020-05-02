@@ -12,7 +12,7 @@ import java.util.List;
 public class EditableTable extends TableView<List<StringProperty>> {
 
     /**
-     * rowNum and columnNum must be consistent with values
+     * values[0] is row 0, values[1] is row 2....
      * @param values
      */
     public EditableTable(List<List<StringProperty>> values) {
@@ -20,6 +20,7 @@ public class EditableTable extends TableView<List<StringProperty>> {
         setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY);
         setFixedCellSize(30);
         skinProperty().addListener((observable, oldSkin, newSkin) -> {
+            // set no head
             TableHeaderRow headerRow = ((TableViewSkinBase) newSkin).getTableHeaderRow();
             headerRow.setMinHeight(0);
             headerRow.setPrefHeight(0);
@@ -40,6 +41,7 @@ public class EditableTable extends TableView<List<StringProperty>> {
 
         double height = getItems().size() * getFixedCellSize() + 3;
         setPrefHeight(height);
+        setMinHeight(height);
     }
 
 }

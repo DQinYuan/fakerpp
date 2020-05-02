@@ -18,6 +18,7 @@ import org.testd.ui.model.DataSourceInfoProperty;
 import org.testd.ui.util.Forms;
 import org.testd.ui.vo.TableMetaVO;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 @Component
@@ -27,7 +28,8 @@ public class TableMetaConfView {
     private final MetaController metaController;
 
     public Parent getView(TableMetaVO metaProperty,
-                                 Predicate<String> nameValidator) {
+                                 Predicate<String> nameValidator,
+                          Runnable okAction) {
 
         BooleanField virtualField =
                 Field.ofBooleanType(metaProperty.dataSourceProperty().get() == null)
@@ -87,24 +89,23 @@ public class TableMetaConfView {
             }
         });
 
-        Form form = Form.of(
-                Group.of(
-                        Field.ofStringType(metaProperty.nameProperty())
-                                .id("tableName")
-                                .required("Table Name must not be empty")
-                                .label("Table Name:")
-                                .validate(CustomValidator.forPredicate(nameValidator,
-                                        "table name should be unique")),
-                        virtualField,
-                        dataSourceField,
-                        Field.ofIntegerType(metaProperty.numberProperty())
-                                .id("number")
-                                .validate(IntegerRangeValidator.atLeast(0, ">= 0"))
-                                .label("Number:")
-                )
-        ).title("Meta Conf");
-
-        return Forms.renderForm(form, ()->dsProperty.set(temp.get()));
+        return Forms.renderForm("Meta Conf", Arrays.asList(
+                Field.ofStringType(metaProperty.nameProperty())
+                        .id("tableName")
+                        .required("Table Name must not be empty")
+                        .label("Table Name:")
+                        .validate(CustomValidator.forPredicate(nameValidator,
+                                "table name should be unique")),
+                virtualField,
+                dataSourceField,
+                Field.ofIntegerType(metaProperty.numberProperty())
+                        .id("number")
+                        .validate(IntegerRangeValidator.atLeast(0, ">= 0"))
+                        .label("Number:")
+        ), ()->{
+            dsProperty.set(temp.get());
+            okAction.run();
+        });
     }
 
 }

@@ -141,7 +141,7 @@ public class ERMLEngine {
         GeneratorSupplier generatorSupplier = generators.generators()
                 .get(gi.getField())
                 .get(gi.getGenerator());
-        return generatorSupplier.getInitedGenerator("default".equals(gi.getLang()) ?
-                        defaultLang : gi.getLang(), gi.getAttributes(), gi.getOptions());
+        return generatorSupplier.getInitedGenerator(Table.GeneratorInfo.FOLLOW_DEFAULT_LANG
+                .equals(gi.getLang()) ? defaultLang : gi.getLang(), gi.getAttributes(), gi.getOptions());
     }
 }

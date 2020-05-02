@@ -28,6 +28,7 @@ public class ColFamilyVO {
 
     /**
      * virtual colFamilyVo not related with a colFamilyProperty
+     *
      * @param cols
      */
     public ColFamilyVO(ObservableSet<ColProperty> cols) {
@@ -35,8 +36,11 @@ public class ColFamilyVO {
         this.generatorInfos = FXCollections.observableArrayList();
     }
 
-    public ColFamilyVO(TableProperty.ColFamilyProperty colFamilyProperty) {
-        cols = FXCollections.observableSet(new LinkedHashSet<>());
+    public ColFamilyVO(TableProperty.ColFamilyProperty colFamilyProperty, Function<String, ColProperty> colPropertyCreater) {
+        cols = FXCollections.observableSet(
+                colFamilyProperty.getCols().stream().map(colPropertyCreater)
+                        .collect(Collectors.toCollection(HashSet::new))
+        );
         BindingUtil.mapContent(colFamilyProperty.getCols(),
                 cols, ColProperty::getColName);
         if (colFamilyProperty.getGeneratorInfos().size() == 0) {

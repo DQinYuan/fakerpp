@@ -1,6 +1,10 @@
 package org.testd.ui.view.dynamic;
 
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;
@@ -17,9 +21,12 @@ import org.springframework.util.CollectionUtils;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
+import org.testd.ui.model.DataSourceInfoProperty;
+import org.testd.ui.model.JoinType;
+import org.testd.ui.util.BindingUtil;
+import org.testd.ui.vo.ConnectionVO;
 import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
-import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.TableProperty;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.MyVBox;
@@ -28,10 +35,7 @@ import org.testd.ui.view.DrawBoardView;
 import org.testd.ui.view.form.TableMetaConfView;
 import org.testd.ui.vo.TableMetaVO;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -47,9 +51,11 @@ public class MyTableView extends BorderPane {
     private final DrawBoardController drawBoardController;
     private final BeanFactory beanFactory;
     private final TableMetaConfView tableMetaConfView;
+    private final ColPropertyFactory colPropertyFactory;
 
     //----------- property
     private TableProperty tableProperty;
+    private ColFamilyVO excludesColFamily;
 
     //----------- JavaFx Component
     @FXML
@@ -71,9 +77,44 @@ public class MyTableView extends BorderPane {
         deleteTableMenu.setOnAction(event -> drawBoardController.remove(this));
     }
 
+    private void showExcluedCols() {
+        ExcludesView excludesView = fxWeaver.loadControl(ExcludesView.class);
+        excludesView.initFromColFamilyVO(this, excludesColFamily);
+        addTableColFamily(excludesView);
+    }
+
     public void initTableProperty(TableProperty tableProperty) {
         this.tableProperty = tableProperty;
         tableNameLabel.textProperty().bind(tableProperty.getName());
+
+        // init excludes view when table is virtual
+        ObservableSet<ColProperty> excludeColsProperty = FXCollections.observableSet(
+                new LinkedHashSet<>(
+                        colPropertyFactory.colPropertiesWithListener(tableProperty.getExcludes(),
+                                this)
+                )
+        );
+        BindingUtil.mapContent(tableProperty.getExcludes(), excludeColsProperty,
+                ColProperty::getColName);
+        this.excludesColFamily = new ColFamilyVO(excludeColsProperty);
+        if (tableProperty.getDs().get() != null) {
+            showExcluedCols();
+        }
+        tableProperty.getDs().isNull().addListener((observable, oldValue, isNull) -> {
+            if (isNull) { // virtual
+                excludeColsProperty.clear();
+                deleteTableColFamily(ExcludesView.class);
+            } else {
+                showExcluedCols();
+            }
+        });
+
+        // init exists col families
+        tableProperty.getColFamilies().forEach(cf -> relatedColFamilyVo(cf).visibleProperty().set(true));
+
+        // init position binding
+        translateXProperty().bindBidirectional(tableProperty.getX());
+        translateYProperty().bindBidirectional(tableProperty.getY());
     }
 
     public TableProperty tableProperty() {
@@ -124,7 +165,8 @@ public class MyTableView extends BorderPane {
     @FXML
     private void handleMetaConf() {
         Stages.newSceneInChild(tableMetaConfView.getView(new TableMetaVO(tableProperty),
-                name -> !drawBoardController.tableNameExists(name, tableProperty)),
+                name -> !drawBoardController.tableNameExists(name, tableProperty), () -> {
+                }),
                 getScene().getWindow());
     }
 
@@ -138,11 +180,14 @@ public class MyTableView extends BorderPane {
         }
 
         ConnectionView connectionView = beanFactory.getBean(ConnectionView.class);
-        ConnectionProperty connectionProperty = new ConnectionProperty(this);
-        connectionView.register(connectionProperty);
+        TableProperty.JoinProperty newJoinProp =
+                TableProperty.JoinProperty.defaultProperty(this.getName());
+        ConnectionVO connectionVO = new ConnectionVO(this,
+                null, newJoinProp, JoinType.defaultType);
+        connectionView.init(connectionVO);
 
         EditConnectionView editConnectionView = fxWeaver.loadControl(EditConnectionView.class);
-        editConnectionView.initFromConnectionProperty(connectionProperty);
+        editConnectionView.initFromConnectionProperty(connectionVO);
 
         Stages.newSceneInChild(editConnectionView, this.getScene().getWindow());
     }
@@ -193,32 +238,23 @@ public class MyTableView extends BorderPane {
     }
 
     /**
-     * col families except join col families
-     *
-     * @return
+     * @return col families except col families related with join
      */
-    public List<ColFamilyVO> getNormalColFamilies() {
+    public List<ColFamilyVO> getColFamiliesExceptJoin() {
         return colFamiliesInput.getMyChildren()
-                .stream().filter(vi -> vi instanceof ColFamilyView)
+                .stream().filter(vi -> !(vi instanceof JoinView))
                 .map(ColFamilyViewInterface::getColFamilyVO)
                 .collect(Collectors.toList());
     }
 
-
-
-    @FXML
-    private void handleNewColFamily() {
-        TableProperty.ColFamilyProperty colFamilyProperty =
-                new TableProperty.ColFamilyProperty(new ArrayList<>(), new ArrayList<>());
-        ColFamilyVO colFamilyVO = new ColFamilyVO(colFamilyProperty);
-
-        EditColFamilyView editColFamilyView = fxWeaver.loadControl(EditColFamilyView.class);
-        editColFamilyView.initFromMyTableView(this, colFamilyVO);
+    public ColFamilyVO relatedColFamilyVo(TableProperty.ColFamilyProperty colFamilyProperty) {
+        ColFamilyVO colFamilyVO = new ColFamilyVO(colFamilyProperty,
+                colName -> colPropertyFactory.colPropertyWithListener(colName, this));
 
         ColFamilyView colFamilyView = fxWeaver.loadControl(ColFamilyView.class);
         colFamilyVO.visibleProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                colFamilyView.initFromTableAndColFamilyProperty(this, colFamilyVO);
+                colFamilyView.initFromTableAndColFamilyVO(this, colFamilyVO);
                 colFamiliesInput.getMyChildren().add(colFamilyView);
                 tableProperty.getColFamilies().add(colFamilyProperty);
             } else {
@@ -234,6 +270,18 @@ public class MyTableView extends BorderPane {
             }
         });
 
+        return colFamilyVO;
+    }
+
+    @FXML
+    private void handleNewColFamily() {
+        TableProperty.ColFamilyProperty colFamilyProperty =
+                new TableProperty.ColFamilyProperty(new ArrayList<>(), new ArrayList<>());
+        ColFamilyVO colFamilyVO = relatedColFamilyVo(colFamilyProperty);
+
+        EditColFamilyView editColFamilyView = fxWeaver.loadControl(EditColFamilyView.class);
+        editColFamilyView.initFromMyTableView(this, colFamilyVO);
+
         Stages.newSceneInChild(editColFamilyView, this.getScene().getWindow());
     }
 
@@ -247,6 +295,11 @@ public class MyTableView extends BorderPane {
 
     public void deleteTableColFamily(ColFamilyViewInterface colFamilyView) {
         colFamiliesInput.getMyChildren().remove(colFamilyView);
+    }
+
+    public void deleteTableColFamily(Class<?> cfClass) {
+        colFamiliesInput.getMyChildren().removeIf(colFamilyView ->
+                cfClass.isAssignableFrom(colFamilyView.getClass()));
     }
 
     public void flushColFamilyView() {

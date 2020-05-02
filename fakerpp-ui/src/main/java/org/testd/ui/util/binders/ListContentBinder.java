@@ -15,7 +15,7 @@ public class ListContentBinder<E, F> implements ListChangeListener<E>, WeakListe
     private final Function<? super E, ? extends F> mapper;
 
     public ListContentBinder(List<F> mapped, Function<? super E, ? extends F> mapper) {
-        this.mappedRef = new WeakReference<List<F>>(mapped);
+        this.mappedRef = new WeakReference<>(mapped);
         this.mapper = mapper;
     }
 

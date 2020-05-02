@@ -4,7 +4,9 @@ import javafx.scene.Node;
 import org.springframework.stereotype.Component;
 import org.testd.ui.model.DataSourceInfoProperty;
 import org.testd.ui.model.TableProperty;
+import org.testd.ui.view.dynamic.TaskStateView;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +18,11 @@ public class DrawBoardController {
     private Map<String, TableProperty> propMap;
     private List<Node> elements;
 
+    /**
+     *
+     * @param propMap already bound with elements
+     * @param elements
+     */
     public void init(Map<String, TableProperty> propMap, List<Node> elements) {
         this.propMap = propMap;
         this.elements = elements;
@@ -38,6 +45,10 @@ public class DrawBoardController {
                 .collect(Collectors.toList());
     }
 
+    public Collection<TableProperty> tables() {
+        return propMap.values();
+    }
+
     public Optional<TableProperty> dsInUse(DataSourceInfoProperty dataSource) {
         return propMap.values().stream()
                 .filter(tp -> tp.getDs().get() == dataSource)
@@ -52,7 +63,13 @@ public class DrawBoardController {
         elements.remove(node);
     }
 
+    public void translateState(TaskStateView to) {
+        elements.removeIf(n -> n instanceof TaskStateView);
+        elements.add(to);
+    }
 
-
+    public void clear() {
+        elements.clear();
+    }
 }
 

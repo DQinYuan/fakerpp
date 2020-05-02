@@ -4,9 +4,8 @@ import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.engine.generator.Generator;
 import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultNumber;
 import org.testd.fakerpp.core.util.SeedableThreadLocalRandom;
-import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultNumber;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class IntGen implements Generator {
@@ -25,7 +24,7 @@ public class IntGen implements Generator {
 
     @Override
     public List<String> nextData() {
-        return Arrays.asList(String.valueOf(SeedableThreadLocalRandom.nextInt(min, max)));
+        return Collections.singletonList(String.valueOf(SeedableThreadLocalRandom.nextInt(min, max)));
     }
 
     @Override

@@ -3,20 +3,23 @@ package org.testd.ui.view.dynamic;
 import com.google.common.annotations.VisibleForTesting;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.Scene;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.Spinner;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.testd.fakerpp.core.engine.generator.GeneratorSupplier;
 import org.testd.fakerpp.core.engine.generator.Generators;
-import org.testd.ui.DefaultsConfig;
 import org.testd.ui.model.TableProperty;
 import org.testd.ui.util.Stages;
 import org.testd.ui.view.form.EditColFamilyParamView;
@@ -29,8 +32,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class GeneratorSelector extends HBox {
-
-    private final DefaultsConfig defaultsConfig;
 
     private final Generators generators;
 
@@ -60,14 +61,16 @@ public class GeneratorSelector extends HBox {
         fieldInput = new ChoiceBox<>();
         fieldInput.setPrefHeight(26);
         fieldInput.setPrefWidth(80);
+        fieldInput.setId("fieldInput");
         getChildren().add(fieldInput);
 
         generatorInput = new ChoiceBox<>();
         generatorInput.setPrefHeight(26);
         generatorInput.setPrefWidth(80);
+        generatorInput.setId("generatorInput");
         getChildren().add(generatorInput);
 
-        // init casade between fieldInput and generatorInput
+        // init cascade between fieldInput and generatorInput
         Map<String, Map<String, GeneratorSupplier>> gens = generators.generators();
         fieldInput.setItems(FXCollections.observableArrayList(gens.keySet()));
         fieldInput.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -86,9 +89,15 @@ public class GeneratorSelector extends HBox {
         weightInput.setPrefWidth(65);
     }
 
+    private GeneratorSupplier currentGenerator() {
+        GeneratorSupplier current = generators.generators()
+                .get(fieldInput.getValue()).get(generatorInput.getValue());
+        assert current != null;
+        return current;
+    }
+
     public void init(ColFamilyVO owner,
-                     TableProperty.GeneratorInfoProperty generatorInfoProperty,
-                     BooleanProperty weightVisibleProperty) {
+                     TableProperty.GeneratorInfoProperty generatorInfoProperty) {
         this.owner = owner;
         this.generatorInfoProperty = generatorInfoProperty;
 
@@ -97,6 +106,19 @@ public class GeneratorSelector extends HBox {
         generatorInput.valueProperty()
                 .bindBidirectional(generatorInfoProperty.getGenerator());
 
+        generatorInput.valueProperty().addListener((observable, oldValue, newValue) -> {
+            generatorInfoProperty.clearParam();
+            if (newValue != null) {
+                // pop up config dialog when new generator has required param
+                GeneratorSupplier curGenerator = currentGenerator();
+                boolean hasRequiredParam = curGenerator.paramInfos().values().stream().anyMatch(pi ->
+                        pi.getDefaultValue() == null) || curGenerator.optionSetter().isPresent();
+                if (hasRequiredParam) {
+                    showParamEditDialog();
+                }
+            }
+        });
+
         weightInput.getValueFactory().setValue(generatorInfoProperty.getWeight().get());
         generatorInfoProperty.getWeight()
                 .bind(weightInput.valueProperty());
@@ -104,15 +126,14 @@ public class GeneratorSelector extends HBox {
         // init context menu
         ContextMenu contextMenu = new ContextMenu();
 
-        editParam = new MenuItem("Edit More Param");
+        editParam = new MenuItem("Edit Params");
         contextMenu.getItems().add(editParam);
-        editParam.setOnAction(event -> {
-            Parent editView = editColFamilyParamView.getView(generatorInfoProperty);
-            Stages.newSceneInChild(editView, getScene().getWindow());
-        });
+        editParam.setId("Edit_Params_mi");
+        editParam.setOnAction(ignore -> showParamEditDialog());
 
         composeMore = new MenuItem("Compose More Generator");
         contextMenu.getItems().add(composeMore);
+        composeMore.setId("Compose_More_Generator_mi");
         composeMore.setOnAction(event -> owner.getGeneratorInfos()
                 .add(TableProperty.GeneratorInfoProperty.defaultProperty()));
 
@@ -127,8 +148,16 @@ public class GeneratorSelector extends HBox {
                 .greaterThan(Bindings.size(owner.getGeneratorInfos()), 1);
         moreThanOneGen
                 .addListener((observable, oldValue, newValue) ->
-                    moreThanOneGenAction(newValue));
+                        moreThanOneGenAction(newValue));
         moreThanOneGenAction(moreThanOneGen.get());
+    }
+
+    private void showParamEditDialog() {
+        Stage child = Stages.child(getScene().getWindow());
+        Region editView = editColFamilyParamView
+                .getView(generatorInfoProperty, currentGenerator(), child);
+        child.setScene(new Scene(editView));
+        child.showAndWait();
     }
 
     private void moreThanOneGenAction(boolean isMoreThanOne) {

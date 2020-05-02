@@ -54,7 +54,6 @@ class EditableTableTest extends ApplicationSpec {
         })
 
         when:
-        Thread.sleep(10000)
         doubleClickOn(lookup(".table-cell").queryAllAs(TableCell.class)
                 .find {it.getText() == "aaa"})
         write("mmmm")

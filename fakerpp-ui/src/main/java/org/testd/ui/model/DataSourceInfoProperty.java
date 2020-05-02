@@ -49,6 +49,18 @@ public class DataSourceInfoProperty {
         passwd.set(newDataSourceInfo.getPasswd());
     }
 
+    public DataSourceInfo unmap() {
+        return new DataSourceInfo(
+                name.get(),
+                type.get(),
+                storer.get(),
+                batchSize.get(),
+                url.get(),
+                user.get(),
+                passwd.get()
+        );
+    }
+
     @Override
     public String toString() {
         return "DataSourceInfoProperty{" +

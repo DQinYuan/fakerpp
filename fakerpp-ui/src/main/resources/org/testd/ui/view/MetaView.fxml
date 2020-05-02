@@ -28,6 +28,11 @@
                     <children>
                         <Label text="DataSources:" />
                         <Button mnemonicParsing="false" onAction="#handleNewDataSource" text="New" />
+                        <Button mnemonicParsing="false" onAction="#handleSaveDataSources" text="Save">
+                            <tooltip>
+                                <Tooltip text="Persist these datasource infos to disk for use when restart"/>
+                            </tooltip>
+                        </Button>
                     </children>
                 </HBox>
                 <ScrollPane prefHeight="150.0" prefWidth="${mainOptionsPane.width}">

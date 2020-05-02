@@ -45,6 +45,10 @@ public class JoinView extends BorderPane implements ColFamilyViewInterface {
         return send;
     }
 
+    /**
+     * two phase init, phase 1
+     * @param colsSet
+     */
     public void init(ObservableSet<ColProperty> colsSet) {
         this.colFamilyVO = new ColFamilyVO(colsSet);
 
@@ -56,6 +60,12 @@ public class JoinView extends BorderPane implements ColFamilyViewInterface {
                 Equaler.withExtrator(Label::getText));
     }
 
+    /**
+     * two phase init, phase 2
+     * @param send
+     * @param joinType
+     * @param counterTableName
+     */
     public void init1(boolean send,
                       JoinType joinType,
                       String counterTableName) {

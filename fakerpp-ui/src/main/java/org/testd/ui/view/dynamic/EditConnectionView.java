@@ -3,10 +3,8 @@ package org.testd.ui.view.dynamic;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -16,9 +14,9 @@ import org.springframework.util.CollectionUtils;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
+import org.testd.ui.vo.ConnectionVO;
 import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
-import org.testd.ui.model.ConnectionProperty;
 import org.testd.ui.model.JoinType;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.FxProperties;
@@ -51,20 +49,26 @@ public class EditConnectionView extends VBox {
     @FXML
     private RadioButton rightRadio;
     @FXML
+    private CheckBox randomInput;
+    @FXML
+    private HBox randomInputHbox;
+    @FXML
     private ComboBox<String> targetInput;
 
-    private ConnectionProperty connectionProperty;
+    private ConnectionVO connectionVO;
 
     @FXML
     private void initialize() {
+        randomInputHbox.visibleProperty().bind(joinTypeGroup
+                .selectedToggleProperty().isEqualTo(rightRadio));
     }
 
-    public void initFromConnectionProperty(ConnectionProperty connectionProperty) {
-        assert connectionProperty.sourceProperty().get() != null;
-        this.connectionProperty = connectionProperty;
+    public void initFromConnectionProperty(ConnectionVO connectionVO) {
+        assert connectionVO.sourceProperty().get() != null;
+        this.connectionVO = connectionVO;
 
         // init title
-        MyTableView sourceTable = connectionProperty.sourceProperty().getValue();
+        MyTableView sourceTable = connectionVO.sourceProperty().getValue();
         title.setText(String.format("Connection From %s",
                 sourceTable.getName()));
 
@@ -73,21 +77,24 @@ public class EditConnectionView extends VBox {
                 .stream().map(tp -> tp.getName().get()).collect(Collectors.toList());
         targetInput.getItems().addAll(otherTables);
 
-        FxProperties.runIfExists(connectionProperty.targetProperty(),
+        FxProperties.runIfExists(connectionVO.targetProperty(),
                 targetTable -> {
                     targetInput.getSelectionModel().select(targetTable.getName());
                     targetInput.setDisable(true);
                 });
 
         // Join type
-        FxProperties.runIfExists(connectionProperty.joinTypeProperty(),
+        FxProperties.runIfExists(connectionVO.joinTypeProperty(),
                 this::selectByJoinType);
+
+        // Random checkbox
+        randomInput.setSelected(connectionVO.randomProperty().get());
 
         // Col families
         List<ColFamilyVO> selectableColFamilies = sourceTable
                 .getColFamiliesExcept(JoinView.class, joinView -> !joinView.isSend());
 
-        connectionProperty.sendRecvMap().forEach((s, r) -> {
+        connectionVO.sendRecvMap().forEach((s, r) -> {
             ColFamilyMappingView colFamilyMappingView =
                     fxWeaver.loadControl(ColFamilyMappingView.class);
             colFamilyMappingView.initFromOriginAndMappingCol(s.getColName(),
@@ -99,7 +106,7 @@ public class EditConnectionView extends VBox {
         selectableColFamilies.stream()
                 .map(ColFamilyVO::colsProperty)
                 .flatMap(Set::stream)
-                .filter(col -> !connectionProperty
+                .filter(col -> !connectionVO
                         .sendRecvMap().containsKey(col))
                 .map(col -> {
                     ColFamilyMappingView colFamilyMappingView =
@@ -168,7 +175,7 @@ public class EditConnectionView extends VBox {
         }
 
         Set<String> receiveCols = new HashSet<>(resColMap.values());
-        Predicate<String> recvChecker = connectionProperty.recvChecker(targetTableView);
+        Predicate<String> recvChecker = connectionVO.recvChecker(targetTableView);
         for (String receiveCol : receiveCols) {
             if (!recvChecker.test(receiveCol)) {
                 FxDialogs.showError("New Connection Error",
@@ -178,9 +185,10 @@ public class EditConnectionView extends VBox {
             }
         }
 
-        // check pass, modify connectionProperty
-        connectionProperty.targetProperty().set(targetTableView);
-        connectionProperty.joinTypeProperty().set(getJoinType());
+        // check pass, modify connectionVO
+        connectionVO.randomProperty().set(randomInput.isSelected());
+        connectionVO.targetProperty().set(targetTableView);
+        connectionVO.joinTypeProperty().set(getJoinType());
 
         Map<ColProperty, ColProperty> newSendRecv = new LinkedHashMap<>();
         for (Map.Entry<String, String> sendRecvEntry : resColMap.entrySet()) {
@@ -189,14 +197,14 @@ public class EditConnectionView extends VBox {
                     targetTableView);
             // when send col deleted, corresponding recv col must be deleted at same time
             sendProperty.addDeleteListener(colName ->
-                connectionProperty.sendRecvMap().remove(sendProperty));
+                connectionVO.sendRecvMap().remove(sendProperty));
             newSendRecv.put(sendProperty, recvProperty);
         }
 
-        connectionProperty.replaceSendRecv(newSendRecv);
+        connectionVO.replaceSendRecv(newSendRecv);
 
-        if (!connectionProperty.visibleProperty().get()) {
-            connectionProperty.visibleProperty().set(true);
+        if (!connectionVO.visibleProperty().get()) {
+            connectionVO.visibleProperty().set(true);
         }
 
         Stages.closeWindow(getScene().getWindow());

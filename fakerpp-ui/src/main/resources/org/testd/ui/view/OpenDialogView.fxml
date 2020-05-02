@@ -17,7 +17,7 @@
                </font>
             </Label>
             <Label text="(recommand for beginner):" />
-            <Button mnemonicParsing="false" text="Open From DataBase" />
+            <Button mnemonicParsing="false" onAction="#handleOpenDatabase" text="Open From DataBase" />
             <Label text="Or you want to open a model in a directory:">
                <font>
                   <Font name="System Bold" size="14.0" />

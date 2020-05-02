@@ -2,15 +2,15 @@ package org.testd.ui.view;
 
 import com.google.common.annotations.VisibleForTesting;
 import javafx.beans.binding.Bindings;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.testd.ui.util.XmlUtil;
 import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
+import org.testd.ui.UiPreferences;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.controller.MetaController;
 import org.testd.ui.fxweaver.core.FxWeaver;
@@ -24,7 +24,6 @@ import org.testd.ui.view.dynamic.EditDataSourceView;
 import org.testd.ui.view.dynamic.FollowRightMouseMenu;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -39,6 +38,7 @@ public class MetaView {
     private final FxWeaver fxWeaver;
     private final DrawBoardController drawBoardController;
     private final MetaController metaController;
+    private final UiPreferences uiPreferences;
 
     @FXML
     private ChoiceBox<String> langs;
@@ -52,6 +52,8 @@ public class MetaView {
     private TableColumn<DataSourceInfoProperty, String> dsTypeCol;
     @FXML
     private TableColumn<DataSourceInfoProperty, String> dsUrlCol;
+
+    private MetaProperty metaProperty;
 
     @FXML
     private void initialize() {
@@ -132,9 +134,29 @@ public class MetaView {
         primaryStageHolder.newSceneInChild(editDataSourceView);
     }
 
+    @FXML
+    private void handleSaveDataSources() {
+        uiPreferences.put(UiPreferences.dataSourcesKey, XmlUtil.genXml(
+                document ->
+                    document.appendChild(
+                            metaProperty.serialDataSources(document)
+                    )
+        ));
+        FxDialogs.showInformation(
+                "Save data sources successfully",
+                "Save data sources successfully",
+                ""
+        );
+    }
+
     public void initFromMetaProperty(MetaProperty metaProperty) {
+        this.metaProperty = metaProperty;
+
+        langs.valueProperty().set(metaProperty.getLang().get());
         Bindings.bindBidirectional(metaProperty.getLang(),
                 langs.valueProperty());
+
+        dataSourceTable.getItems().addAll(metaProperty.getDataSourceInfos());
         Bindings.bindContentBidirectional(metaProperty.getDataSourceInfos(),
                 dataSourceTable.getItems());
     }

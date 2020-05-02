@@ -45,6 +45,7 @@ class FakersTest extends Specification {
                  "max"                   : mockParamInfo("max", int.class, null)]
         "beer"   | "name"          | [:]                                                     | [:] | [:]
         "name"   | "full-name"     | [:]                                                     | [:] | [:]
+        "name"   | "blood-group"   | [:]                                                     | [:] | [:]
     }
 
     def "there is no field without generator"() {

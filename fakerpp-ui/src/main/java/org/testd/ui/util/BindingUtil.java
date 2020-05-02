@@ -1,15 +1,16 @@
 package org.testd.ui.util;
 
-import javafx.beans.WeakListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableStringValue;
-import javafx.collections.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
+import javafx.collections.ObservableSet;
 import org.apache.commons.lang3.StringUtils;
 import org.testd.ui.util.binders.*;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,6 +112,22 @@ public class BindingUtil {
         source.addListener(keyValueSetBinder);
     }
 
+    public static <K, V> void bindValue(List<V> valueList,
+                                        ObservableMap<K, V> source) {
+        final ValueListBinder<K, V> valueListBinder =
+                new ValueListBinder<>(valueList);
+
+        if (valueList instanceof ObservableList) {
+            ((ObservableList<V>)valueList).setAll(source.values());
+        } else {
+            valueList.clear();
+            valueList.addAll(source.values());
+        }
+
+        source.removeListener(valueListBinder);
+        source.addListener(valueListBinder);
+    }
+
 
     @SuppressWarnings("unchecked")
     public static void bindContentTypeUnsafe(List bind, ObservableList source) {
@@ -126,6 +143,41 @@ public class BindingUtil {
         source.addListener(contentBinding);
     }
 
+    public static <EK, EV, FK, FV> void mapContentWithoutInit(Map<FK, FV> mapped,
+                                                   ObservableMap<EK, EV> source,
+                                                   Function<EK, FK> keyMapper,
+                                                   Function<EV, FV> valueMapper) {
+        MapContentBinder<EK, EV, FK, FV> contentBinder =
+                new MapContentBinder<>(mapped, keyMapper, valueMapper);
+        source.removeListener(contentBinder);
+        source.addListener(contentBinder);
+    }
+
+    public static <EK, EV, FK, FV> void mapContent(Map<FK, FV> mapped,
+                                                   ObservableMap<EK, EV> source,
+                                                   Function<EK, FK> keyMapper,
+                                                   Function<EV, FV> valueMapper) {
+        MapContentBinder<EK, EV, FK, FV> contentBinder =
+                new MapContentBinder<>(mapped, keyMapper, valueMapper);
+        mapped.clear();
+        mapped.putAll(
+                source.entrySet().stream()
+                .collect(toMap(en -> keyMapper.apply(en.getKey()), en -> valueMapper.apply(en.getValue())))
+        );
+        source.removeListener(contentBinder);
+        source.addListener(contentBinder);
+    }
+
+    /**
+     * bind a map with list according to keyMapper and valueMapper
+     * @param mapped
+     * @param source
+     * @param keyMapper
+     * @param valueMapper
+     * @param <E>
+     * @param <FK>
+     * @param <FV>
+     */
     public static <E, FK, FV> void mapContent(Map<FK, FV> mapped, ObservableList<E> source,
                                               Function<E, Property<FK>> keyMapper,
                                               Function<E, FV> valueMapper) {
@@ -140,7 +192,9 @@ public class BindingUtil {
                 new MapListContentBinder<>(mapped, keyMapper, valueMapper, filter);
         mapped.clear();
         mapped.putAll(
-                source.stream().collect(toMap(item -> keyMapper.apply(item).getValue(),
+                source.stream()
+                        .filter(filter)
+                        .collect(toMap(item -> keyMapper.apply(item).getValue(),
                         valueMapper))
         );
         source.removeListener(contentBinder);
@@ -152,7 +206,7 @@ public class BindingUtil {
         final SetListContentBinder<E, F> contentBinder =
                 new SetListContentBinder<>(mapped, mapper, filter);
         mapped.clear();
-        mapped.addAll(source.stream().map(mapper).collect(toList()));
+        mapped.addAll(source.stream().filter(filter).map(mapper).collect(toList()));
         source.removeListener(contentBinder);
         source.addListener(contentBinder);
     }
@@ -179,8 +233,8 @@ public class BindingUtil {
 
     public static <E, F> void mapContent(ObservableList<F> mapped, ObservableList<E> source,
                                          Function<? super E, ? extends F> mapper) {
-        final ListContentBinder<E, F> contentMapping = new ListContentBinder<E, F>(mapped, mapper);
-        mapped.setAll(source.stream().map(mapper::apply).collect(toList()));
+        final ListContentBinder<E, F> contentMapping = new ListContentBinder<>(mapped, mapper);
+        mapped.setAll(source.stream().map(mapper).collect(toList()));
         source.removeListener(contentMapping);
         source.addListener(contentMapping);
     }

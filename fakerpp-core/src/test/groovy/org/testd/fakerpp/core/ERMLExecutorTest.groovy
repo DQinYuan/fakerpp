@@ -37,25 +37,25 @@ class ERMLExecutorTest extends Specification {
         where:
         modelName     | dbName                         | expectSqls
         "user_shop"   | "ERMLExecutorTest.diskExec"    | ["select * from shop"       : """
-           ID         NAME        OWNER
+           id         name        owner
             1     Shop_GuC    Owner_zl6
             2     Shop_wrk    Owner_S0t
             3     Shop_XXH    Owner_GpS
 """,
                                                           "select * from user"       : """
-           ID         NAME          SEX          AGE
+           id         name          sex          age
             1          钟泽洋       female           25
             2          王旭尧         male           23
             3          郑君浩       female           45
 """,
                                                           "select * from user_detail": """
-           ID         NAME          SEX          AGE      ADDRESS  DESCRIPTION
+           id         name          sex          age      address  description
             1          钟泽洋       female           25   street_rVF         FVF8
             2          王旭尧         male           23   street_RXB         mMoH
             3          郑君浩       female           45   street_WTR         foPp
 """,
                                                           "select * from user_shop"  : """
-           ID           DT      SHOP_ID      USER_ID       AMOUNT
+           id           dt      shop_id      user_id       amount
             1   2020-01-02            1            1      8590.94
             2   2020-01-02            1            2      4811.81
             3   2020-01-02            1            3       3662.8
@@ -86,13 +86,13 @@ class ERMLExecutorTest extends Specification {
 """,
                                                           "show tables"              : """
    TABLE_NAME TABLE_SCHEMA
-         SHOP       PUBLIC
-         USER       PUBLIC
-  USER_DETAIL       PUBLIC
-    USER_SHOP       PUBLIC
+         shop       PUBLIC
+         user       PUBLIC
+  user_detail       PUBLIC
+    user_shop       PUBLIC
 """]
         "composetest" | "ERMLExecutorTest.composetest" | ["select * from user": """
-         NAME
+         name
 Romaine Lindgren V
 Mellissa Lang
           钱梓晨
@@ -137,7 +137,7 @@ Mellissa Lang
 
         then:
         rowSetToString(execSqlInH2(dbName, "select * from user")) == """
-         NAME
+         name
           沈明哲
           林哲瀚
           金钰轩

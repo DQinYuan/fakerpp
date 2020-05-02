@@ -41,7 +41,7 @@ public class EditColFamilyView extends BorderPane {
 
     public void initFromMyTableView(MyTableView tableView, ColFamilyVO colFamilyVO) {
         this.ownerTable = tableView;
-        this.otherColFamilies = tableView.getNormalColFamilies().stream()
+        this.otherColFamilies = tableView.getColFamiliesExceptJoin().stream()
                 .filter(cf -> !cf.equals(colFamilyVO))
                 .collect(Collectors.toList());
         otherColFamilies.forEach(
@@ -61,6 +61,7 @@ public class EditColFamilyView extends BorderPane {
         Set<String> extraCols = Pattern.compile("\n")
                 .splitAsStream(newCols.getText())
                 .filter(s -> !s.trim().equals(""))
+                .map(String::trim)
                 .collect(ImmutableSet.toImmutableSet());
 
         // catch other cols and delete from origin col families

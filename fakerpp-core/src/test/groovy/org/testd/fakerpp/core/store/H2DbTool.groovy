@@ -31,7 +31,7 @@ class H2DbTool {
     }
 
     static RowSet execSqlInH2(String db, String sql) {
-        def h2Conn = DriverManager.getConnection("jdbc:h2:mem:${db};DB_CLOSE_DELAY=-1")
+        def h2Conn = DriverManager.getConnection("jdbc:h2:mem:${db};DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false")
         def stmt = h2Conn.createStatement()
         def cachedRowSet = RowSetProvider.newFactory().createCachedRowSet()
         stmt.execute(sql)

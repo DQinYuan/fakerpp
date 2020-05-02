@@ -20,7 +20,30 @@ class BatchableTableStorerTest extends Specification {
                 assert batch.size() == expect[counter++]
             }
         }
+        // store five record
         5.times {
+            mockTS.store(["a1", "b1", "c1"])
+        }
+        mockTS.flush()
+    }
+
+    def "not flush zero record"() {
+        expect:
+        def expect = [2, 2, 2]
+        def counter = 0
+        def mockTS = new BatchableTableStorer(2, ["a", "b", "c"]) {
+            @Override
+            Map<String, List<String>> feedBackData(List<String> excludes) throws ERMLException {
+                return null
+            }
+
+            @Override
+            protected void executeCommit(List<List<String>> batch) throws ERMLException {
+                assert batch.size() != 0
+                assert batch.size() == expect[counter++]
+            }
+        }
+        6.times {
             mockTS.store(["a1", "b1", "c1"])
         }
         mockTS.flush()

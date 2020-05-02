@@ -1,10 +1,6 @@
 package org.testd.ui.view.dynamic;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
@@ -30,7 +26,6 @@ public class ColFamilyView extends BorderPane implements ColFamilyViewInterface 
 
     private ColFamilyVO colFamilyVO;
     private MyTableView ownerTable;
-    private BooleanProperty weightVisible = new SimpleBooleanProperty(false);
 
     @FXML
     private VBox generatorsInput;
@@ -57,33 +52,20 @@ public class ColFamilyView extends BorderPane implements ColFamilyViewInterface 
         );
     }
 
-
-    public void initFromTableAndColFamilyProperty(MyTableView ownerTable,
-                                                  ColFamilyVO colFamilyVO) {
+    public void initFromTableAndColFamilyVO(MyTableView ownerTable,
+                                            ColFamilyVO colFamilyVO) {
         this.ownerTable = ownerTable;
         this.colFamilyVO = colFamilyVO;
 
-        BindingUtil.mapContent(colsInput.getChildren(),
-                colFamilyVO.colsProperty(),
-                colProperty -> new Label(colProperty.getColName()),
-                (l1, l2) -> ((Label) l1).getText().equals(((Label) l2).getText()));
+        colsInput.bindToCols(colFamilyVO.colsProperty());
 
         assert colFamilyVO.getGeneratorInfos().size() >= 1;
-
-        // weight spinner only visible when generator num >= 2
-        generatorsInput.getChildren().addListener((ListChangeListener<Node>) c -> {
-            if (c.getList().size() >= 2) {
-                weightVisible.set(true);
-            } else {
-                weightVisible.set(false);
-            }
-        });
 
         BindingUtil.mapContent(generatorsInput.getChildren(),
                 colFamilyVO.getGeneratorInfos(),
                 gInfo -> {
                     GeneratorSelector gs = beanFactory.getBean(GeneratorSelector.class);
-                    gs.init(colFamilyVO, gInfo, weightVisible);
+                    gs.init(colFamilyVO, gInfo);
                     return gs;
                 });
     }

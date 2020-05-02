@@ -14,6 +14,7 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.testd.ui.fxweaver.core.FxmlView;
+import org.testd.ui.util.ResourceUtil;
 
 import java.util.List;
 
@@ -38,8 +39,7 @@ public class ColFamilyMappingView extends HBox {
 
     @FXML
     private void initialize() {
-        rightArrow.setImage(new Image(ColFamilyMappingView.class
-                .getResource("/img/rightarrow.png").toString()));
+        rightArrow.setImage(ResourceUtil.loadImage("rightarrow.png"));
 
         checkbox.selectedProperty().addListener((observable, oldValue, newValue) ->
             toggleMapColVisiable(newValue)

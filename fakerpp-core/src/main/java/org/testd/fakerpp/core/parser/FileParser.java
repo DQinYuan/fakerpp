@@ -7,12 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joox.Match;
 import org.testd.fakerpp.core.ERMLException;
-import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
 import org.testd.fakerpp.core.parser.ast.ERML;
 import org.testd.fakerpp.core.parser.ast.Meta;
 import org.testd.fakerpp.core.parser.ast.Table;
-import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
-import org.testd.fakerpp.core.parser.ast.ERML;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -51,10 +48,10 @@ public class FileParser {
 
     public void processByDir(Path path) throws ERMLException {
         // meta directory
-        if (Files.isDirectory(path) && path.endsWith("meta")) {
+        if (Files.isDirectory(path) && path.endsWith(Meta.metaDir)) {
             if (ermlBuilder.meta() == null) {
-                Document doc = getDocument(path.resolve("meta.xml"), MetaSchema.getInstance());
-                ermlBuilder.meta(parseMetaXml(doc));
+                Document doc = getDocument(path.getParent().resolve(Meta.metaXmlPath), MetaSchema.getInstance());
+                ermlBuilder.meta(Meta.parseMeta(doc.getDocumentElement()));
             }
             return;
         }
@@ -67,7 +64,7 @@ public class FileParser {
     }
 
     public void processByStream(InputStream metaStream, List<InputStream> tableStreams) throws ERMLException {
-        ermlBuilder.meta(parseMetaXml(getDocument(metaStream, MetaSchema.getInstance())));
+        ermlBuilder.meta(Meta.parseMeta(getDocument(metaStream, MetaSchema.getInstance()).getDocumentElement()));
         for (InputStream tableStream : tableStreams) {
             ermlBuilder.appendTable(parseTableXml(getDocument(tableStream,
                     FakerppSchema.getInstance())));
@@ -119,28 +116,6 @@ public class FileParser {
         } catch (IOException e) {
             throw new ERMLException("read file error", e);
         }
-    }
-
-
-    public static Meta parseMetaXml(Document document) {
-        Meta.Builder builder = Meta.builder();
-        $(document)
-                .child("datasources")
-                .children()
-                .each(ctx ->
-                        builder.appendDataSourceInfo(
-                                new DataSourceInfo(
-                                        $(ctx).attr("name"),
-                                        $(ctx).attr("type"),
-                                        $(ctx).attr("storer"),
-                                        Integer.parseInt($(ctx).attr("batch-size")),
-                                        $(ctx).child("url").text(),
-                                        $(ctx).child("user").text(),
-                                        $(ctx).child("passwd").text())
-                        )
-                );
-        builder.lang($(document).attr("lang"));
-        return builder.build();
     }
 
     public static Table.Joins parseJoins(Match joinsCtx) {

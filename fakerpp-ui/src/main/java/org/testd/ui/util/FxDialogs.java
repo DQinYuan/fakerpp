@@ -43,7 +43,7 @@ public class FxDialogs {
                 .showAndWait();
     }
 
-    public static void showException(String title, String head, String message, Exception exception) {
+    public static void showException(String title, String head, String message, Throwable exception) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         exception.printStackTrace(pw);

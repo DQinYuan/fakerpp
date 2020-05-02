@@ -19,15 +19,20 @@ import org.testd.ui.DefaultsConfig;
 import org.testd.ui.PrimaryStageHolder;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
+import org.testd.ui.model.TableProperty;
+import org.testd.ui.util.Stages;
 import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
-import org.testd.ui.model.ConnectionProperty;
+import org.testd.ui.vo.ConnectionVO;
 import org.testd.ui.util.BindingUtil;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * represent a compose of join send view, join receive view and a connection line
+ */
 @Component
 @RequiredArgsConstructor
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -35,7 +40,6 @@ public class ConnectionView {
 
     private final FxWeaver fxWeaver;
     private final DefaultsConfig defaultsConfig;
-    private final PrimaryStageHolder primaryStageHolder;
     private final DrawBoardController drawBoardController;
 
     private JoinView joinSendView;
@@ -44,14 +48,18 @@ public class ConnectionView {
     private ConnectPolyLine connectLine;
     private Runnable listenerDeleter = () ->{};
 
-    public void register(ConnectionProperty connectionProperty) {
+    /**
+     * relate this connection view with a connection property
+     * @param connectionVO
+     */
+    public void init(ConnectionVO connectionVO) {
 
         // bind send and receive set
         ObservableSet<ColProperty> sendSet = FXCollections
                 .observableSet(new LinkedHashSet<>());
         ObservableSet<ColProperty> recvSet = FXCollections
                 .observableSet(new LinkedHashSet<>());
-        BindingUtil.bindKeyValue(sendSet, recvSet, connectionProperty.sendRecvMap());
+        BindingUtil.bindKeyValue(sendSet, recvSet, connectionVO.sendRecvMap());
 
         joinSendView = fxWeaver.loadControl(JoinView.class);
         joinSendView.init(sendSet);
@@ -60,28 +68,30 @@ public class ConnectionView {
 
         sendSet.addListener((SetChangeListener<ColProperty>) change -> {
             if (change.getSet().isEmpty()) {
-                connectionProperty.visibleProperty().set(false);
+                connectionVO.visibleProperty().set(false);
             }
         });
 
-        connectionProperty.visibleProperty()
+        connectionVO.visibleProperty()
                 .addListener((observable, oldValue, newValue) -> {
                     if (newValue) {
-                        show(connectionProperty);
+                        show(connectionVO);
+                        connectionVO.joinAdd();
                     } else {
                         assert connectLine != null;
-                        assert connectionProperty.sourceProperty().get() != null;
-                        assert connectionProperty.targetProperty().get() != null;
+                        assert connectionVO.sourceProperty().get() != null;
+                        assert connectionVO.targetProperty().get() != null;
                         listenerDeleter.run();
                         drawBoardController.remove(connectLine);
-                        connectionProperty.sourceProperty().get()
+                        connectionVO.sourceProperty().get()
                                 .deleteTableColFamily(joinSendView);
-                        connectionProperty.targetProperty().get()
+                        connectionVO.targetProperty().get()
                                 .deleteTableColFamily(joinRecvView);
+                        connectionVO.joinDelete();
                     }
                 });
 
-        connectionProperty.setRecvChecker(
+        connectionVO.setRecvChecker(
                 tableView -> {
                     Set<String> checkCols =
                             tableView.getColFamiliesExcept(joinRecvView).stream()
@@ -94,28 +104,28 @@ public class ConnectionView {
         EventHandler<ActionEvent> editHandler = event -> {
             EditConnectionView newConnView =
                     fxWeaver.loadControl(EditConnectionView.class);
-            newConnView.initFromConnectionProperty(connectionProperty);
-            primaryStageHolder.newSceneInChild(newConnView);
+            newConnView.initFromConnectionProperty(connectionVO);
+            Stages.newSceneInChild(newConnView, connectLine.getScene().getWindow());
         };
         EventHandler<ActionEvent> deleteHandler = event ->
-            connectionProperty.visibleProperty().set(false);
+            connectionVO.visibleProperty().set(false);
         joinSendView.addMenuHandler(editHandler, deleteHandler);
         joinRecvView.addMenuHandler(editHandler, deleteHandler);
 
     }
 
-    private void show(ConnectionProperty connectionProperty) {
+    private void show(ConnectionVO connectionVO) {
         MyTableView sourceTableView =
-                connectionProperty.sourceProperty().get();
+                connectionVO.sourceProperty().get();
         sourceTableView.addTableColFamily(joinSendView);
 
         MyTableView targetTableView =
-                connectionProperty.targetProperty().get();
+                connectionVO.targetProperty().get();
         targetTableView.addTableColFamily(joinRecvView);
 
-        joinSendView.init1(true, connectionProperty.joinTypeProperty().get(),
+        joinSendView.init1(true, connectionVO.joinTypeProperty().get(),
                 targetTableView.getName());
-        joinRecvView.init1(false, connectionProperty.joinTypeProperty().get(),
+        joinRecvView.init1(false, connectionVO.joinTypeProperty().get(),
                 sourceTableView.getName());
 
         // line connect

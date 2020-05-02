@@ -8,20 +8,12 @@
             </cols>
             <compose>
                 <name lang="zh-CN">
-                    <full-name>
-                        <cols>
-                            <col>name</col>
-                        </cols>
-                    </full-name>
+                    <full-name/>
                 </name>
             </compose>
             <compose weight="5">
                 <name>
-                    <full-name>
-                        <cols>
-                            <col>name</col>
-                        </cols>
-                    </full-name>
+                    <full-name/>
                 </name>
             </compose>
         </composes>

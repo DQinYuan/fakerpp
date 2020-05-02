@@ -1,20 +1,24 @@
 package org.testd.fakerpp.core.store.storers.csv;
 
+import com.google.common.collect.ImmutableSet;
 import lombok.extern.slf4j.Slf4j;
 import org.testd.fakerpp.core.ERMLException;
 import org.testd.fakerpp.core.parser.ast.DataSourceInfo;
+import org.testd.fakerpp.core.parser.ast.Table;
 import org.testd.fakerpp.core.store.storers.BatchableTableStorer;
 import org.testd.fakerpp.core.store.storers.Storer;
 import org.testd.fakerpp.core.store.storers.TableStorer;
-import org.testd.fakerpp.core.store.storers.BatchableTableStorer;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -42,6 +46,11 @@ public class DefaultStorer implements Storer {
     public TableStorer getTableStorer(String tableName, List<String> colNames) throws ERMLException {
         return new InternalStorer(dataDir.resolve(tableName + ".csv"),
                 batchSize, colNames);
+    }
+
+    @Override
+    public Set<Table> reverse() throws ERMLException {
+        return ImmutableSet.of();
     }
 
     private class InternalStorer extends BatchableTableStorer {

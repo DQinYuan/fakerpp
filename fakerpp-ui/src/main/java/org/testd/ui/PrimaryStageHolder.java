@@ -6,6 +6,7 @@ import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
+import org.testd.ui.fxweaver.core.FxControllerAndView;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.util.Stages;
 import org.testd.ui.view.OpenDialogView;
@@ -28,18 +29,19 @@ public class PrimaryStageHolder implements ApplicationListener<StageReadyEvent> 
         primaryStage = stage;
     }
 
-    public void changeSceneFullScene(Class<?> target) {
-        changeSceneFullSceneWithParam(target, null, o -> {});
+    public <T> void changeSceneFullScreenWithParam(Class<T> target, Consumer<T> initer) {
+        changeScene(target, s  -> s.setMaximized(true), initer);
     }
 
-    public <T> void changeSceneFullSceneWithParam(Class<?> target, T param, Consumer<T> paramConsumer) {
-        changeScene(target, s  -> s.setMaximized(true), param, paramConsumer);
+    public <T> void changeScene(Class<T> target) {
+        changeScene(target, s -> {}, t -> {});
     }
 
-    public <T> void changeScene(Class<?> target, Consumer<Stage> otherSet,
-                                T param, Consumer<T> paramConsumer) {
-        primaryStage.getScene().setRoot(fxWeaver.loadView(target));
-        paramConsumer.accept(param);
+    public <T> void changeScene(Class<T> target, Consumer<Stage> otherSet,
+                               Consumer<T> initer) {
+        FxControllerAndView<T, Parent> loaded = fxWeaver.load(target);
+        primaryStage.getScene().setRoot(loaded.getView().get());
+        initer.accept(loaded.getController());
         otherSet.accept(primaryStage);
     }
 
@@ -53,5 +55,9 @@ public class PrimaryStageHolder implements ApplicationListener<StageReadyEvent> 
 
     public void newSceneInChild(Parent content) {
         Stages.newSceneInChild(content, primaryStage.getScene().getWindow());
+    }
+
+    public void newSceneInChild(Parent content, String title) {
+        Stages.newSceneInChild(content, primaryStage.getScene().getWindow(), title);
     }
 }

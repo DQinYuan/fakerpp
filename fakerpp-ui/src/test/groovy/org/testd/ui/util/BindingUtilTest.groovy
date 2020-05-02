@@ -53,7 +53,7 @@ class BindingUtilTest extends Specification {
 
     def "test map list to map with filter and key modify"() {
         given:
-        ObservableList<LoProperty> list = FXCollections.observableArrayList()
+        ObservableList<LoProperty> list = FXCollections.observableArrayList(new LoProperty("", 1))
         Map<String, LoProperty> map = new HashMap<>()
 
         when:

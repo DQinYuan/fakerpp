@@ -35,6 +35,10 @@ public class Storers {
     private Pattern storerExtrator =
             Pattern.compile("org\\.testd\\.fakerpp\\.core\\.store\\.storers\\.(.+)\\.(.+)Storer");
 
+    /**
+     *
+     * @return type -> storer -> storer supplier
+     */
     @Cacheable("storers")
     public Map<String, Map<String, Supplier<Storer>>> storers() {
         String pack = "org.testd.fakerpp.core.store.storers";

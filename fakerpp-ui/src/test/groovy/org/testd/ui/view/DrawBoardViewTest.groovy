@@ -4,6 +4,7 @@ import javafx.scene.Scene
 import javafx.scene.control.ComboBox
 import javafx.scene.control.TextArea
 import javafx.scene.control.TextField
+import javafx.scene.layout.StackPane
 import javafx.stage.Stage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -11,7 +12,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.FilterType
 import org.springframework.stereotype.Component
-import org.springframework.test.context.TestPropertySource
+import org.springframework.test.annotation.DirtiesContext
 import org.testd.ui.Tools
 import org.testd.ui.controller.DrawBoardController
 import org.testd.ui.fxweaver.core.FxWeaver
@@ -27,7 +28,7 @@ class DrawBoardViewTest extends ApplicationSpec {
     @TestConfiguration
     @ComponentScan(excludeFilters = @ComponentScan.Filter(
             type = FilterType.ASSIGNABLE_TYPE,
-            value = [MainWindowView.class, MetaView.class]) )
+            value = [MainWindowView.class, MetaView.class]))
     @Component
     static class DrawBoardViewTestConfig {
     }
@@ -41,6 +42,8 @@ class DrawBoardViewTest extends ApplicationSpec {
     @Autowired
     DrawBoardController drawBoardController
 
+    Stage testStage
+
     @Override
     void init() throws Exception {
         FxToolkit.registerStage { new Stage() }
@@ -48,55 +51,56 @@ class DrawBoardViewTest extends ApplicationSpec {
 
     @Override
     void start(Stage stage) throws Exception {
+        testStage = stage
+
         stage.setScene(new Scene(drawBoardView, 1000, 600))
         stage.show()
     }
 
     @Override
     void stop() throws Exception {
-        FxToolkit.hideStage()
+        // clean dirty test data
+        drawBoardController.clear()
+        // prevent drawBoardView already set as root of another scene
+        testStage.getScene().setRoot(new StackPane())
+        FxToolkit.cleanupStages()
     }
 
-    def initTablesCfs() {
-        def table1 = fxWeaver.loadControl(MyTableView.class)
-        table1.initTableProperty(new TableProperty("Table1"))
-        table1.setTranslateX(10)
-        table1.setTranslateY(10)
-
-        def table2 = fxWeaver.loadControl(MyTableView.class)
-        table2.initTableProperty(new TableProperty("Table2"))
-        table2.setTranslateX(350)
-        table2.setTranslateY(150)
+    def initTable(String tableName, int x = 10, int y = 10, String... cfs) {
+        def table = fxWeaver.loadControl(MyTableView.class)
+        table.initTableProperty(new TableProperty(tableName))
+        table.setTranslateX(x)
+        table.setTranslateY(y)
 
         interact({
-            drawBoardController.append(table1)
-            drawBoardController.append(table2)
-            table1.setId("Table1")
-            table2.setId("Table2")
+            drawBoardController.append(table)
+            table.setId(tableName)
         })
 
-        Tools.newColFamilies(this, "Table1", """
-aaa
+        cfs.each { Tools.newColFamilies(this, tableName, it) }
+
+        return table
+    }
+
+    def initTablePair() {
+        return [initTable("Table1", 10, 10, """aaa
 bbb
 ccc
-""")
-        Tools.newColFamilies(this, "Table1", """
+""", """
 ll
 ee
-""")
-        Tools.newColFamilies(this, "Table2", """
+"""), initTable("Table2", 350, 150, """
 ddd
 eee
 fff
-""")
-        return [table1, table2]
+""")]
     }
 
     def "test cascade delete col with join"() {
         given:
         MyTableView t1
         MyTableView t2
-        (t1, t2) = initTablesCfs()
+        (t1, t2) = initTablePair()
 
         when:
         clickOn("#Table1 #newConnection")
@@ -125,6 +129,19 @@ fff
         recvViews[0].colsProperty()*.getColName().toSet() ==
                 ["aaa", "xxb", "ccc", "ll", "ee"] as Set
 
+        // check sync property
+        t2.tableProperty().getJoins().leftJoins.size() == 1
+        t2.tableProperty().getJoins().rightJoins.size() == 0
+        t2.tableProperty().getJoins().leftJoins[0].depend.get() == "Table1"
+        t2.tableProperty().getJoins().leftJoins[0].map == [
+                "aaa":"aaa",
+                "bbb":"xxb",
+                "ccc":"ccc",
+                "ll":"ll",
+                "ee":"ee"
+        ]
+
+        and:
         // delete one col
         rightClickOn(t1.colFamiliesInput.children[0].colsInput)
         clickOn("#edit_cols_mi")
@@ -138,21 +155,62 @@ bbb
         })
         clickOn("#okButton")
 
+        then:
         // check cascade after delete one col
         sendViews[0].colsProperty()*.getColName().toSet() ==
                 ["aaa", "bbb", "ll", "ee"] as Set
         recvViews[0].colsProperty()*.getColName().toSet() ==
                 ["aaa", "xxb", "ll", "ee"] as Set
+        t2.tableProperty().getJoins().leftJoins[0].map == [
+                "aaa":"aaa",
+                "bbb":"xxb",
+                "ll":"ll",
+                "ee":"ee"
+        ]
 
+        and:
         // delete entire col family
         rightClickOn(t1.colFamiliesInput.children[1].colsInput)
         clickOn("#delete_cols_mi")
 
+        then:
         // check cascade after delete col family
         sendViews[0].colsProperty()*.getColName().toSet() ==
                 ["aaa", "bbb"] as Set
         recvViews[0].colsProperty()*.getColName().toSet() ==
                 ["aaa", "xxb"] as Set
+        t2.tableProperty().getJoins().leftJoins[0].map == [
+                "aaa":"aaa",
+                "bbb":"xxb",
+        ]
+
+        and:
+        // change join type
+        rightClickOn(t2.colFamiliesInput.children[1].partInCols)
+        clickOn("#edit_connection_mi")
+        clickOn("#rightRadio")
+        clickOn("#okButton")
+
+        then:
+        t2.tableProperty().getJoins().leftJoins.size() == 0
+        t2.tableProperty().getJoins().rightJoins.size() == 1
+        t2.tableProperty().getJoins().rightJoins[0].map == [
+                "aaa":"aaa",
+                "bbb":"xxb",
+        ]
+    }
+
+    def "not append table when user simply close table conf view after new table"() {
+        given:
+        rightClickOn(drawBoardView)
+        clickOn("#New_Table_mi")
+
+        when:
+        // close new table dialog
+        interact({((Stage)listWindows()[1]).close()})
+
+        then:
+        drawBoardController.tables().size() == 0
     }
 
 

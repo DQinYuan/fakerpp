@@ -86,10 +86,13 @@ public class DateBase {
         }
     }
 
-    public String random() {
+    public LocalDate randomDate() {
         long randomInterval = SeedableThreadLocalRandom.nextLong(interval);
-        return LocalDate.ofEpochDay(
-                startDate.toEpochDay() + randomInterval).format(dateFormatter);
+        return LocalDate.ofEpochDay(startDate.toEpochDay() + randomInterval);
+    }
+
+    public String random() {
+        return randomDate().format(dateFormatter);
     }
 
     public long getInterval() {

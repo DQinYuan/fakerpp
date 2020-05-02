@@ -9,6 +9,7 @@ import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultString;
 import org.testd.fakerpp.core.util.SeedableThreadLocalRandom;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class StrGen implements Generator {
@@ -27,7 +28,7 @@ public class StrGen implements Generator {
     @Override
     public List<String> nextData() {
         String rStr = SeedableThreadLocalRandom.randomAlphanumeric(len);
-        return Arrays.asList(prefix
+        return Collections.singletonList(prefix
                 + rStr
                 + suffix);
     }

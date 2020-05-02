@@ -67,7 +67,7 @@ class MainWindowViewTest extends ApplicationSpec {
                     new Table("aTable", "", 10,
                             new Table.Joins(ImmutableList.of(), ImmutableList.of()),
                             ImmutableList.of(), ImmutableList.of()),
-                    dsip
+                    dsip, 0, 0
             ))
             metaView.appendDataSource(dsip)
             drawBoardController.append(tableView)

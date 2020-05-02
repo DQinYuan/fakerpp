@@ -8,6 +8,7 @@ import org.testd.fakerpp.core.engine.generator.Generator;
 import org.testd.fakerpp.core.engine.generator.builtin.base.DefaultString;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class DateGen implements Generator {
@@ -28,7 +29,7 @@ public class DateGen implements Generator {
 
     @Override
     public List<String> nextData() {
-        return Arrays.asList(dateBase.random());
+        return Collections.singletonList(dateBase.random());
     }
 
     @Override

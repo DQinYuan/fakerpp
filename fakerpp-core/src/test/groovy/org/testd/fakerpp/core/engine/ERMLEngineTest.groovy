@@ -30,9 +30,7 @@ class ERMLEngineTest extends Specification {
         def m0Ds = new DataSourceInfo("mysql0", "mysql",
                 "s", 100, "mysql0Url",
                 "mysql0User", "123456")
-        def metaBuilder = Meta.builder()
-        metaBuilder.appendDataSourceInfo(m0Ds)
-        metaBuilder.lang("en")
+        def meta = new Meta("en", [(m0Ds.name): m0Ds])
         def tables = [
                 "user_shop": new Table(
                         "user_shop",
@@ -92,7 +90,7 @@ class ERMLEngineTest extends Specification {
                 )
         ]
         def ermlBuilder = ERML.builder()
-        ermlBuilder.meta(metaBuilder.build())
+        ermlBuilder.meta(meta)
         tables.each { k, v -> ermlBuilder.appendTable(v) }
         def erml = ermlBuilder.build()
 
@@ -150,9 +148,7 @@ class ERMLEngineTest extends Specification {
         def m0Ds = new DataSourceInfo("mysql0", "mysql",
                 "s", 100, "mysql0Url",
                 "mysql0User", "123456")
-        def metaBuilder = Meta.builder()
-        metaBuilder.appendDataSourceInfo(m0Ds)
-        metaBuilder.lang("en")
+        def meta = new Meta("en", [(m0Ds.name): m0Ds])
         def tables = [
                 "user_shop": new Table(
                         "user_shop",
@@ -170,7 +166,7 @@ class ERMLEngineTest extends Specification {
                                 ["amount"],
                                 [new Table.GeneratorInfo(
                                         "number",
-                                        "default",
+                                        Table.GeneratorInfo.FOLLOW_DEFAULT_LANG,
                                         "random-double",
                                         ["max-number-of-decimals": "2",
                                          "min"                   : "90",
@@ -256,7 +252,7 @@ class ERMLEngineTest extends Specification {
                 )
         ]
         def ermlBuilder = ERML.builder()
-        ermlBuilder.meta(metaBuilder.build())
+        ermlBuilder.meta(meta)
         tables.each { k, v -> ermlBuilder.appendTable(v) }
         def erml = ermlBuilder.build()
 
