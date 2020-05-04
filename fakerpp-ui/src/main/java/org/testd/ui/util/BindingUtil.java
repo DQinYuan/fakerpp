@@ -2,6 +2,7 @@ package org.testd.ui.util;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
@@ -21,6 +22,35 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public class BindingUtil {
+
+
+    public static StringBinding trim(final ObservableStringValue op) {
+        if (op == null) {
+            throw new NullPointerException("Operand cannot be null");
+        }
+
+        return new StringBinding() {
+            {
+                super.bind(op);
+            }
+
+
+            @Override
+            public void dispose() {
+                super.unbind(op);
+            }
+
+            @Override
+            protected String computeValue() {
+                return op.get().trim();
+            }
+
+            @Override
+            public ObservableList<?> getDependencies() {
+                return FXCollections.singletonObservableList(op);
+            }
+        };
+    }
 
     /**
      * @param op

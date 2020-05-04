@@ -1,4 +1,4 @@
-package org.testd.ui.util;
+package org.testd.ui.view.component;
 
 import com.sun.javafx.scene.control.skin.TableHeaderRow;
 import com.sun.javafx.scene.control.skin.TableViewSkinBase;

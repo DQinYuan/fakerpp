@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
-
+<?import org.testd.ui.view.component.SelectOrUserDefineBox?>
 <fx:root spacing="10.0" type="HBox" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <CheckBox fx:id="checkbox" mnemonicParsing="false" text="[col1,col2,col3]" />
        <ImageView fx:id="rightArrow" fitHeight="15.0" fitWidth="20.0" visible="false" />
-      <TextField fx:id="mapCol" visible="false" />
+       <SelectOrUserDefineBox fx:id="mapColBox" visible="false"/>
    </children>
 </fx:root>

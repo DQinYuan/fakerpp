@@ -1,8 +1,6 @@
 package org.testd.ui.view.dynamic;
 
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableSet;
 import javafx.collections.SetChangeListener;
@@ -21,7 +19,6 @@ import org.springframework.util.CollectionUtils;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
-import org.testd.ui.model.DataSourceInfoProperty;
 import org.testd.ui.model.JoinType;
 import org.testd.ui.util.BindingUtil;
 import org.testd.ui.vo.ConnectionVO;
@@ -29,7 +26,7 @@ import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
 import org.testd.ui.model.TableProperty;
 import org.testd.ui.util.FxDialogs;
-import org.testd.ui.util.MyVBox;
+import org.testd.ui.view.component.MyVBox;
 import org.testd.ui.util.Stages;
 import org.testd.ui.view.DrawBoardView;
 import org.testd.ui.view.form.TableMetaConfView;
@@ -56,6 +53,7 @@ public class MyTableView extends BorderPane {
     //----------- property
     private TableProperty tableProperty;
     private ColFamilyVO excludesColFamily;
+    private Set<ConnectionVO> relatedConnections = new HashSet<>();
 
     //----------- JavaFx Component
     @FXML
@@ -74,7 +72,18 @@ public class MyTableView extends BorderPane {
     private void initialize() {
         dragable();
 
-        deleteTableMenu.setOnAction(event -> drawBoardController.remove(this));
+        deleteTableMenu.setOnAction(event -> handleTableDelete());
+    }
+
+    private void handleTableDelete() {
+        drawBoardController.remove(this);
+        relatedConnections.forEach(connVo ->
+                connVo.visibleProperty().set(false));
+        relatedConnections.clear();
+    }
+
+    public void relateConnection(ConnectionVO connectionVO) {
+        relatedConnections.add(connectionVO);
     }
 
     private void showExcluedCols() {
@@ -214,10 +223,27 @@ public class MyTableView extends BorderPane {
                 .collect(Collectors.toList());
     }
 
+    public <T extends ColFamilyViewInterface> List<ColFamilyVO>
+    getColFamiliesExcept(Class<T> viewType) {
+        return getColFamiliesExcept(viewType, t -> false);
+    }
+
+    public List<ColFamilyVO> getColFamiliesExcept(ColFamilyViewInterface expect) {
+        return colFamiliesInput.getMyChildren().stream()
+                .filter(c -> c != expect)
+                .map(ColFamilyViewInterface::getColFamilyVO)
+                .collect(Collectors.toList());
+    }
+
     public List<ColFamilyVO> getColFamilies() {
         return colFamiliesInput.getMyChildren()
                 .stream().map(ColFamilyViewInterface::getColFamilyVO)
                 .collect(Collectors.toList());
+    }
+
+    public List<ColProperty> moveCols(Set<String> cols) {
+        return getColFamilies().stream().flatMap(cfvo ->
+                cfvo.moveCols(cols).stream()).collect(Collectors.toList());
     }
 
     public <T extends ColFamilyViewInterface> List<ColFamilyVO>
@@ -225,14 +251,6 @@ public class MyTableView extends BorderPane {
         return colFamiliesInput.getMyChildren().stream()
                 .filter(c -> c.getClass().equals(viewType))
                 .filter(c -> predicate.test(viewType.cast(c)))
-                .map(ColFamilyViewInterface::getColFamilyVO)
-                .collect(Collectors.toList());
-    }
-
-
-    public List<ColFamilyVO> getColFamiliesExcept(ColFamilyViewInterface expect) {
-        return colFamiliesInput.getMyChildren().stream()
-                .filter(c -> c != expect)
                 .map(ColFamilyViewInterface::getColFamilyVO)
                 .collect(Collectors.toList());
     }

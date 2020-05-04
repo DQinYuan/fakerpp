@@ -1,4 +1,4 @@
-package org.testd.ui.util;
+package org.testd.ui.view.component;
 
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -9,6 +9,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import org.testd.ui.util.ListUtil;
 import org.testd.ui.view.dynamic.FollowRightMouseMenu;
 
 import java.util.List;

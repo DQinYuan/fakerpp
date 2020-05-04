@@ -31,6 +31,7 @@ public class ColPropertyFactory {
     public ColProperty colPropertyWithListener(String colName, MyTableView owerTable) {
         ColProperty colProperty = new ColProperty(colName);
         colProperty.addDeleteListener(name -> {
+            // get all join send view
             List<ColFamilyVO> sendColFamilies = owerTable.getColFamilies(JoinView.class,
                     JoinView::isSend);
             sendColFamilies.forEach(colFamilyProperty -> colFamilyProperty.deleteCol(name));

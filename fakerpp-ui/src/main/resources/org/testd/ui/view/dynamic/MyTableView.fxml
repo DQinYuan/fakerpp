@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.text.Font?>
-<?import org.testd.ui.util.MyVBox?>
+<?import org.testd.ui.view.component.MyVBox?>
 <fx:root prefHeight="0.0" prefWidth="300.0" type="javafx.scene.layout.BorderPane" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1">
    <top>
       <ToolBar fx:id="toolBar" prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
@@ -45,6 +45,6 @@
    </top>
    <center>
       <MyVBox fx:id="colFamiliesInput" prefHeight="200.0" prefWidth="100.0"
-            style="-fx-background-color: beige;" BorderPane.alignment="CENTER" />
+              style="-fx-background-color: beige;" BorderPane.alignment="CENTER" />
    </center>
 </fx:root>

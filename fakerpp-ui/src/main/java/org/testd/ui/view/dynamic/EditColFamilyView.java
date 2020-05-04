@@ -11,7 +11,9 @@ import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.testd.fakerpp.core.parser.ast.Table;
 import org.testd.ui.fxweaver.core.FxmlView;
+import org.testd.ui.model.ColProperty;
 import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.util.FxDialogs;
 import org.testd.ui.util.Stages;
@@ -66,11 +68,10 @@ public class EditColFamilyView extends BorderPane {
 
         // catch other cols and delete from origin col families
         ObservableList<String> catchCols = catchOtherCols.getCheckModel().getCheckedItems();
-        otherColFamilies.forEach(cf -> cf.deleteCols(catchCols));
 
         if (CollectionUtils.isEmpty(extraCols) &&
                 CollectionUtils.isEmpty(catchCols)) {
-            FxDialogs.showError("Empty Col Family Error",
+            FxDialogs.showError("Edit Col Family Error",
                     "Col family empty", "Col family can not be empty!!");
             return;
         }
@@ -78,18 +79,22 @@ public class EditColFamilyView extends BorderPane {
                 .map(ColFamilyVO::colsProperty)
                 .flatMap(Set::stream)
                 .anyMatch(cp -> extraCols.contains(cp.getColName()))) {
-            FxDialogs.showError("Empty Col Family Error",
+            FxDialogs.showError("Edit Col Family Error",
                     "Col Name duplicate", "Col Name can not duplicate!!");
             return;
         }
 
-        ImmutableSet.Builder<String> currentColsBuilder = ImmutableSet.builder();
-        currentColsBuilder.addAll(extraCols);
-        currentColsBuilder.addAll(catchCols);
-        Set<String> currentCols = currentColsBuilder.build();
+        Set<ColProperty> extraColProperties =
+                colPropertyFactory.colPropertiesWithListener(extraCols, ownerTable);
 
-        colFamilyVO.replace(colPropertyFactory.colPropertiesWithListener(currentCols,
-                ownerTable));
+        ImmutableSet.Builder<ColProperty> currentColsBuilder = ImmutableSet.builder();
+        currentColsBuilder.addAll(extraColProperties);
+        currentColsBuilder.addAll(otherColFamilies.stream()
+                .flatMap(cfvo -> cfvo.moveCols(catchCols).stream())
+                .collect(Collectors.toList())
+        );
+
+        colFamilyVO.replace(currentColsBuilder.build());
 
         colFamilyVO.visibleProperty().set(true);
         Stages.closeWindow(getScene().getWindow());

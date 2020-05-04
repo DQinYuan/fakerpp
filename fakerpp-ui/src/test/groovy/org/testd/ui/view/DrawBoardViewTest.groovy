@@ -17,6 +17,7 @@ import org.testd.ui.Tools
 import org.testd.ui.controller.DrawBoardController
 import org.testd.ui.fxweaver.core.FxWeaver
 import org.testd.ui.model.TableProperty
+import org.testd.ui.view.dynamic.ConnectPolyLine
 import org.testd.ui.view.dynamic.JoinView
 import org.testd.ui.view.dynamic.MyTableView
 import org.testfx.api.FxToolkit
@@ -106,7 +107,7 @@ fff
         clickOn("#Table1 #newConnection")
         interact({
             lookup("#targetInput").queryAs(ComboBox.class)
-                    .selectionModel.select("Table2")
+                    .selectionModel.select(t2.tableProperty())
         })
         lookup(".check-box").queryAll().each { clickOn(it) }
         interact({
@@ -211,6 +212,58 @@ bbb
 
         then:
         drawBoardController.tables().size() == 0
+    }
+
+    def "cascade delete connection view when delete source table"() {
+        given:
+        MyTableView t1
+        MyTableView t2
+        (t1, t2) = initTablePair()
+
+        // connection from t1 to t2
+        clickOn("#Table1 #newConnection")
+        interact({
+            lookup("#targetInput").queryAs(ComboBox.class)
+                    .selectionModel.select(t2.tableProperty())
+        })
+        lookup(".check-box").queryAll().each { clickOn(it) }
+        clickOn("#okButton")
+
+        when:
+        // delete table1
+        rightClickOn("#Table1 #tableNameLabel")
+        clickOn("#deleteTableMenu")
+
+        then:
+        drawBoardController.elements.find { ConnectPolyLine.class.isAssignableFrom(it.getClass())} == null
+        drawBoardController.tables().size() == 1
+        drawBoardController.tables()[0].is(t2.tableProperty())
+    }
+
+    def "cascade delete connection view when delete target table"() {
+        given:
+        MyTableView t1
+        MyTableView t2
+        (t1, t2) = initTablePair()
+
+        // connection from t1 to t2
+        clickOn("#Table1 #newConnection")
+        interact({
+            lookup("#targetInput").queryAs(ComboBox.class)
+                    .selectionModel.select(t2.tableProperty())
+        })
+        lookup(".check-box").queryAll().each { clickOn(it) }
+        clickOn("#okButton")
+
+        when:
+        // delete table2
+        rightClickOn("#Table2 #tableNameLabel")
+        clickOn("#deleteTableMenu")
+
+        then:
+        drawBoardController.elements.find { ConnectPolyLine.class.isAssignableFrom(it.getClass())} == null
+        drawBoardController.tables().size() == 1
+        drawBoardController.tables()[0].is(t1.tableProperty())
     }
 
 

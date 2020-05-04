@@ -5,7 +5,6 @@ import com.dlsc.formsfx.model.validators.CustomValidator;
 import com.dlsc.formsfx.model.validators.StringLengthValidator;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.layout.Region;
@@ -18,7 +17,7 @@ import org.testd.fakerpp.core.engine.generator.GeneratorSupplier;
 import org.testd.fakerpp.core.parser.ast.Table;
 import org.testd.ui.DefaultsConfig;
 import org.testd.ui.model.TableProperty;
-import org.testd.ui.util.EditableTableBuilder;
+import org.testd.ui.view.component.EditableTableBuilder;
 import org.testd.ui.util.Forms;
 import org.testd.ui.util.RunnableUtil;
 

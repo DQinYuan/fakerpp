@@ -1,4 +1,4 @@
-package org.testd.ui.util
+package org.testd.ui.view.component
 
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.Scene
@@ -6,6 +6,7 @@ import javafx.scene.control.TableCell
 import javafx.scene.input.KeyCode
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
+import org.testd.ui.view.component.EditableTable
 import org.testfx.api.FxToolkit
 import org.testfx.framework.spock.ApplicationSpec
 

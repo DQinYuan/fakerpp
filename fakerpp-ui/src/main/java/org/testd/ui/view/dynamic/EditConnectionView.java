@@ -1,12 +1,14 @@
 package org.testd.ui.view.dynamic;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import javafx.collections.ObservableMap;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
 import lombok.RequiredArgsConstructor;
+import org.javatuples.Pair;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,7 @@ import org.springframework.util.CollectionUtils;
 import org.testd.ui.controller.DrawBoardController;
 import org.testd.ui.fxweaver.core.FxWeaver;
 import org.testd.ui.fxweaver.core.FxmlView;
+import org.testd.ui.model.TableProperty;
 import org.testd.ui.vo.ConnectionVO;
 import org.testd.ui.vo.ColFamilyVO;
 import org.testd.ui.model.ColProperty;
@@ -24,8 +27,10 @@ import org.testd.ui.util.Stages;
 import org.testd.ui.view.DrawBoardView;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @FxmlView
@@ -53,7 +58,7 @@ public class EditConnectionView extends VBox {
     @FXML
     private HBox randomInputHbox;
     @FXML
-    private ComboBox<String> targetInput;
+    private ComboBox<TableProperty> targetInput;
 
     private ConnectionVO connectionVO;
 
@@ -73,13 +78,27 @@ public class EditConnectionView extends VBox {
                 sourceTable.getName()));
 
         // Target Table
-        List<String> otherTables = drawBoardController.tablesExcept(sourceTable.tableProperty())
-                .stream().map(tp -> tp.getName().get()).collect(Collectors.toList());
+        List<TableProperty> otherTables =
+                drawBoardController.tablesExcept(sourceTable.tableProperty());
+        Callback<ListView<TableProperty>, ListCell<TableProperty>> cellFactory =
+                listView -> new ListCell<TableProperty>(){
+                    @Override
+                    protected void updateItem(TableProperty item, boolean empty) {
+                        super.updateItem(item, empty);
+                        if (empty || item == null) {
+                            setText(null);
+                        } else {
+                            setText(item.getName().get());
+                        }
+                    }
+                };
+        targetInput.setButtonCell(cellFactory.call(null));
+        targetInput.setCellFactory(cellFactory);
         targetInput.getItems().addAll(otherTables);
 
         FxProperties.runIfExists(connectionVO.targetProperty(),
                 targetTable -> {
-                    targetInput.getSelectionModel().select(targetTable.getName());
+                    targetInput.getSelectionModel().select(targetTable.tableProperty());
                     targetInput.setDisable(true);
                 });
 
@@ -87,18 +106,18 @@ public class EditConnectionView extends VBox {
         FxProperties.runIfExists(connectionVO.joinTypeProperty(),
                 this::selectByJoinType);
 
-        // Random checkbox
+        // Random checkbox (for right join)
         randomInput.setSelected(connectionVO.randomProperty().get());
 
-        // Col families
+        // Selectable Col families from Source Table
         List<ColFamilyVO> selectableColFamilies = sourceTable
                 .getColFamiliesExcept(JoinView.class, joinView -> !joinView.isSend());
 
         connectionVO.sendRecvMap().forEach((s, r) -> {
             ColFamilyMappingView colFamilyMappingView =
                     fxWeaver.loadControl(ColFamilyMappingView.class);
-            colFamilyMappingView.initFromOriginAndMappingCol(s.getColName(),
-                    r.getColName());
+            colFamilyMappingViewInit(colFamilyMappingView,
+                    s.getColName(),r.getColName(), connectionVO.sendRecvMap());
             colFamilyMappingView.select();
             colFamiliesSelectBoxes.getChildren().add(colFamilyMappingView);
         });
@@ -111,10 +130,34 @@ public class EditConnectionView extends VBox {
                 .map(col -> {
                     ColFamilyMappingView colFamilyMappingView =
                             fxWeaver.loadControl(ColFamilyMappingView.class);
-                    colFamilyMappingView.initFromOriginAndMappingCol(col.getColName(),
-                            col.getColName());
+                    colFamilyMappingViewInit(colFamilyMappingView,
+                            col.getColName(), col.getColName(), connectionVO.sendRecvMap());
                     return colFamilyMappingView;
                 }).forEach(colFamiliesSelectBoxes.getChildren()::add);
+    }
+
+    /**
+     * init targetInput before call this method
+     * @param colFamilyMappingView
+     * @param originCol
+     * @param targetCol
+     * @param sendRecv
+     */
+    private void colFamilyMappingViewInit(ColFamilyMappingView colFamilyMappingView,
+                                          String originCol,
+                                          String targetCol,
+                                          Map<ColProperty, ColProperty> sendRecv) {
+        if (targetInput.isDisable()) {
+            colFamilyMappingView.initTargetImmutable(
+                    originCol, targetCol, targetInput.getValue(),
+                    sendRecv.values().stream().map(ColProperty::getColName)
+                            .collect(Collectors.toSet())
+            );
+        } else {
+            colFamilyMappingView.initTargetMutable(
+                    originCol, targetCol, targetInput.valueProperty()
+            );
+        }
     }
 
     private void selectByJoinType(JoinType joinType) {
@@ -139,7 +182,7 @@ public class EditConnectionView extends VBox {
     @FXML
     private void handleOk() {
         // check
-        String targetTable = targetInput.getSelectionModel()
+        TableProperty targetTable = targetInput.getSelectionModel()
                 .getSelectedItem();
         if (targetTable == null) {
             FxDialogs.showError("New Connection Error",
@@ -147,7 +190,7 @@ public class EditConnectionView extends VBox {
                     "Target table can not be empty");
             return;
         }
-        MyTableView targetTableView = drawBoardView.getTableByName(targetTable);
+        MyTableView targetTableView = drawBoardView.getTableByName(targetTable.getName().get());
 
         List<ColFamilyMappingView> selectedMapping = colFamiliesSelectBoxes
                 .getChildren()
@@ -162,22 +205,34 @@ public class EditConnectionView extends VBox {
             return;
         }
 
-        Map<String, String> resColMap = selectedMapping.stream()
-                .collect(ImmutableMap.toImmutableMap(
-                        ColFamilyMappingView::getOrigin,
-                        ColFamilyMappingView::getTarget
+        // isUserDefined -> List<Pair<origin col, target col>>
+        Map<Boolean, List<Pair<String, String>>> extralAndCatchCols = selectedMapping.stream()
+                .collect(Collectors.partitioningBy(
+                        ColFamilyMappingView::isUserDefined,
+                        Collectors.mapping(
+                                cmv -> new Pair<>(cmv.getOrigin(), cmv.getTarget()),
+                                Collectors.toList()
+                        )
                 ));
-        if (resColMap.values().stream().distinct().count() != resColMap.size()) {
+
+        List<Pair<String, String>> extraCols = extralAndCatchCols.get(true);
+        List<Pair<String, String>> catchCols = extralAndCatchCols.get(false);
+
+        // check target col duplicate
+        if (Stream.of(extraCols.stream(), catchCols.stream())
+                .flatMap(Function.identity()).distinct().count()
+                != extraCols.size() + catchCols.size()) {
             FxDialogs.showError("New Connection Error",
                     "Join Cols Invalid",
                     "Target col duplicate!!");
             return;
         }
 
-        Set<String> receiveCols = new HashSet<>(resColMap.values());
+        List<String> extraReceiveCols = extraCols.stream().map(Pair::getValue1)
+                .collect(ImmutableList.toImmutableList());
         Predicate<String> recvChecker = connectionVO.recvChecker(targetTableView);
-        for (String receiveCol : receiveCols) {
-            if (!recvChecker.test(receiveCol)) {
+        for (String extraReceiveCol : extraReceiveCols) {
+            if (!recvChecker.test(extraReceiveCol)) {
                 FxDialogs.showError("New Connection Error",
                         "Join Cols Invalid",
                         "Target col duplicate with existing col in target table!!");
@@ -185,22 +240,44 @@ public class EditConnectionView extends VBox {
             }
         }
 
-        // check pass, modify connectionVO
+        ////// check pass, modify connectionVO
+
         connectionVO.randomProperty().set(randomInput.isSelected());
         connectionVO.targetProperty().set(targetTableView);
         connectionVO.joinTypeProperty().set(getJoinType());
+        targetTableView.relateConnection(connectionVO);
+        connectionVO.sourceProperty().get().relateConnection(connectionVO);
+
+        // move catch cols
 
         Map<ColProperty, ColProperty> newSendRecv = new LinkedHashMap<>();
-        for (Map.Entry<String, String> sendRecvEntry : resColMap.entrySet()) {
-            ColProperty sendProperty = new ColProperty(sendRecvEntry.getKey());
-            ColProperty recvProperty = colPropertyFactory.colPropertyWithListener(sendRecvEntry.getValue(),
-                    targetTableView);
+        Map<String, ColProperty> movingTargetCols = targetTableView.moveCols(
+                catchCols.stream().map(Pair::getValue1).collect(Collectors.toSet())
+        ).stream().collect(Collectors.toMap(
+                ColProperty::getColName,
+                Function.identity()
+        ));
+        for (Pair<String, String> catchCol : catchCols) {
+            ColProperty sendProperty = new ColProperty(catchCol.getValue0());
+            ColProperty recvProperty = movingTargetCols.get(catchCol.getValue1());
             // when send col deleted, corresponding recv col must be deleted at same time
             sendProperty.addDeleteListener(colName ->
-                connectionVO.sendRecvMap().remove(sendProperty));
+                    connectionVO.sendRecvMap().remove(sendProperty));
             newSendRecv.put(sendProperty, recvProperty);
         }
 
+
+        // add extra cols
+
+        for (Pair<String, String> extraCol : extraCols) {
+            ColProperty sendProperty = new ColProperty(extraCol.getValue0());
+            ColProperty recvProperty = colPropertyFactory.colPropertyWithListener(extraCol.getValue1(),
+                    targetTableView);
+            // when send col deleted, corresponding recv col must be deleted at same time
+            sendProperty.addDeleteListener(colName ->
+                    connectionVO.sendRecvMap().remove(sendProperty));
+            newSendRecv.put(sendProperty, recvProperty);
+        }
         connectionVO.replaceSendRecv(newSendRecv);
 
         if (!connectionVO.visibleProperty().get()) {
@@ -208,7 +285,6 @@ public class EditConnectionView extends VBox {
         }
 
         Stages.closeWindow(getScene().getWindow());
-
     }
 
 }

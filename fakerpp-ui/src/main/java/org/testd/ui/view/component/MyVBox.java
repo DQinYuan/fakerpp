@@ -1,9 +1,10 @@
-package org.testd.ui.util;
+package org.testd.ui.view.component;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
+import org.testd.ui.util.BindingUtil;
 
 public class MyVBox<T> extends VBox {
 

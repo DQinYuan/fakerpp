@@ -71,6 +71,15 @@ public class ColFamilyVO {
         needDeleted.forEach(ColProperty::deleted);
     }
 
+
+    public Set<ColProperty> moveCols(Collection<String> colNames) {
+        Set<ColProperty> needDeleted = cols.stream()
+                .filter(cp -> colNames.contains(cp.getColName()))
+                .collect(ImmutableSet.toImmutableSet());
+        cols.removeAll(needDeleted);
+        return needDeleted;
+    }
+
     public void deleteCol(String colName) {
         Optional<ColProperty> findCol = cols.stream()
                 .filter(colProperty -> Objects.equals(colProperty.getColName(),
